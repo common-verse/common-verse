@@ -8,6 +8,7 @@ import {
   getRecentPoems,
   getUpcomingEvents,
   getEvents,
+  getEventsPage,
 } from "./cms";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -173,4 +174,24 @@ it("loads every event archive page and reports failures on later pages", async (
     .mockResolvedValueOnce(Response.json({ docs: [], hasNextPage: true }))
     .mockResolvedValueOnce(new Response(null, { status: 503 }));
   await expect(getEvents("ar")).rejects.toThrow("503");
+});
+
+it("keeps events page request errors separate from missing editorial copy", async () => {
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(new Response(null, { status: 503 }))
+    .mockResolvedValueOnce(Response.json({ heading: "Private programme" }));
+  vi.stubGlobal("fetch", fetch);
+  expect(await getEventsPage("en")).toBeNull();
+  await expect(getEventsPage("ar")).rejects.toThrow(
+    "Events page request failed with 503",
+  );
+  expect(await getEventsPage("ar", "runtime-secret")).toMatchObject({
+    heading: "Private programme",
+  });
+  const [url, options] = fetch.mock.calls[2];
+  expect(new URL(url).pathname).toBe("/api/globals/events-page/preview");
+  expect(new URL(url).searchParams.get("locale")).toBe("ar");
+  expect(options.headers).toEqual({ "x-preview-secret": "runtime-secret" });
 });

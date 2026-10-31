@@ -21,7 +21,7 @@ Keep Payload’s native dashboard and cards. Organize the editorial sidebar as
 Content (Articles, Events, Locations), Media (Images & Files), Administration (Users),
 then Pages (Home, About, Contact, Privacy, Legal Notice). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
-Home, About, Contact, Privacy, and Legal Notice are fixed Payload globals. Event,
+Home, the Events page, About, Contact, Privacy, and Legal Notice are fixed Payload globals. Event,
 poet, and poem detail pages come from their collections. Articles are an MVP collection with localized native rich text, drafts, preview
 and public article routes. Do not add arbitrary pages. The legacy `pages` collection remains
 hidden to preserve existing records and is not used by public routing or bulk seeding.
@@ -39,10 +39,19 @@ controls. Its native `generateSlug` checkbox owns automatic generation, includin
 draft autosaves; there is no custom event slug hook, transliteration, or collision
 suffixing. Drafts and authorized previews remain supported.
 There are no event subtypes, prices, end dates, or separate SEO fields. Public
-metadata derives from the title, description, and cover image. Upcoming events are
-selected by their start date.
+metadata derives from the title, description, and cover image. Upcoming events remain active through their date in Europe/Berlin; the time tells visitors when the event starts.
 
-Titles and descriptions have no character limit or custom counter. The content
+The Events page has its own global under **Pages → Events page**, separate from
+the Events collection. Editors can translate its heading and introduction and
+select a primary featured event and up to four additional events in display order. With no eligible selection, the nearest
+upcoming published event is featured automatically. Past events, drafts, and
+events without a title in the current language cannot be featured. Featured events
+are shown once in a manually browsed, non-rotating feature beside the main page heading and introduction, above the remaining chronological programme. Featured events use an image and compact caption, separate from the list layout. The list uses text-only date and title columns; event images appear only in the featured section of the programme page. On compact screens, dates stack above the event text. Only events today or tomorrow receive a relative-day badge. A collapsed archive
+shows past events newest first. The page supports drafts and authorized Live
+Preview; missing introduction translations use UI copy in the visitor’s language,
+never another language’s editorial text.
+
+Event titles have an 80-character maximum and descriptions a 160-character maximum, enforced by Payload’s native validation with translated editor guidance. Events-page headings allow 80 characters and introductions 180. The content
 editor supports headings, lists, quotes, alignment, indentation, emphasis, links,
 separators, and Media images with alternative text and credits. Articles retain
 their simpler toolbar. The location is a structured address/coordinate snapshot.

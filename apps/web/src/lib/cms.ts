@@ -1,3 +1,4 @@
+import { berlinDayStart } from "./event-date";
 import { locales, type Locale, type FixedPageKey } from "@poetry/i18n";
 import { convertLexicalToPlaintext } from "@payloadcms/richtext-lexical/plaintext";
 import type {
@@ -8,6 +9,7 @@ import type {
   Poem,
   Article,
   Event,
+  EventsPage,
 } from "@poetry/types";
 
 const cmsUrl = import.meta.env.PUBLIC_CMS_URL ?? "http://localhost:3001";
@@ -132,7 +134,7 @@ export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
   url.searchParams.set("limit", "4");
   url.searchParams.set("where[title][exists]", "true");
   url.searchParams.set("where[title][not_equals]", "");
-  const now = new Date().toISOString();
+  const now = berlinDayStart();
   url.searchParams.set("where[startDate][greater_than_equal]", now);
   const response = await fetch(url);
   if (!response.ok)
@@ -171,6 +173,25 @@ export async function getHomepage(
   if (response.status === 404) return null;
   if (!response.ok)
     throw new Error(`Homepage request failed with ${response.status}`);
+  return response.json();
+}
+
+export async function getEventsPage(
+  locale: Locale,
+  previewSecret?: string,
+): Promise<EventsPage | null> {
+  const url = new URL(
+    `/api/globals/events-page/${previewSecret ? "preview" : "public"}`,
+    cmsUrl,
+  );
+  url.searchParams.set("locale", locale);
+  const response = await fetch(url, {
+    headers: previewSecret ? { "x-preview-secret": previewSecret } : {},
+    cache: "no-store",
+  });
+  if (response.status === 404) return null;
+  if (!response.ok)
+    throw new Error(`Events page request failed with ${response.status}`);
   return response.json();
 }
 

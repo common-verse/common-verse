@@ -73,7 +73,7 @@ for (const locale of ["de", "ar"] as const) {
   });
 }
 
-test.describe("server-rendered gold and slate themes", () => {
+test.describe("server-rendered brand and slate themes", () => {
   test.use({ javaScriptEnabled: false });
 
   for (const locale of ["de", "ar"] as const) {
@@ -230,7 +230,7 @@ test.describe("server-rendered gold and slate themes", () => {
           };
         });
         if (theme === "light") {
-          // Neutral header chrome leaves gold for primary actions and accents.
+          // Neutral header chrome leaves the brand colour for actions and accents.
           expect(Math.min(...results.header)).toBeGreaterThan(240);
           expect(results.backgroundLuminance).toBeGreaterThan(0.85);
           expect(results.cardAlpha).toBe(1);
@@ -255,7 +255,7 @@ test.describe("server-rendered gold and slate themes", () => {
             ).toBeGreaterThanOrEqual(4.5);
           }
         }
-        expect(results.primaryBase).toEqual([241, 166, 10]);
+        expect(results.primaryBase).toEqual([255, 3, 61]);
         expect(results.primary).toEqual(results.primaryBase);
         expect(results.primaryForeground).toEqual(results.black);
         expect(results.headerAlpha).toBe(1);

@@ -1,5 +1,5 @@
 ---
-import { localizedPath, unlocalizedPath, type Locale } from '@poetry/i18n'
+import { getLocaleMetadata, localizedPath, unlocalizedPath, type Locale } from '@poetry/i18n'
 import * as m from '../paraglide/messages.js'
 import LanguageSwitcher from './LanguageSwitcher.svelte'
 import ThemeSwitcher from './ThemeSwitcher.svelte'
@@ -13,14 +13,15 @@ interface Props {
 
 const { locale, themePreference } = Astro.props
 const messageOptions = { locale }
+const { direction } = getLocaleMetadata(locale)
 ---
 
-<header class="site-header">
+<header class="site-header" dir="ltr" style="view-transition-name: site-header">
   <a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, messageOptions) !== 'The Poetry Project' ? ` — ${m.site_title({}, messageOptions)}` : ''}</span></a>
   <nav aria-label={m.nav_primary({}, messageOptions)}>
-    <a href={localizedPath(locale, 'events')}>{m.nav_events({}, messageOptions)}</a>
-    <a href={localizedPath(locale, 'articles')}>{m.nav_articles({}, messageOptions)}</a>
-    <a href={localizedPath(locale, 'poems')}>{m.nav_poems({}, messageOptions)}</a>
+    <a dir={direction} href={localizedPath(locale, 'events')}>{m.nav_events({}, messageOptions)}</a>
+    <a dir={direction} href={localizedPath(locale, 'articles')}>{m.nav_articles({}, messageOptions)}</a>
+    <a dir={direction} href={localizedPath(locale, 'poems')}>{m.nav_poems({}, messageOptions)}</a>
   </nav>
   <div class="header-controls">
     <LanguageSwitcher client:load currentLocale={locale} label={m.language_label({}, messageOptions)} path={unlocalizedPath(Astro.originPathname)} search={Astro.url.search} />

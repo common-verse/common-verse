@@ -37,6 +37,8 @@ export const Events: CollectionConfig = {
   fields: [
     {
       name: "title",
+      maxLength: 80,
+      admin: { description: label("event_title_limit") },
       label: label("title"),
       type: "text",
       localized: true,
@@ -45,6 +47,8 @@ export const Events: CollectionConfig = {
     slugField(),
     {
       name: "description",
+      maxLength: 160,
+      admin: { description: label("event_description_limit") },
       label: label("description"),
       type: "text",
       localized: true,

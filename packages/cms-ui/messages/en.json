@@ -153,5 +153,13 @@
   "place_search_clear": "Clear search",
   "location_bookmark_add": "Bookmark selected place",
   "location_bookmark_edit": "Edit saved location",
-  "coordinates": "Coordinates"
+  "coordinates": "Coordinates",
+  "events_page": "Events page",
+  "featured_event": "Featured event",
+  "events_feature_help": "Leave empty to feature the nearest upcoming event. Past events, drafts, and untranslated events are omitted.",
+  "event_title_limit": "Up to 80 characters. Keep the title clear and specific.",
+  "event_description_limit": "Up to 160 characters. One short sentence for the programme.",
+  "events_introduction_limit": "Up to 180 characters. Introduce the programme in one or two sentences.",
+  "additional_featured_events": "More featured events",
+  "additional_featured_events_help": "Choose up to four additional upcoming events, in display order. Past events, drafts, and duplicates are omitted."
 }

@@ -25,6 +25,7 @@ import { Events } from "./collections/Events";
 import { contentFields } from "./components/contentFields";
 import { FixedPages } from "./globals/FixedPages";
 import { Homepage } from "./globals/Homepage";
+import { EventsPage } from "./globals/EventsPage";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -61,7 +62,7 @@ export default buildConfig({
       },
     },
   })),
-  globals: [Homepage, ...FixedPages].map((global) => ({
+  globals: [Homepage, EventsPage, ...FixedPages].map((global) => ({
     ...global,
     fields: contentFields(global.fields),
     admin: {

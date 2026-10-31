@@ -27,6 +27,14 @@ export interface Event {
   _status?: "draft" | "published";
 }
 
+export interface EventsPage {
+  heading?: string | null;
+  introduction?: string | null;
+  featuredEvent?: Event | number | string | null;
+  additionalFeaturedEvents?: (Event | number | string)[] | null;
+  _status?: "draft" | "published";
+}
+
 export interface PoemTranslation {
   language: Locale | "other";
   languageLabel?: string | null;

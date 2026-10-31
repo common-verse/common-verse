@@ -38,5 +38,13 @@
   "events_intro": "Helbest me digihîne hev. Li vir atolyeyan, xwendinên helbestê û derfetên hevdîtinê bibîne.",
   "events_details": "Bi kurtî",
   "events_when": "Kengî",
-  "events_where": "Li ku"
+  "events_where": "Li ku",
+  "events_upcoming": "Bûyerên pêşerojê",
+  "events_past": "Bûyerên borî",
+  "events_no_upcoming": "Niha tu bûyerên pêşerojê nehatine plansazkirin. Ji bo xwendin û atolyeyan bi me re têkilî daynin.",
+  "events_featured": "Bûyera bijartî",
+  "events_previous": "Bûyera berê",
+  "events_next": "Bûyera paşê",
+  "events_position": "Bûyera bijartî {current} ji {total}",
+  "events_time": "{time}"
 }

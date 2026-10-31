@@ -103,7 +103,12 @@ must not require a database migration or rewrite editorial records.
 
 Use central locale metadata: Arabic and Persian are RTL; German, English,
 Ukrainian, and Kurmanji are LTR. Interface direction follows the effective
-interface language. Content fields and embedded text follow their content
+interface language. The Events header keeps its introduction on the left and
+featured event on the right in every locale. The site header also keeps its logo,
+navigation links, and controls in the same physical order; individual labels keep
+their language direction. Text follows the locale direction. Carousel controls keep previous on the left,
+next on the right, and the same arrow and slide directions in every language. Date/time strings and the feature counter use bidi
+isolation to preserve their internal order. Content fields and embedded text follow their content
 language, including when it differs from the interface.
 
 Declare the correct `lang` and `dir` for mixed-language content and the preview
@@ -180,3 +185,21 @@ localized label object as `[object Object]`.
 - [Payload interface translations](https://payloadcms.com/docs/configuration/i18n)
 - [Payload content localization](https://payloadcms.com/docs/configuration/localization)
 - [Inlang message catalogs](https://inlang.com/m/reootnfj/plugin-inlang-messageFormat)
+
+## Event date and time formatting
+
+Event labels use `Intl.DateTimeFormat` and its CLDR locale data for `de`, `en`,
+`ar`, `fa`, `uk`, and `ku`. Keep weekday and time in the same formatter so the
+locale controls their punctuation and clock format. German appends “Uhr” through
+the UI catalog; other languages retain their native time patterns.
+
+All event times use `Europe/Berlin`, including daylight saving. Calendars and
+numerals follow locale conventions: Persian uses the Solar Hijri calendar and
+Persian digits. Arabic explicitly uses Arabic-Indic digits, and Persian explicitly
+uses Persian digits, consistently for dates, times, and featured-event counters. The list omits the year only when the event and today share the
+same year in the displayed calendar, so Persian year changes follow Nowruz.
+English follows the generic `en` locale (month/day numeric dates and a 12-hour
+clock). A regional English variant would be a separate product decision.
+
+References: [Unicode locale date charts](https://cldr.unicode.org/index/charts)
+and [Intl calendar options](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat#calendar).

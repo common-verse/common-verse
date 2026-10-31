@@ -38,5 +38,13 @@
   "events_intro": "يجمعنا الشعر. اكتشف ورش العمل والأمسيات الشعرية وفرص اللقاء.",
   "events_details": "لمحة سريعة",
   "events_when": "الموعد",
-  "events_where": "المكان"
+  "events_where": "المكان",
+  "events_upcoming": "الفعاليات القادمة",
+  "events_past": "الفعاليات السابقة",
+  "events_no_upcoming": "لا توجد فعاليات قادمة مجدولة حاليًا. تواصلوا معنا بشأن القراءات وورش الكتابة.",
+  "events_featured": "فعالية مميزة",
+  "events_previous": "الفعالية السابقة",
+  "events_next": "الفعالية التالية",
+  "events_position": "الفعالية المميزة {current} من {total}",
+  "events_time": "{time}"
 }

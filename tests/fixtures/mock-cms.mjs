@@ -40,7 +40,7 @@ function event(locale, preview) {
     description,
     content: plainTextToRichText(description),
     image: media,
-    startDate: "2026-11-14T13:00:00.000Z",
+    startDate: new Date(Date.now() + 7 * 86_400_000).toISOString(),
     location: {
       coordinates: [13.405, 52.52],
       address: "The Poetry Project, Berlin",
@@ -48,6 +48,16 @@ function event(locale, preview) {
     registrationUrl: "https://example.org/register",
     _status: preview ? "draft" : "published",
   };
+}
+
+function extraFeaturedEvents(locale) {
+  return Array.from({ length: 4 }, (_, index) => ({
+    ...event(locale, false),
+    id: 30 + index,
+    slug: `featured-${index + 1}`,
+    title: locale === "fa" ? null : `Featured ${index + 1} ${locale}`,
+    startDate: new Date(Date.now() + index * 3 * 86_400_000).toISOString(),
+  }));
 }
 
 const poem = {
@@ -244,6 +254,28 @@ const server = http.createServer((request, response) => {
       }),
     );
   }
+  if (url.pathname.startsWith("/api/globals/events-page/")) {
+    return response.end(
+      JSON.stringify({
+        heading:
+          locale === "fa"
+            ? null
+            : `Events programme ${locale}${isPreview ? " — draft" : ""}`,
+        introduction:
+          locale === "fa"
+            ? null
+            : `Editorial introduction ${locale}${isPreview ? " — draft" : ""}`,
+        additionalFeaturedEvents: extraFeaturedEvents(locale),
+        featuredEvent: {
+          ...event(locale, false),
+          id: 20,
+          slug: "reading",
+          title: locale === "fa" ? null : `Reading ${locale}`,
+        },
+        _status: isPreview ? "draft" : "published",
+      }),
+    );
+  }
   if (url.pathname.startsWith("/api/globals/homepage/")) {
     const document = homepage(locale, isPreview);
     if (isPreview && reversedHomepageLocales.has(locale))
@@ -307,13 +339,36 @@ const server = http.createServer((request, response) => {
       };
       return response.end(
         JSON.stringify({
-          docs: [document, reading],
-          totalDocs: 2,
+          docs: [
+            document,
+            reading,
+            ...extraFeaturedEvents(locale),
+            {
+              ...document,
+              id: 22,
+              slug: "next-workshop",
+              title: locale === "fa" ? null : `Workshop ${locale}`,
+              startDate: new Date(Date.now() + 14 * 86_400_000).toISOString(),
+              image: {
+                ...media,
+                url: "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 2 1%22%3E%3Crect width=%222%22 height=%221%22 fill=%22white%22/%3E%3C/svg%3E",
+              },
+            },
+            {
+              ...document,
+              id: 21,
+              slug: "past",
+              title: `Past event ${locale}`,
+              startDate: new Date(Date.now() - 7 * 86_400_000).toISOString(),
+            },
+          ],
+          totalDocs: 8,
           hasNextPage: false,
         }),
       );
     }
     if (requestedSlug === "reading") {
+      document.id = 20;
       document.image = { ...media, credit: "Event photographer" };
       document.content.root.children[0].children[0].format = 1;
       document.content.root.children.push({

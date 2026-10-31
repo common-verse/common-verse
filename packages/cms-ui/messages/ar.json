@@ -153,5 +153,13 @@
   "place_search_clear": "مسح البحث",
   "location_bookmark_add": "حفظ الموقع المحدد في المفضلة",
   "location_bookmark_edit": "تعديل المكان المحفوظ",
-  "coordinates": "الإحداثيات"
+  "coordinates": "الإحداثيات",
+  "events_page": "صفحة الفعاليات",
+  "featured_event": "فعالية مميزة",
+  "events_feature_help": "اتركه فارغًا لعرض أقرب فعالية قادمة. لا تُعرض الفعاليات السابقة والمسودات والفعاليات غير المترجمة.",
+  "event_title_limit": "حتى 80 حرفًا. اجعل العنوان واضحًا ومحددًا.",
+  "event_description_limit": "حتى 160 حرفًا. جملة قصيرة لعرض البرنامج.",
+  "events_introduction_limit": "حتى 180 حرفًا. قدّم البرنامج في جملة أو جملتين.",
+  "additional_featured_events": "فعاليات مميزة إضافية",
+  "additional_featured_events_help": "اختر حتى أربع فعاليات قادمة إضافية بترتيب العرض. لا تُعرض الفعاليات السابقة والمسودات والمكررة."
 }

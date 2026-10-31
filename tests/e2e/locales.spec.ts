@@ -27,6 +27,25 @@ for (const [locale, direction] of expectations) {
     await expect(page.locator("html")).toHaveAttribute("lang", locale);
     await expect(page.locator("html")).toHaveAttribute("dir", direction);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    for (const width of [1280, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      const brand = (await page.locator(".site-header .brand").boundingBox())!;
+      const controls = (await page.locator(".header-controls").boundingBox())!;
+      expect(brand.x + brand.width).toBeLessThanOrEqual(controls.x);
+      const links = page.locator(".site-header nav a");
+      let previousRight = 0;
+      for (const link of await links.all()) {
+        const box = (await link.boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(previousRight);
+        previousRight = box.x + box.width;
+        await expect(link).toHaveCSS("direction", direction);
+      }
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
   });
 
   test(`${locale} workshop route renders localized content`, async ({

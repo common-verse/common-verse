@@ -1,4 +1,5 @@
 ---
+import { eventFormatLocale } from '../../../lib/event-date'
 import { locationText } from "../../../lib/location"
 import { eventContentHTML } from '../../../lib/event-content'
 import { Heading } from '$lib/components/ui/heading'
@@ -41,22 +42,22 @@ const structuredData = {
   eventStatus: 'https://schema.org/EventScheduled',
 }
 const html = eventContentHTML(event.content, cmsUrl)
-const date = new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))
+const date = new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))
 const registrationUrl = registrationHref(event.registrationUrl, locale)
 const credit = mediaCredit(eventMedia?.credit)
 const alternateLocales = await getEventLocales(slug, preview ? suppliedSecret : undefined)
 ---
 
-<BaseLayout {locale} {title} {description} {image} {structuredData} {alternateLocales} canonicalPath={`events/${slug}`} {preview} contentType="article">
+<BaseLayout {locale} {title} {description} {image} {structuredData} {alternateLocales} canonicalPath={`events/${slug}`} {preview} contentType="article" mainClass="events-page">
   <article class="event-page">
     <Link variant="standalone" class="back-link" href={localizedPath(locale, 'events')}>{m.home_all_events({}, { locale })}</Link>
-    <header class="event-heading">
-      <Heading level={1}>{event.title}</Heading>
-      {event.description && <Text variant="lead" class="lede">{event.description}</Text>}
+    <header class="event-heading event-summary">
+      <Heading level={1} style={`view-transition-name: event-title-${event.id}`}>{event.title}</Heading>
+      {event.description && <Text variant="lead" class="lede" style={`view-transition-name: event-description-${event.id}`}>{event.description}</Text>}
     </header>
     <div class="content-grid event-layout">
       <div class="event-story">
-        <EditorialImage image={event.image} {locale} eager />
+        <EditorialImage image={event.image} {locale} eager transitionName={`event-image-${event.id}`} />
         {credit && <p class="image-credit">{credit.source ? <><a href={credit.source}>{credit.text}</a> / <a href={credit.license!}>Creative Commons</a></> : credit.text}</p>}
       </div>
       <Card.Root as="aside" size="sm" class="event-facts" aria-label={m.events_details({}, { locale })}>
@@ -65,7 +66,7 @@ const alternateLocales = await getEventLocales(slug, preview ? suppliedSecret : 
           <dl>
             <div>
               <dt>{m.events_when({}, { locale })}</dt>
-              <dd><time datetime={event.startDate}>{date}</time></dd>
+              <dd><time datetime={event.startDate}>{m.events_time({ time: date }, { locale })}</time></dd>
             </div>
             {locationText(event.location) && <div><dt>{m.events_where({}, { locale })}</dt><dd>{locationText(event.location)}</dd></div>}
           </dl>
@@ -79,11 +80,9 @@ const alternateLocales = await getEventLocales(slug, preview ? suppliedSecret : 
 
 <style>
   .event-page { overflow-wrap: anywhere; }
-  .back-link { margin-block-end: var(--space-md-lg); }
-  .event-heading { max-inline-size: 54rem; margin-block-end: var(--space-lg-xl); }
-  .event-heading :global(h1) { margin-block: var(--space-sm) var(--space-md); line-height: 1.12; }
-  .event-heading :global(.lede) { max-inline-size: 55ch; margin: 0; }
-  .event-layout { align-items: start; }
+  .back-link { view-transition-name: event-back-link; margin-block-end: var(--space-md-lg); }
+  .event-heading { inline-size: calc(100% - var(--event-date-width) - var(--event-column-gap)); margin-block-end: var(--space-lg-xl); }
+  .event-layout { view-transition-name: event-detail-content; align-items: start; }
   .event-story { min-inline-size: 0; }
   .event-prose { min-inline-size: 0; max-inline-size: 65ch; line-height: 1.75; margin: 0; }
   .event-layout :global(.event-facts) { min-inline-size: 0; }

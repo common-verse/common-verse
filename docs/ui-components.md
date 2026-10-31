@@ -60,3 +60,18 @@ produces the same illustration across locales and pages. Uploaded editorial
 portraits take precedence. Earlier imported demo portrait photos are replaced in
 the public UI by illustrations; their media records remain intact. No external
 avatar API calls, browser JavaScript, or portrait-photo seed step is needed.
+
+## Event page transitions
+
+The programme and event detail pages opt into native cross-document view
+transitions, outside draft previews. Matching event titles and descriptions share stable names. Programme rows and
+the detail heading use proportional text widths and font sizes
+to preserve line wrapping while compact list text scales into the detail heading. Matched text uses a single visible
+snapshot rather than a crossfade between duplicate glyphs;
+the title and description move for 200 ms while the site header stays steady.
+The remaining content fades in with a `space-xs` downward shift, starting at 75%
+of `motion-page` (150 ms) and lasting `motion-fast` (160 ms) so it overlaps the end of the text transition. The detail body and back link have their own entrance layers. Only the
+active featured title, description, and image participate, avoiding hidden carousel content
+in the transition. Browser Back and ordinary links retain native navigation behaviour.
+Reduced motion disables the transition, and unsupported browsers navigate normally.
+No client-side router or additional runtime dependency is used.

@@ -2,8 +2,6 @@
 @import "./token.css";
 
 :root {
-  --motion-fast: 160ms;
-  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -874,5 +872,55 @@ footer {
   .featured-layout:has(> figure),
   .featured-layout:has(> [data-slot="avatar"]) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.events-page {
+  --event-date-width: 10rem;
+  --event-column-gap: var(--space-md-lg);
+}
+.events-page :is(.event-summary, .hero-introduction, .hero-copy) .ui-heading {
+  color: var(--primary);
+}
+.events-page .event-summary .ui-heading {
+  view-transition-class: event-text;
+  margin-block: 0 var(--space-md);
+  font-size: var(--font-size-xxxl);
+  line-height: 1.12;
+  font-weight: 500;
+}
+.events-page .event-summary {
+  max-inline-size: 54rem;
+}
+.events-page .event-summary p {
+  view-transition-class: event-text;
+  margin: 0;
+  max-inline-size: 55ch;
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+}
+/* Scale width with type to keep identical line breaks during the transition. */
+.events-page .event-row-copy .ui-heading {
+  inline-size: 56%;
+  font-size: calc(var(--font-size-xxxl) * 0.56);
+  margin-block-end: var(--space-xs);
+}
+.events-page .event-row-copy p {
+  inline-size: 75%;
+  font-size: calc(var(--font-size-md) * 0.75);
+}
+@media (max-width: 48rem) {
+  .events-page {
+    --event-date-width: 8rem;
+    --event-column-gap: var(--space-sm);
+  }
+}
+@media (max-width: 36rem) {
+  .events-page {
+    --event-date-width: 0px;
+    --event-column-gap: 0px;
+  }
+  .events-page .event-row-link {
+    gap: var(--space-sm);
   }
 }

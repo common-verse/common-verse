@@ -38,5 +38,13 @@
   "events_intro": "Poetry brings us together. Find workshops, readings, and opportunities to meet.",
   "events_details": "At a glance",
   "events_when": "When",
-  "events_where": "Where"
+  "events_where": "Where",
+  "events_upcoming": "Upcoming events",
+  "events_past": "Past events",
+  "events_no_upcoming": "No upcoming events are scheduled. Contact us about readings and workshops.",
+  "events_featured": "Featured event",
+  "events_previous": "Previous event",
+  "events_next": "Next event",
+  "events_position": "Featured event {current} of {total}",
+  "events_time": "{time}"
 }

@@ -38,5 +38,13 @@
   "events_intro": "Поезія об’єднує нас. Тут ви знайдете майстерні, поетичні читання та нагоди для зустрічей.",
   "events_details": "Коротко про подію",
   "events_when": "Коли",
-  "events_where": "Де"
+  "events_where": "Де",
+  "events_upcoming": "Майбутні події",
+  "events_past": "Минулі події",
+  "events_no_upcoming": "Наразі майбутніх подій не заплановано. Зв’яжіться з нами щодо читань і майстерень.",
+  "events_featured": "Рекомендована подія",
+  "events_previous": "Попередня подія",
+  "events_next": "Наступна подія",
+  "events_position": "Рекомендована подія {current} із {total}",
+  "events_time": "{time}"
 }

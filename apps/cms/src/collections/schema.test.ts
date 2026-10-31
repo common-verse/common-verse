@@ -102,7 +102,11 @@ describe("editorial schemas", () => {
       localized: true,
       required: true,
     });
-    expect(field(Events, "description")).toMatchObject({ localized: true });
+    expect(field(Events, "description")).toMatchObject({
+      localized: true,
+      maxLength: 160,
+    });
+    expect(field(Events, "title")).toMatchObject({ maxLength: 80 });
     const slugFields = Events.fields.find(
       (candidate) => candidate.type === "row",
     )!.fields;

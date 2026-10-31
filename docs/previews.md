@@ -34,3 +34,7 @@ shared [public URL mappings](routing.md).
 
 Use [testing guidance](testing.md) for authorization, live-preview, and
 signed-in editor checks.
+
+The Events listing also supports preview via **Pages → Events page**. Its localized
+heading, introduction, and chosen upcoming event use the same protected preview
+flow; the listing itself continues to show published event records.

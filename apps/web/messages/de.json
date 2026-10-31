@@ -38,5 +38,13 @@
   "events_intro": "Poesie bringt uns zusammen. Hier findest du Workshops, Lesungen und Gelegenheiten zur Begegnung.",
   "events_details": "Auf einen Blick",
   "events_when": "Wann",
-  "events_where": "Wo"
+  "events_where": "Wo",
+  "events_upcoming": "Kommende Veranstaltungen",
+  "events_past": "Vergangene Veranstaltungen",
+  "events_no_upcoming": "Zurzeit sind keine kommenden Veranstaltungen geplant. Kontaktieren Sie uns für Lesungen und Workshops.",
+  "events_featured": "Im Mittelpunkt",
+  "events_previous": "Vorherige Veranstaltung",
+  "events_next": "Nächste Veranstaltung",
+  "events_position": "Hervorgehobene Veranstaltung {current} von {total}",
+  "events_time": "{time} Uhr"
 }

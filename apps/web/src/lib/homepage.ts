@@ -1,3 +1,4 @@
+import { eventDaysAway } from "./event-date";
 import {
   getLocaleMetadata,
   isLocale,
@@ -55,8 +56,7 @@ export function upcomingEvents(
   const upcoming = (event: Event) =>
     Boolean(event.title) &&
     (preview || event._status !== "draft") &&
-    Number.isFinite(Date.parse(event.startDate)) &&
-    Date.parse(event.startDate) >= now.getTime();
+    (eventDaysAway(event.startDate, now) ?? -1) >= 0;
   const selected = (pinned ?? []).filter(
     (event): event is Event =>
       Boolean(event) && typeof event === "object" && upcoming(event),

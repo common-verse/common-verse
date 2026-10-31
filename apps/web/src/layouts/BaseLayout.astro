@@ -2,6 +2,7 @@
 import { getLocaleMetadata, locales, localizedPath, type Locale } from '@poetry/i18n'
 import { editorLocale, message } from '@poetry/cms-ui'
 import Header from '../components/Header.astro'
+import EventTransitions from '../components/EventTransitions.astro'
 import BrandLogo from '../components/BrandLogo.astro'
 import * as m from '../paraglide/messages.js'
 import '../styles/global.css'
@@ -74,6 +75,7 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
     {socialImage && <meta name="twitter:image" content={socialImage} />}
     {structuredData && <script type="application/ld+json" set:html={JSON.stringify(structuredData).replaceAll('<', '\\u003c')} />}
     <title>{title}</title>
+    {!preview && (canonicalPath === 'events' || canonicalPath.startsWith('events/')) && <EventTransitions />}
   </head>
   <body>
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>

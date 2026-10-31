@@ -30,8 +30,8 @@ content and UI remain supported. Custom editor labels use the CMS UI catalog des
 - **Events:** events and workshops share one picker. Automatic shows up to
   four nearest upcoming published records. Manual shows only the selected records,
   in the chosen order, up to four. Past events, drafts, duplicates, and records
-  without a title in the current language are omitted. Events underway remain
-  listed until their end time. Dates use Europe/Berlin time.
+  without a title in the current language are omitted. Events remain
+  listed through their calendar day. Dates use Europe/Berlin time.
 - **Poems:** Automatic shows the four newest published poems by creation date.
   Manual shows only the chosen poems, up to four and in selection order. Originals
   remain visible; only available translations appear alongside them.

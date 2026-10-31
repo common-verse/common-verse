@@ -153,5 +153,13 @@
   "place_search_clear": "Suche leeren",
   "location_bookmark_add": "Ausgewählten Ort merken",
   "location_bookmark_edit": "Gespeicherten Ort bearbeiten",
-  "coordinates": "Koordinaten"
+  "coordinates": "Koordinaten",
+  "events_page": "Veranstaltungsseite",
+  "featured_event": "Hervorgehobene Veranstaltung",
+  "events_feature_help": "Leer lassen, um die nächste Veranstaltung hervorzuheben. Vergangene Veranstaltungen, Entwürfe und nicht übersetzte Veranstaltungen werden ausgelassen.",
+  "event_title_limit": "Bis zu 80 Zeichen. Den Titel klar und konkret halten.",
+  "event_description_limit": "Bis zu 160 Zeichen. Ein kurzer Satz für das Programm.",
+  "events_introduction_limit": "Bis zu 180 Zeichen. Das Programm in ein oder zwei Sätzen vorstellen.",
+  "additional_featured_events": "Weitere hervorgehobene Veranstaltungen",
+  "additional_featured_events_help": "Bis zu vier weitere kommende Veranstaltungen in Anzeigereihenfolge wählen. Vergangene Veranstaltungen, Entwürfe und Duplikate werden ausgelassen."
 }

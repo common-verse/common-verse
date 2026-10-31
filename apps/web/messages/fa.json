@@ -38,5 +38,13 @@
   "events_intro": "شعر ما را به هم پیوند می‌دهد. کارگاه‌ها، شعرخوانی‌ها و فرصت‌های دیدار را اینجا پیدا کنید.",
   "events_details": "در یک نگاه",
   "events_when": "زمان",
-  "events_where": "مکان"
+  "events_where": "مکان",
+  "events_upcoming": "رویدادهای پیش رو",
+  "events_past": "رویدادهای گذشته",
+  "events_no_upcoming": "در حال حاضر رویدادی برنامه‌ریزی نشده است. برای جلسات شعرخوانی و کارگاه‌ها با ما تماس بگیرید.",
+  "events_featured": "رویداد ویژه",
+  "events_previous": "رویداد قبلی",
+  "events_next": "رویداد بعدی",
+  "events_position": "رویداد ویژهٔ {current} از {total}",
+  "events_time": "{time}"
 }

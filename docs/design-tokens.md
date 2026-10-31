@@ -14,6 +14,8 @@ Only these HEX inputs define the palette:
 | `black` | #101010 | Neutral near-black anchor               |
 | `white` | #FDFDFC | Near-white anchor                       |
 | `gold`  | #F1A60A | Original site brand yellow              |
+| `pink`  | #FF033D | Primary brand colour                    |
+| `mint`  | #00FCC2 | Light surface tint                      |
 | `slate` | #26465A | Restrained slate-blue secondary accents |
 | `green` | #176848 | Success                                 |
 | `red`   | #B42318 | Error                                   |
@@ -30,24 +32,24 @@ palette primitives; components should use semantic roles instead.
 
 ## Surfaces and elevation
 
-Light cards, menus, and the header mix 97% white with 3% gold for a faint warm
-tint. The page mixes this neutral with 2% black, giving cards a quiet paper-like
-backdrop. The dark page mixes 99% neutral black with 1% gold. Dark elevation
-overlays mix 99% white with 1% gold before applying alpha. Secondary blue does not tint
-general surfaces or neutral text: both themes keep the same warm gold character.
-These percentages describe OKLCH interpolation weights, not alpha. Gold stays
+Light cards, menus, and the header mix 99.8% white with 0.2% mint for a faint complementary
+tint. The page mixes this neutral with 0.5% black, giving cards a quiet paper-like
+backdrop. The dark page mixes 99% neutral black with 1% primary. Dark elevation
+overlays mix 99% white with 1% primary before applying alpha. Secondary blue does not tint
+general surfaces or neutral text: light surfaces use mint, while dark surfaces and text derive their tint from the primary input.
+These percentages describe OKLCH interpolation weights, not alpha. The brand colour stays
 concentrated in primary actions and meaningful highlights. The header is opaque
 and warm near-white in light mode; dark mode uses an opaque composite of 5% pale tint
-over the dark page. Header hover states and general accent surfaces mix 20% gold
+over the dark page. Header hover states and general accent surfaces mix 20% primary
 with the warm light surface. The newsletter card uses this light primary tint
-with the matching accent foreground. Dark accent surfaces use gold at 12% alpha.
+with the matching accent foreground. Dark accent surfaces use primary at 12% alpha.
 
 | Surface              | Light                              | Dark                                                 |
 | -------------------- | ---------------------------------- | ---------------------------------------------------- |
-| Page                 | Opaque paper neutral               | Opaque near-black with a gold tint                   |
-| Card                 | Opaque warm white, small shadow    | Pale gold-tinted background at 5% alpha              |
+| Page                 | Opaque paper neutral               | Opaque near-black with a primary tint                |
+| Card                 | Opaque warm white, small shadow    | Pale primary-tinted background at 5% alpha           |
 | Secondary controls   | Pale slate-blue surface            | Pale slate-blue tint at 12% alpha                    |
-| Muted / raised state | Warm neutral surface               | Pale gold-tinted background at 8% alpha              |
+| Muted / raised state | Warm neutral surface               | Pale primary-tinted background at 8% alpha           |
 | Menu / popover       | Opaque warm white, floating shadow | Opaque composite of 12% pale tint over the dark page |
 
 Dark card backgrounds use alpha, not element opacity. Nested cards therefore
@@ -73,16 +75,16 @@ Card shadows apply consistently to editorial, event, and participation panels.
 | Boundaries and focus | `border`, `input`, `ring`                                                    |
 | Feedback             | `success`, `warning`, `error`, `info`, each with `-foreground` and `-subtle` |
 
-Text derives from the neutral anchors: main light text mixes black with 4% gold,
-and main dark text mixes white with 4% gold. Secondary text mixes towards the
+Text derives from the neutral anchors: main light text mixes black with 4% primary,
+and main dark text mixes white with 4% primary. Secondary text mixes towards the
 page surface. Status text uses controlled lightness (42% light / 80% dark) and
 capped chroma, with subtle fills mixed into the active page background. A fixed
 OKLCH lightness difference does not guarantee a WCAG contrast ratio.
 
-Primary backgrounds retain the vibrant gold input with near-black labels.
-Primary text uses the same gold in both themes, with no outlines or halos.
-Its contrast on light surfaces is unresolved and intentionally deferred;
-existing contrast checks remain unchanged. The logo indent stays the original gold.
+Primary backgrounds retain the vibrant pink input with near-black labels.
+Event titles use the exact primary pink in both themes, with no outlines or halos.
+The small-text role `primary-text` caps light-theme OKLCH lightness at 55% and raises
+dark-theme lightness to at least 85% for readable contrast. The logo indent stays the original gold.
 
 Use semantic Tailwind utilities such as `bg-primary text-primary-foreground`,
 or semantic variables in project CSS. `destructive` aliases error. Compatibility
@@ -99,6 +101,13 @@ general page background.
 Use `border` for decorative dividers and `input` for control boundaries. Use
 `ring` for keyboard focus. Do not communicate status through colour alone; add
 clear text or an icon with a label. Keep literal colours out of components.
+
+## Image overlays
+
+The events programme keeps text on the page background, including in its featured
+section. Photographs sit beside the text without overlays. In the programme list, dates, weekday and time, and locations share a consistent
+column. Weekday and time stay together on one line, followed by the venue in plain text. Both light
+and dark appearances use the same semantic roles.
 
 ## Preferences and verification
 
@@ -143,3 +152,13 @@ and `xxxl`. Choose a step by content role, independently of the semantic heading
 level. Heading variants use `display` → `xxxl`, `title` → `xl`, and `subtitle` →
 `lg`; Text uses `body` → `base`, `lead` → `md`, and `small`/`caption` → `sm`.
 Preserve unitless line heights and wrapping for translated and RTL content.
+
+## Motion
+
+`motion-fast` is 160 ms for controls. `motion-page` is 200 ms for the event title
+and description movement. Both use `motion-ease`, `cubic-bezier(0.2, 0, 0, 1)`.
+The remaining page content enters at 75% of the page duration (150 ms), using
+half the fast duration (80 ms) and a downward shift of `space-3xs`. The total
+sequence is 230 ms. These values are a design choice for this site's frequent
+navigation, rather than a universal duration requirement. Reduced motion skips
+the page transition.

@@ -83,6 +83,10 @@
 
 /* Edit these HEX inputs; all theme colours derive from them. */
 :root {
+  --motion-fast: 160ms;
+  --motion-page: 200ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
   /* Fluid type: 400–1280px, 16–19px base, 1.25–1.333 ratios; 1rem = 16px. */
   --font-size-sm: clamp(0.8rem, 0.17vw + 0.76rem, 0.89rem);
   --font-size-base: clamp(1rem, 0.34vw + 0.91rem, 1.19rem);
@@ -112,12 +116,14 @@
   --black: #101010;
   --white: #fdfdfc;
   --gold: #f1a60a;
+  --pink: #ff033d;
+  --mint: #00fcc2;
   --slate: #26465a;
   --green: #176848;
   --red: #b42318;
   --blue: #215f93;
 
-  --primary-base: oklch(from var(--gold) l c h);
+  --primary-base: oklch(from var(--pink) l c h);
   --secondary-base: oklch(from var(--slate) l c h);
   --success-base: oklch(from var(--green) l c h);
   --error-base: oklch(from var(--red) l c h);
@@ -144,10 +150,10 @@
   --slate-900: color-mix(in oklch, var(--secondary-base) 30%, var(--black));
 
   /* Light surfaces use paper-like neutrals; colour stays in actions and accents. */
-  --neutral-light: color-mix(in oklch, var(--white) 97%, var(--primary-base));
+  --neutral-light: color-mix(in oklch, var(--white) 99.8%, var(--mint));
   --background-light: color-mix(
     in oklch,
-    var(--neutral-light) 98%,
+    var(--neutral-light) 99.5%,
     var(--black)
   );
   --background-dark: color-mix(in oklch, var(--black) 99%, var(--primary-base));
@@ -167,15 +173,21 @@
     color-mix(in oklch, var(--black) 96%, var(--primary-base)),
     color-mix(in oklch, var(--white) 96%, var(--primary-base))
   );
+  --image-background: var(--black);
+  --image-foreground: var(--white);
+  --image-scrim: color-mix(in srgb, var(--black) 65%, transparent);
   --card: light-dark(var(--surface-light), var(--surface-overlay));
   --card-foreground: var(--foreground);
   --popover: light-dark(var(--surface-light), var(--surface-floating-dark));
   --popover-foreground: var(--foreground);
-  /* Primary fills and text share the original gold; button labels use ink. */
+  /* Primary fills and text share the brand colour; button labels use ink. */
   --primary: var(--primary-base);
   --primary-foreground: var(--black);
   --primary-hover: color-mix(in oklch, var(--primary-base) 92%, var(--white));
-  --primary-text: var(--primary);
+  --primary-text: light-dark(
+    oklch(from var(--primary-base) min(l, 0.55) c h),
+    oklch(from var(--primary-base) max(l, 0.85) c h)
+  );
   --secondary-text: light-dark(
     var(--secondary-base),
     oklch(from var(--secondary-base) 80% c h)
@@ -226,8 +238,8 @@
   --info-foreground: light-dark(var(--white), var(--black));
   --info-subtle: color-mix(in oklch, var(--info) 12%, var(--background));
   --warning: light-dark(
-    oklch(from var(--primary-base) 42% min(c, 0.12) h),
-    oklch(from var(--primary-base) 80% min(c, 0.12) h)
+    oklch(from var(--gold) 42% min(c, 0.12) h),
+    oklch(from var(--gold) 80% min(c, 0.12) h)
   );
   --warning-foreground: light-dark(var(--white), var(--black));
   --warning-subtle: color-mix(in oklch, var(--warning) 12%, var(--background));

@@ -16,6 +16,7 @@ const entityOrder = [
   "media",
   "users",
   "homepage",
+  "events-page",
   "about",
   "contact",
   "privacy",

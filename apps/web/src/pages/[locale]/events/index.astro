@@ -1,62 +1,59 @@
 ---
+import { getSecret } from 'astro:env/server'
 import { Heading } from '$lib/components/ui/heading'
 import { Text } from '$lib/components/ui/text'
-import EditorialImage from '../../../components/EditorialImage.astro'
-import { locationText } from '../../../lib/location'
 import { Link } from '$lib/components/ui/link'
+import EventRow from '$lib/components/sections/EventRow.svelte'
+import EventsHero from '$lib/components/sections/EventsHero.svelte'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
-import { getEvents } from '../../../lib/cms'
+import { getEvents, getEventsPage } from '../../../lib/cms'
+import { eventProgramme } from '../../../lib/event-programme'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
-const events = (await getEvents(locale)).filter((event) => event.title)
-const title = m.nav_events({}, { locale })
+const suppliedSecret = Astro.url.searchParams.get('previewSecret') ?? undefined
+const secret = getSecret('PREVIEW_SECRET')
+const preview = Boolean(suppliedSecret && secret && suppliedSecret === secret)
+if (suppliedSecret && !preview) return new Response('Invalid preview link', { status: 401 })
+const [events, page] = await Promise.all([getEvents(locale), getEventsPage(locale, preview ? suppliedSecret : undefined)])
+const now = new Date()
+const { features, upcoming, past } = eventProgramme(events, [page?.featuredEvent, ...(page?.additionalFeaturedEvents ?? [])], now)
+const title = page?.heading?.trim() || m.nav_events({}, { locale })
+const introduction = page?.introduction?.trim() || m.events_intro({}, { locale })
+const cmsUrl = import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'
 ---
 
-<BaseLayout {locale} {title} canonicalPath="events">
-  <section>
-    <Heading level={1}>{title}</Heading>
-    <Text variant="lead">{m.events_intro({}, { locale })}</Text>
-    {events.length === 0 && <p>{m.events_empty({}, { locale })}</p>}
-    <ul class="content-list event-programme">
-      {events.map((event) => (
-        <li>
-          <article>
-            <EditorialImage image={event.image} {locale} />
-            <div class="programme-copy">
-              <p class="programme-date"><time datetime={event.startDate}>
-                {new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))}
-              </time></p>
-              <Heading level={2}><Link variant="heading" href={localizedPath(locale, `events/${event.slug}`)}>{event.title}</Link></Heading>
-              {event.description && <Text>{event.description}</Text>}
-              {locationText(event.location) && <Text variant="small" tone="muted">{locationText(event.location)}</Text>}
-            </div>
-          </article>
-        </li>
-      ))}
+<BaseLayout {locale} {title} description={introduction} canonicalPath="events" {preview} mainClass="events-page">
+  <EventsHero events={features} {locale} {title} {introduction} {cmsUrl} {now} client:load />
+  {upcoming.length > 0 && <section class="events-section" aria-labelledby="upcoming-heading">
+    <Heading level={2} id="upcoming-heading">{m.events_upcoming({}, { locale })}</Heading>
+    <ul class="event-programme">
+      {upcoming.map((event) => <li><EventRow {event} {locale} {now} /></li>)}
     </ul>
-  </section>
+  </section>}
+  {features.length === 0 && <section class="events-empty">
+    <Heading level={2}>{m.events_upcoming({}, { locale })}</Heading>
+    <Text>{m.events_no_upcoming({}, { locale })}</Text>
+    <Link href={localizedPath(locale, 'contact')}>{m.home_contact({}, { locale })}</Link>
+  </section>}
+  {past.length > 0 && <details id="past-events" class="events-archive">
+    <summary><Heading level={2} variant="subtitle">{m.events_past({}, { locale })}</Heading></summary>
+    <ul class="event-programme">
+      {past.map((event) => <li><EventRow {event} {locale} {now} /></li>)}
+    </ul>
+  </details>}
 </BaseLayout>
 
 <style>
-  section { overflow-wrap: anywhere; }
-  .event-programme { gap: var(--space-md-lg); }
-  .event-programme article {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
-    gap: var(--space-md-lg);
-    align-items: center;
-    padding-block: var(--space-md-lg);
-  }
-  .event-programme article:not(:has(figure)) { grid-template-columns: 1fr; }
-  .programme-copy { min-inline-size: 0; }
-  .programme-copy :global(h2) { margin-block: var(--space-xs) var(--space-sm); line-height: 1.2; }
-  .programme-copy :global(p) { margin-block: var(--space-xs); max-inline-size: 58ch; }
-  .programme-date { font-weight: 600; }
-  @media (max-width: 40rem) {
-    .event-programme article { grid-template-columns: 1fr; }
-  }
+  .events-section, .events-empty { margin-block: var(--space-xl-xxl); }
+  .events-section :global(h2) { margin-block: 0 var(--space-sm); }
+  .event-programme { list-style: none; padding: 0; margin: 0; }
+  li { min-inline-size: 0; }
+  .events-archive { margin-block-start: var(--space-xl-xxl); scroll-margin-block-start: 8rem; }
+  summary { inline-size: fit-content; padding-block: var(--space-sm); margin-block-end: var(--space-md); cursor: pointer; }
+  summary :global(h2) { display: inline; }
+  summary:focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
 </style>

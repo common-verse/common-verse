@@ -1,0 +1,67 @@
+<style is:inline>
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+
+    @keyframes event-content-in {
+      from { opacity: 0; transform: translateY(calc(-1 * var(--space-xs))); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes event-content-out {
+      to { opacity: 0; }
+    }
+
+    ::view-transition-group(*) {
+      animation-duration: var(--motion-page);
+      animation-timing-function: var(--motion-ease);
+    }
+
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: calc(var(--motion-fast) * .5);
+    }
+
+    ::view-transition-old(*.event-text) {
+      opacity: 0;
+      animation: none;
+    }
+
+    ::view-transition-new(*.event-text) {
+      animation: none;
+      mix-blend-mode: normal;
+      block-size: 100%;
+      object-fit: fill;
+    }
+
+    ::view-transition-old(root),
+    ::view-transition-old(*):only-child {
+      animation: event-content-out calc(var(--motion-fast) * .5) var(--motion-ease) both;
+    }
+
+    ::view-transition-new(root),
+    ::view-transition-new(*):only-child,
+    ::view-transition-new(*.event-text):only-child {
+      animation: event-content-in var(--motion-fast) var(--motion-ease) calc(var(--motion-page) * .75) both;
+      mix-blend-mode: normal;
+    }
+
+    ::view-transition-group(site-header),
+    ::view-transition-new(site-header),
+    ::view-transition-new(site-header):only-child {
+      animation: none;
+    }
+
+    ::view-transition-old(site-header) {
+      opacity: 0;
+      animation: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+</style>
