@@ -82,8 +82,8 @@ Project website. Editors can replace them in the homepage sections. See
 ## Fixed informational page starting content
 
 Run `pnpm seed:pages` in `apps/cms` to import the German and English
-About, Contact, Privacy, and Legal Notice content. This replaces those two locales
-for the four globals in one transaction and preserves other translations. Existing
+About, Contact, Privacy, Legal Notice, and Terms of sale & withdrawal content.
+This replaces those two locales for the five globals in one transaction and preserves other translations. Existing
 versions retain the previous content. The command refuses production.
 
 The adaptations were prepared from [About](https://thepoetryproject.de/ueber-uns),
@@ -112,3 +112,24 @@ initial Events-page introduction and five featured selections are written in a s
 roll back records and remove only uploads from that attempt. Existing event slugs
 are skipped, existing introduction text is preserved, and unrelated drafts and
 uploads are untouched. Rerunning the command does not duplicate events.
+
+## Bookshop catalogue
+
+`pnpm --filter @poetry/cms seed:shop` adds the five books from the old WooCommerce
+shop with their covers (from `scripts/seed/shop-covers/`) to the
+[shop](shop.md). Descriptions use the published German and English texts; other
+languages stay empty. Cover alt texts exist in all six languages. ISBN, page
+count, publisher, and year are left empty where the sources are missing or
+contradict each other.
+
+These values are placeholders. Set the real ones in the admin before launch:
+
+- Stock is `10` for every buyable book. The old shop tracked no stock.
+- The sold-out _Berliner Anthologie_ has stock `0` and price `0`.
+- Shop settings: shipping rate `4.50` €. Confirm the six-language
+  small-business VAT note (§ 19 UStG) with the treasurer.
+
+The command has the same guards as the event programme. It skips existing product
+slugs, including trashed products, and writes shop settings only while they are
+empty. Repeat runs add missing cover alt texts and price-note translations to the
+records it created, without replacing filled values.
