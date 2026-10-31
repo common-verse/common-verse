@@ -17,7 +17,8 @@
     "seed:bulk": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-cli.ts --bulk",
     "seed:photos": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-cli.ts --bulk --photos",
     "seed:programme": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-programme.ts",
-    "seed:shop": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-shop.ts"
+    "seed:shop": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-shop.ts",
+    "shop:purchase": "pnpm --filter @poetry/cms-ui compile && tsx scripts/shop-purchase.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
