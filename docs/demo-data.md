@@ -95,3 +95,20 @@ Names, organization identifiers, addresses and contact details use placeholders.
 Privacy describes the starting content and needs to match the services used by the
 website. Replace placeholders and review
 privacy/legal content before public launch. No old photographs are imported.
+
+## Editorial event programme
+
+`pnpm --filter @poetry/cms seed:programme` adds twenty independently written
+readings, workshops, and neighbourhood events dated July 2026–January 2027.
+Each event has six-language titles, descriptions, and rich text, with longer
+German and English treatments. The bodies vary headings, quotations, ordered and
+unordered lists, inline images, and contact links. Covers combine original SVG
+artwork and licensed Wikimedia photographs with source and license credits.
+The public editorial copy uses natural titles and contains no fixture labels.
+
+The command requires the local `poetry` database and refuses production. Photos
+are cached before database writes. Events, localized media metadata, and the
+initial Events-page introduction and five featured selections are written in a single transaction; failures
+roll back records and remove only uploads from that attempt. Existing event slugs
+are skipped, existing introduction text is preserved, and unrelated drafts and
+uploads are untouched. Rerunning the command does not duplicate events.

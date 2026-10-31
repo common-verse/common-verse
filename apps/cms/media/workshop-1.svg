@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
-  <title id="title">Abstract workshop artwork</title>
-  <desc id="desc">Layered paper-like shapes in burgundy, blue, gold, and cream.</desc>
-  <rect width="1200" height="800" fill="#f3ecdf"/>
-  <path d="M0 520 390 120l220 680H0Z" fill="#7f2f3b"/>
-  <path d="m320 0 510 0-140 800H490Z" fill="#304f6d" opacity=".9"/>
-  <circle cx="930" cy="310" r="250" fill="#d7a83f"/>
-  <path d="m760 800 160-380 280 170v210Z" fill="#171713"/>
-</svg>

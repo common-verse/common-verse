@@ -1,0 +1,1062 @@
+[
+  {
+    "slug": "nacht-der-vielen-sprachen",
+    "date": "2026-10-31",
+    "time": "19:00",
+    "place": 0,
+    "style": "reading",
+    "text": {
+      "de": {
+        "title": "Nacht der vielen Sprachen",
+        "description": "Mehrsprachige Lesungen über Nähe, Aufbruch und den Mut, die eigene Geschichte hörbar zu machen.",
+        "body": [
+          "Manche Sätze verändern ihren Klang, wenn sie die Sprache wechseln. An diesem Abend hören wir beides: die Originale und ihre deutschen Übersetzungen. Zwischen den Lesungen erzählen die Schreibenden, wo ein Text beginnt und was bei seiner Übertragung offenbleibt.",
+          "Die Texte handeln von Freundschaft, vom Leben zwischen verschiedenen Orten und von kleinen Entscheidungen, die einen großen Unterschied machen. In der Pause bleibt Zeit, miteinander ins Gespräch zu kommen. Wer nur zuhören möchte, ist ebenso willkommen."
+        ],
+        "programme": [
+          "Ankommen und Platz finden ab 18:30 Uhr",
+          "Drei kurze Leseblöcke mit Originalen und Übersetzungen",
+          "Offenes Gespräch mit den Schreibenden zum Abschluss"
+        ],
+        "quote": "Eine Stimme muss nicht laut sein, um einen Raum zu verändern."
+      },
+      "en": {
+        "title": "A Night of Many Languages",
+        "description": "Multilingual readings about closeness, new beginnings, and the courage to share your own story.",
+        "body": [
+          "Some sentences change their sound when they cross into another language. Tonight we hear both versions: original texts and their German translations. Between readings, the writers share where a poem begins and what remains open in translation.",
+          "The poems move through friendship, life between places, and small decisions with lasting consequences. There is time to talk during the interval. You are equally welcome to simply listen."
+        ],
+        "programme": [
+          "Doors open at 18:30",
+          "Three short sets of original texts and translations",
+          "A closing conversation with the writers"
+        ],
+        "quote": "A voice does not have to be loud to change a room."
+      },
+      "ar": {
+        "title": "ليلة اللغات المتعددة",
+        "description": "أمسية شعرية متعددة اللغات عن القرب والبدايات الجديدة وشجاعة التعبير عن الذات."
+      },
+      "fa": {
+        "title": "شب زبان‌های بسیار",
+        "description": "شبی با شعر به چند زبان؛ دربارهٔ نزدیکی، آغازهای تازه و جسارت شنیده‌شدن."
+      },
+      "uk": {
+        "title": "Ніч багатьох мов",
+        "description": "Багатомовний поетичний вечір про близькість, нові початки та сміливість бути почутими."
+      },
+      "ku": {
+        "title": "Şeva gelek zimanan",
+        "description": "Êvareke helbestê bi gelek zimanan li ser nêzîkbûn, destpêkên nû û wêrekiya axaftinê."
+      }
+    }
+  },
+  {
+    "slug": "stadt-aus-stimmen",
+    "date": "2026-10-24",
+    "time": "16:00",
+    "place": 1,
+    "style": "walk",
+    "text": {
+      "de": {
+        "title": "Stadt aus Stimmen",
+        "description": "Ein literarischer Spaziergang durch Neukölln: zuhören, Straßensätze sammeln und unterwegs schreiben.",
+        "body": [
+          "Ein Kioskgespräch, ein klingelndes Fahrrad, ein Wort auf einem Ladenschild: Die Stadt schreibt längst mit. Wir nehmen uns einen Nachmittag Zeit, ihre beiläufigen Geschichten zu bemerken. An drei Haltepunkten entstehen kurze Texte, die wir direkt vor Ort teilen können.",
+          "Die Strecke ist etwa zwei Kilometer lang. Wir gehen langsam und machen mehrere Pausen. Bitte bringt wetterfeste Kleidung und etwas zum Schreiben mit. Bei starkem Regen verlegen wir das Schreiben in den Projektraum am Treffpunkt."
+        ],
+        "programme": [
+          "Treffpunkt am Eingang des Nachbarschaftsraums",
+          "Drei Schreibhalte: Geräusch, Begegnung, Erinnerung",
+          "Gemeinsames Lesen bei einem warmen Getränk"
+        ],
+        "quote": "Welche Geschichte würdest du hören, wenn du hier stehen bliebst?"
+      },
+      "en": {
+        "title": "A City Made of Voices",
+        "description": "A literary walk through Neukölln: listen closely, collect street sentences, and write along the way.",
+        "body": [
+          "A conversation at a kiosk, a bicycle bell, a word on a shop sign: the city is already writing. We spend an afternoon noticing its passing stories. At three stops, we make short texts that can be shared in the places that inspired them.",
+          "The route is approximately two kilometres. We walk slowly and stop regularly. Bring weather-appropriate clothing and something to write with. In heavy rain, we will write indoors at the meeting point."
+        ],
+        "programme": [
+          "Meet at the neighbourhood room entrance",
+          "Three writing stops: sound, encounter, memory",
+          "Read together over a warm drink"
+        ],
+        "quote": "What story would you hear if you stayed here a little longer?"
+      },
+      "ar": {
+        "title": "مدينة من الأصوات",
+        "description": "جولة أدبية في نويكولن نجمع فيها أصوات الشارع ونحوّل التفاصيل اليومية إلى نصوص."
+      },
+      "fa": {
+        "title": "شهری از صداها",
+        "description": "پیاده‌روی ادبی در نوی‌کلن؛ شنیدن صدای خیابان و نوشتن از جزئیات روزمره."
+      },
+      "uk": {
+        "title": "Місто з голосів",
+        "description": "Літературна прогулянка Нойкельном: слухаємо вулиці й перетворюємо щоденні деталі на тексти."
+      },
+      "ku": {
+        "title": "Bajarê ji dengan",
+        "description": "Meşeke edebî li Neuköllnê: em guh didin kolanan û hûrguliyên rojane dikin nivîs."
+      }
+    }
+  },
+  {
+    "slug": "ein-wort-zwei-welten",
+    "date": "2026-10-27",
+    "time": "18:00",
+    "place": 2,
+    "style": "workshop",
+    "text": {
+      "de": {
+        "title": "Ein Wort, zwei Welten",
+        "description": "Ein Übersetzungslabor über Wörter ohne Gegenstück und neue Wege zwischen den Sprachen.",
+        "body": [
+          "Wir beginnen mit einem Wort, für das es keine bequeme Entsprechung gibt. Gemeinsam suchen wir nach Bildern, Umwegen und Klangverwandtschaften. Es geht nicht um die einzig richtige Lösung, sondern darum, verschiedene Entscheidungen hörbar zu machen.",
+          "Bringt gern einen eigenen Text von bis zu zehn Zeilen mit. Wer noch keinen hat, arbeitet mit den Schreibimpulsen vor Ort. Ihr müsst keine professionelle Übersetzungserfahrung mitbringen; Neugier auf eine zweite Sprache reicht."
+        ],
+        "programme": [
+          "Ein unübersetzbares Lieblingswort mitbringen",
+          "Zu zweit zwei unterschiedliche Fassungen erarbeiten",
+          "Original, wörtliche Übertragung und freie Version vergleichen"
+        ],
+        "quote": "Vielleicht ist die Lücke zwischen zwei Wörtern schon ein Gedicht."
+      },
+      "en": {
+        "title": "One Word, Two Worlds",
+        "description": "A translation lab exploring words without equivalents and new paths between languages.",
+        "body": [
+          "We begin with a word that has no easy equivalent. Together we look for images, detours, and echoes of sound. Rather than finding one correct answer, we make different choices audible.",
+          "Bring a text of your own, up to ten lines long, if you like. Otherwise, use the writing prompts provided. No professional translation experience is needed; curiosity about another language is enough."
+        ],
+        "programme": [
+          "Bring a favourite word that resists translation",
+          "Work in pairs on two different versions",
+          "Compare the original, literal translation, and free adaptation"
+        ],
+        "quote": "Perhaps the space between two words is already a poem."
+      },
+      "ar": {
+        "title": "كلمة واحدة، عالمان",
+        "description": "مختبر عملي للترجمة يستكشف ما ينتقل بين اللغات وما يحتاج إلى شكل جديد."
+      },
+      "fa": {
+        "title": "یک واژه، دو جهان",
+        "description": "کارگاه ترجمه برای کشف آنچه میان زبان‌ها منتقل می‌شود و آنچه شکلی تازه می‌طلبد."
+      },
+      "uk": {
+        "title": "Одне слово, два світи",
+        "description": "Практична лабораторія перекладу: що переходить між мовами, а що потребує нової форми?"
+      },
+      "ku": {
+        "title": "Peyvek, du cîhan",
+        "description": "Atolyeyeke wergerê: çi di navbera zimanan de derbas dibe û çi pêdivî bi şêweyeke nû heye?"
+      }
+    }
+  },
+  {
+    "slug": "briefe-an-das-morgen",
+    "date": "2026-10-29",
+    "time": "17:00",
+    "place": 3,
+    "style": "letter",
+    "text": {
+      "de": {
+        "title": "Briefe an das Morgen",
+        "description": "Wir schreiben unserem zukünftigen Ich: über Wünsche, Zweifel und das, was bleiben soll.",
+        "body": [
+          "Heute schreiben wir nicht für eine Bewerbung, eine Prüfung oder einen fertigen Auftritt. Wir schreiben an jemanden, der uns kennt und doch noch vieles nicht weiß: unser zukünftiges Ich. Ein kleiner Alltagsgegenstand dient als Ausgangspunkt.",
+          "Der Brief darf ein Satz sein oder mehrere Seiten lang. Ihr entscheidet selbst, ob etwas daraus vorgelesen wird. Zum Abschluss könnt ihr euren Brief in einen Umschlag legen und ein Datum wählen, an dem ihr ihn wieder öffnen möchtet."
+        ],
+        "programme": [
+          "Einen Gegenstand beschreiben, den ihr heute bei euch tragt",
+          "Einen Wunsch und eine offene Frage formulieren",
+          "Den Brief schließen, teilen oder mit nach Hause nehmen"
+        ],
+        "quote": "Liebes Morgen, vergiss bitte nicht, wie wir angefangen haben."
+      },
+      "en": {
+        "title": "Letters to Tomorrow",
+        "description": "Write to your future self about hopes, doubts, and the things you want to keep.",
+        "body": [
+          "Today we are not writing for an application, an exam, or a finished performance. We are writing to someone who knows us but still has much to discover: our future selves. A small everyday object gives us a starting point.",
+          "Your letter can be one sentence or several pages. Sharing is entirely your choice. At the end, you can seal it in an envelope and choose a date to open it again."
+        ],
+        "programme": [
+          "Describe an object you have with you today",
+          "Write down one hope and one unanswered question",
+          "Seal your letter, share it, or take it home"
+        ],
+        "quote": "Dear tomorrow, please remember how we began."
+      },
+      "ar": {
+        "title": "رسائل إلى الغد",
+        "description": "ورشة كتابة مفتوحة نكتب فيها إلى ذواتنا في المستقبل عن الأمنيات والأسئلة وما نريد الاحتفاظ به."
+      },
+      "fa": {
+        "title": "نامه‌هایی به فردا",
+        "description": "کارگاه نوشتن نامه به خودِ آینده؛ از آرزوها، تردیدها و چیزهایی که می‌خواهیم حفظ کنیم."
+      },
+      "uk": {
+        "title": "Листи до завтра",
+        "description": "Відкрита майстерня листів до себе в майбутньому: про бажання, сумніви й те, що хочеться зберегти."
+      },
+      "ku": {
+        "title": "Name ji sibê re",
+        "description": "Atolyeyeke vekirî ya nivîsînê: name ji xwe ya paşerojê re, li ser hêvî û tiştên ku dixwazin bimînin."
+      }
+    }
+  },
+  {
+    "slug": "kueche-der-erinnerungen",
+    "date": "2026-11-03",
+    "time": "18:30",
+    "place": 4,
+    "style": "conversation",
+    "text": {
+      "de": {
+        "title": "Küche der Erinnerungen",
+        "description": "Ein Schreibabend über Essen, Fürsorge und Erinnerungen, die am Küchentisch beginnen.",
+        "body": [
+          "Ein Rezept kann ein Familienarchiv sein. Manchmal besteht es aus einem halben Satz: bis es richtig riecht. Wir sammeln solche Sätze und fragen, was sie über Nähe, Entfernung und das Weitergeben von Wissen erzählen.",
+          "Ihr könnt ein Rezept, eine Gewürzdose oder einfach eine Erinnerung mitbringen. Es wird geschrieben und gelesen, nicht gemeinsam gekocht. Tee und Wasser stehen bereit; mitgebrachte Speisen sind für die Teilnahme nicht erforderlich."
+        ],
+        "programme": [
+          "Mit einer Geruchserinnerung beginnen",
+          "Ein Rezept als Brief, Gedicht oder Gespräch schreiben",
+          "Die Geschichten hinter den Zutaten miteinander teilen"
+        ],
+        "quote": "Ein Löffel davon. So viel, bis du dich erinnerst."
+      },
+      "en": {
+        "title": "A Kitchen of Memories",
+        "description": "An evening of writing about food, care, and memories that begin around a kitchen table.",
+        "body": [
+          "A recipe can hold a family archive. Sometimes it consists of half a sentence: until it smells right. We collect these sentences and consider what they tell us about closeness, distance, and passing knowledge on.",
+          "Bring a recipe, a spice tin, or simply a memory. This is a writing and reading session rather than a cooking class. Tea and water are available; there is no need to bring food."
+        ],
+        "programme": [
+          "Start with the memory of a smell",
+          "Write a recipe as a letter, poem, or conversation",
+          "Share the stories behind the ingredients"
+        ],
+        "quote": "One spoonful of this. Enough to make you remember."
+      },
+      "ar": {
+        "title": "مطبخ الذكريات",
+        "description": "نكتب عن الطعام والرعاية والذكريات التي تبدأ حول المائدة، من رائحة الخبز إلى وصفة بلا مقادير."
+      },
+      "fa": {
+        "title": "آشپزخانهٔ خاطره‌ها",
+        "description": "از بوی نان تا دستور غذایی بی‌پیمانه؛ نوشتن دربارهٔ غذا، مراقبت و خاطره‌های دور سفره."
+      },
+      "uk": {
+        "title": "Кухня спогадів",
+        "description": "Від запаху хліба до рецепта без мірок: пишемо про їжу, турботу та спогади за столом."
+      },
+      "ku": {
+        "title": "Metbexa bîranînan",
+        "description": "Ji bêhna nan heta reçeteyeke bê pîvan: nivîsîn li ser xwarin, lênêrîn û bîranînên li ser sifrê."
+      }
+    }
+  },
+  {
+    "slug": "papier-schere-poesie",
+    "date": "2026-11-07",
+    "time": "14:00",
+    "place": 2,
+    "style": "zine",
+    "text": {
+      "de": {
+        "title": "Papier, Schere, Poesie",
+        "description": "Falte ein kleines Buch aus eigenen Texten, Fundstücken und handgeschriebenen Zeilen.",
+        "body": [
+          "Ein Zine braucht keinen Verlag und keine perfekte Handschrift. Acht kleine Seiten reichen, um eine Geschichte in Umlauf zu bringen. Wir lernen eine einfache Falttechnik und überlegen, wie Schrift, Bild und freie Fläche zusammenarbeiten.",
+          "Papier, Scheren, Kleber und Stifte sind vorhanden. Bringt gern Textreste, alte Zeitschriften oder ein Foto mit, das ihr verwenden dürft. Am Ende nimmt jede Person ein eigenes Heft mit; wer möchte, kann Kopien tauschen."
+        ],
+        "programme": [
+          "Ein Blatt falten und die acht Seiten planen",
+          "Text, Collage und Leerraum zusammensetzen",
+          "Eine kleine gemeinsame Zine-Auslage aufbauen"
+        ],
+        "quote": "Eine Seite ist klein. Was darauf Platz hat, ist es nicht."
+      },
+      "en": {
+        "title": "Paper, Scissors, Poetry",
+        "description": "Fold a small book from your own writing, found fragments, and handwritten lines.",
+        "body": [
+          "A zine needs neither a publisher nor perfect handwriting. Eight small pages are enough to put a story into circulation. We learn a simple folding technique and explore how words, images, and empty space work together.",
+          "Paper, scissors, glue, and pens are provided. Bring scraps of writing, old magazines, or a photograph you have permission to use. Everyone leaves with a booklet of their own, with time to exchange copies if they wish."
+        ],
+        "programme": [
+          "Fold one sheet and plan eight pages",
+          "Combine text, collage, and empty space",
+          "Make a shared display of the finished zines"
+        ],
+        "quote": "A page is small. What it can hold is not."
+      },
+      "ar": {
+        "title": "ورق ومقص وشعر",
+        "description": "نحوّل ورقة واحدة إلى كتيّب صغير يجمع نصوصنا والقصاصات والأسطر المكتوبة باليد."
+      },
+      "fa": {
+        "title": "کاغذ، قیچی، شعر",
+        "description": "با تا زدن و بریدن یک برگ کاغذ، دفترچه‌ای کوچک از نوشته‌ها و تکه‌های پیدا‌شده می‌سازیم."
+      },
+      "uk": {
+        "title": "Папір, ножиці, поезія",
+        "description": "З одного аркуша створимо маленький зін із власними текстами, колажами й рукописними рядками."
+      },
+      "ku": {
+        "title": "Kaxez, meqes, helbest",
+        "description": "Ji kaxezeke tenê pirtûkçeyek çêdikin; bi nivîsên xwe, parçeyan û rêzên bi dest nivîsandî."
+      }
+    }
+  },
+  {
+    "slug": "die-erste-buehne",
+    "date": "2026-11-11",
+    "time": "19:00",
+    "place": 0,
+    "style": "openmic",
+    "text": {
+      "de": {
+        "title": "Die erste Bühne",
+        "description": "Ein Mikrofon, fünf Minuten, dein Text. Ein offener Abend für den ersten Schritt auf die Bühne.",
+        "body": [
+          "Der erste Schritt ans Mikrofon darf vorsichtig sein. Vor Beginn des Abends probieren wir gemeinsam Lautstärke, Abstand und Atempausen aus. Danach gehört die Bühne euren Texten: Gedicht, Brief, kurze Geschichte oder ein noch unfertiger Anfang.",
+          "Die Leseliste öffnet eine halbe Stunde vor Beginn. Pro Person sind bis zu fünf Minuten vorgesehen. Es gibt keine Bewertung und keinen Wettbewerb. Zuhörende tragen den Abend genauso wie diejenigen, die lesen."
+        ],
+        "programme": [
+          "18:30 Uhr: Eintragen und das Mikrofon kennenlernen",
+          "19:00 Uhr: Erste offene Leserunde",
+          "Nach der Pause: weitere Texte und gemeinsamer Abschluss"
+        ],
+        "quote": "Du musst nicht fertig sein, um anzufangen."
+      },
+      "en": {
+        "title": "Your First Stage",
+        "description": "One microphone, five minutes, your words. An open evening for your first step onto the stage.",
+        "body": [
+          "The first step towards a microphone can be tentative. Before the readings, we try out volume, distance, and breathing space together. Then the stage belongs to your writing: a poem, letter, short story, or unfinished beginning.",
+          "The reading list opens half an hour before the event. Each reader has up to five minutes. There is no scoring or competition. Those who listen are as much a part of the evening as those who read."
+        ],
+        "programme": [
+          "18:30: Sign up and get comfortable with the microphone",
+          "19:00: First open reading round",
+          "After the break: more readings and a shared closing"
+        ],
+        "quote": "You do not have to be finished to begin."
+      },
+      "ar": {
+        "title": "المنصة الأولى",
+        "description": "ميكروفون وخمس دقائق ونصك أنت؛ أمسية مفتوحة لمن يود قراءة كلماته أمام الجمهور للمرة الأولى."
+      },
+      "fa": {
+        "title": "اولین صحنه",
+        "description": "یک میکروفن، پنج دقیقه و نوشتهٔ تو؛ فرصتی همراهانه برای نخستین خواندن در برابر جمع."
+      },
+      "uk": {
+        "title": "Перша сцена",
+        "description": "Мікрофон, п’ять хвилин і ваш текст: підтримувальний відкритий мікрофон для першого виступу."
+      },
+      "ku": {
+        "title": "Sekeva yekem",
+        "description": "Mîkrofonek, pênc deqe û nivîsa te: êvareke vekirî ji bo yekem carê li ber guhdaran bixwînî."
+      }
+    }
+  },
+  {
+    "slug": "was-ein-name-erzaehlt",
+    "date": "2026-11-14",
+    "time": "15:00",
+    "place": 3,
+    "style": "workshop",
+    "text": {
+      "de": {
+        "title": "Was ein Name erzählt",
+        "description": "Ein Schreibnachmittag über Namen, Aussprache und die Geschichten in wenigen Silben.",
+        "body": [
+          "Namen werden gerufen, abgekürzt, falsch geschrieben und liebevoll verändert. Wir fragen nicht nach einer richtigen Herkunftsgeschichte. Stattdessen nehmen wir die Situationen ernst, in denen ein Name vertraut oder plötzlich fremd klingt.",
+          "Mit kurzen Übungen entstehen Selbstporträts, Dialoge und kleine Namensgedichte. Niemand muss den eigenen Namen erklären oder persönliche Erinnerungen teilen. Ihr könnt ebenso mit einem erfundenen Namen arbeiten."
+        ],
+        "programme": [
+          "Einen Namen in verschiedenen Schreibweisen betrachten",
+          "Einen Dialog zwischen zwei Anreden schreiben",
+          "Ein kurzes Selbstporträt aus Klängen zusammensetzen"
+        ],
+        "quote": "Sprich meinen Namen langsam. Vielleicht hörst du ein Zuhause darin."
+      },
+      "en": {
+        "title": "The Stories in a Name",
+        "description": "An afternoon of writing about names, pronunciation, and the stories held in a few syllables.",
+        "body": [
+          "Names are called out, shortened, misspelled, and changed with affection. We are not looking for a correct origin story. Instead, we pay attention to situations in which a name sounds familiar or suddenly unfamiliar.",
+          "Short exercises lead to self-portraits, dialogues, and small name poems. Nobody has to explain their name or share personal memories. You are equally welcome to work with an invented name."
+        ],
+        "programme": [
+          "Look at a name in several written forms",
+          "Write a dialogue between two forms of address",
+          "Build a brief self-portrait from sounds"
+        ],
+        "quote": "Say my name slowly. You might hear a home inside it."
+      },
+      "ar": {
+        "title": "ما الذي يرويه الاسم؟",
+        "description": "نكتب عن أسمائنا ونطقها والحكايات التي تسكن بضعة مقاطع صوتية."
+      },
+      "fa": {
+        "title": "یک نام چه می‌گوید؟",
+        "description": "نوشتن از نام‌ها، شیوه‌های تلفظ و داستان‌هایی که در چند هجا جا گرفته‌اند."
+      },
+      "uk": {
+        "title": "Що розповідає ім’я",
+        "description": "Пишемо про імена, їхню вимову та історії, що живуть у кількох складах."
+      },
+      "ku": {
+        "title": "Navek çi vedibêje",
+        "description": "Nivîsîn li ser navan, bilêvkirina wan û çîrokên ku di çend kîteyan de dijîn."
+      }
+    }
+  },
+  {
+    "slug": "zwischen-beat-und-vers",
+    "date": "2026-11-21",
+    "time": "19:30",
+    "place": 5,
+    "style": "performance",
+    "text": {
+      "de": {
+        "title": "Zwischen Beat und Vers",
+        "description": "Spoken Word und elektronische Klänge: ein Abend über Rhythmus, Atem und die Musik der Sprache.",
+        "body": [
+          "Ein wiederholtes Wort kann einen Takt erzeugen. Eine Pause kann ihn unterbrechen. Unsere Lesungen lassen Platz für beides und erproben, wie Texte durch Klang eine zweite Bewegung bekommen.",
+          "Die musikalischen Passagen bleiben bewusst zurückhaltend. Nach dem ersten Set sprechen wir über das Zusammenspiel von Stimme und Sound. Zum Abschluss gibt es Raum für kurze gemeinsame Improvisationen."
+        ],
+        "programme": [
+          "Leseset mit Stimme und elektronischen Klangflächen",
+          "Gespräch über Wiederholung, Stille und Tempo",
+          "Offene Improvisation mit kurzen Textfragmenten"
+        ],
+        "quote": "Zwischen zwei Schlägen passt ein ganzer Satz."
+      },
+      "en": {
+        "title": "Between Beat and Verse",
+        "description": "Spoken word meets electronic sound in an evening of rhythm, breath, and the music of language.",
+        "body": [
+          "A repeated word can establish a beat. A pause can interrupt it. These readings make room for both, exploring how sound gives a text a second movement.",
+          "The musical passages are deliberately restrained. After the first set, we discuss the relationship between voice and sound. The evening ends with space for short collective improvisations."
+        ],
+        "programme": [
+          "A reading set with voice and electronic sound",
+          "A conversation about repetition, silence, and pace",
+          "Open improvisation with short text fragments"
+        ],
+        "quote": "A whole sentence can fit between two beats."
+      },
+      "ar": {
+        "title": "بين الإيقاع والبيت",
+        "description": "أمسية تجمع الشعر المنطوق بالأصوات الإلكترونية الهادئة لاستكشاف الإيقاع والتنفس."
+      },
+      "fa": {
+        "title": "میان ضرب و سطر",
+        "description": "دیدار شعر اجرایی و صداهای آرام الکترونیک؛ شبی برای کشف ریتم و نفس."
+      },
+      "uk": {
+        "title": "Між бітом і віршем",
+        "description": "Зустріч spoken word із тихою електронною музикою: вечір ритму, дихання та поезії."
+      },
+      "ku": {
+        "title": "Di navbera rîtm û rêzê de",
+        "description": "Helbesta devkî û dengên elektronîkî yên nerm; êvarek li ser rîtm û nefesê."
+      }
+    }
+  },
+  {
+    "slug": "ankommen-im-winter",
+    "date": "2026-11-28",
+    "time": "17:00",
+    "place": 4,
+    "style": "reading",
+    "text": {
+      "de": {
+        "title": "Ankommen im Winter",
+        "description": "Eine Lesung über Wärme, Fremdsein und kleine Gesten des Willkommens an kurzen Wintertagen.",
+        "body": [
+          "Nicht jede Ankunft hat ein eindeutiges Datum. Manchmal bemerken wir erst im Rückblick, wann uns ein Ort vertraut geworden ist. Die Texte dieses Nachmittags suchen nach solchen unscheinbaren Übergängen: ein geliehener Schal, eine offene Tür, eine Tasse auf dem richtigen Platz.",
+          "Wir lesen in mehreren Sprachen mit deutschen Übertragungen. Zwischen den Texten bleibt Stille. Im Anschluss laden wir dazu ein, bei Tee und einem kurzen Schreibimpuls eine eigene kleine Willkommensgeschichte festzuhalten."
+        ],
+        "programme": [
+          "Mehrsprachige Lesung in zwei ruhigen Teilen",
+          "Pause mit Tee und Zeit für Gespräche",
+          "Freiwilliger Schreibimpuls: eine Geste, die geblieben ist"
+        ],
+        "quote": "Ein warmer Platz ist manchmal zuerst ein Mensch."
+      },
+      "en": {
+        "title": "Arriving in Winter",
+        "description": "A reading about warmth, unfamiliar places, and small gestures of welcome on short winter days.",
+        "body": [
+          "Not every arrival has a clear date. Sometimes we only recognise later when a place began to feel familiar. These texts look for quiet transitions: a borrowed scarf, an open door, a cup left in the right place.",
+          "Readings take place in several languages with German translations. There is room for silence between the texts. Afterwards, tea and a short writing prompt invite you to record a small story of welcome."
+        ],
+        "programme": [
+          "A multilingual reading in two quiet parts",
+          "Tea break and time to talk",
+          "Optional writing prompt: a gesture that stayed with you"
+        ],
+        "quote": "Sometimes a warm place begins with a person."
+      },
+      "ar": {
+        "title": "الوصول في الشتاء",
+        "description": "قراءة عن الدفء والأماكن غير المألوفة واللفتات الصغيرة التي تجعل الترحيب محسوسًا."
+      },
+      "fa": {
+        "title": "رسیدن در زمستان",
+        "description": "شعرخوانی دربارهٔ گرما، غریبگی و مهربانی‌های کوچکی که حس پذیرفته‌شدن می‌آفرینند."
+      },
+      "uk": {
+        "title": "Прибуття взимку",
+        "description": "Читання про тепло, незнайомі місця та маленькі жести гостинності."
+      },
+      "ku": {
+        "title": "Gihîştin di zivistanê de",
+        "description": "Xwendinek li ser germî, xerîbî û tevgerên biçûk ên pêşwaziyê."
+      }
+    }
+  },
+  {
+    "slug": "woerter-im-gepaeck",
+    "date": "2026-12-05",
+    "time": "14:00",
+    "place": 6,
+    "style": "objects",
+    "text": {
+      "de": {
+        "title": "Wörter im Gepäck",
+        "description": "Aus mitgebrachten Dingen entstehen Texte über Wege, Entscheidungen und das, was wir behalten.",
+        "body": [
+          "Dinge tragen Geschichten, ohne sie von selbst zu erzählen. Wir legen einen Gegenstand auf den Tisch und beschreiben ihn zunächst so genau wie möglich. Erst danach fragen wir, welche Erinnerung sich mit seiner Oberfläche verbindet.",
+          "Bringt einen unempfindlichen Gegenstand mit, den ihr für die Dauer der Werkstatt vor euch ablegen könnt. Ein Bild oder eine Zeichnung davon genügt ebenfalls. Eure Texte und Gegenstände bleiben bei euch."
+        ],
+        "programme": [
+          "Eine Sache ohne ihre Geschichte beschreiben",
+          "Aus Sicht des Gegenstands einen Absatz schreiben",
+          "Zwei Texte zu einer kleinen Fundstück-Ausstellung verbinden"
+        ],
+        "quote": "Was du behältst, erzählt auch von dem, was du zurückgelassen hast."
+      },
+      "en": {
+        "title": "Words in Your Luggage",
+        "description": "Everyday objects become writing about journeys, decisions, and the things we keep.",
+        "body": [
+          "Objects carry stories without telling them on their own. We put one object on the table and first describe it as closely as possible. Only then do we ask what memory clings to its surface.",
+          "Bring a sturdy object you can place in front of you during the workshop. A picture or drawing works just as well. Your writing and your belongings stay with you."
+        ],
+        "programme": [
+          "Describe one thing without telling its story",
+          "Write a paragraph from the object’s point of view",
+          "Pair two texts in a small display of found objects"
+        ],
+        "quote": "What you keep also tells a story about what you left behind."
+      },
+      "ar": {
+        "title": "كلمات في الحقيبة",
+        "description": "نحوّل الأشياء الصغيرة التي نحملها إلى نصوص عن الرحلات والاختيارات وما نحتفظ به."
+      },
+      "fa": {
+        "title": "واژه‌ها در چمدان",
+        "description": "از اشیای کوچکی که همراه داریم، دربارهٔ سفرها، انتخاب‌ها و آنچه نگه می‌داریم می‌نویسیم."
+      },
+      "uk": {
+        "title": "Слова в багажі",
+        "description": "Звичайні речі стають текстами про подорожі, вибір і те, що ми зберігаємо."
+      },
+      "ku": {
+        "title": "Peyv di çenteyê de",
+        "description": "Ji tiştên biçûk ên bi me re nivîs li ser rêwîtî, hilbijartin û tiştên mayî çêdibin."
+      }
+    }
+  },
+  {
+    "slug": "gedichte-fuer-den-alltag",
+    "date": "2026-12-12",
+    "time": "11:00",
+    "place": 2,
+    "style": "shortforms",
+    "text": {
+      "de": {
+        "title": "Gedichte für den Alltag",
+        "description": "Kurze Gedichte für Nachrichten, Notizzettel und Jackentaschen – mitten aus dem Alltag.",
+        "body": [
+          "Eine Beobachtung muss nicht lang sein, um genau zu sein. Wir sammeln Details, die in einem normalen Vormittag leicht verschwinden: die letzte warme Tasse, das Licht im Treppenhaus oder ein Gespräch, das wir nur halb gehört haben.",
+          "Aus diesen Beobachtungen werden Zwei- und Dreizeiler. Wir kürzen, verändern den Zeilenbruch und lesen die Fassungen laut. Am Ende gestaltet ihr eine kleine Serie von Gedichtkarten zum Mitnehmen oder Verschenken."
+        ],
+        "programme": [
+          "Drei genaue Alltagsbeobachtungen notieren",
+          "Mit Zeilenbruch und Auslassung experimentieren",
+          "Drei kleine Gedichtkarten gestalten"
+        ],
+        "quote": "Zwischen zwei Haltestellen hat der Tag kurz angehalten."
+      },
+      "en": {
+        "title": "Poems for Everyday Life",
+        "description": "Short poems for messages, scraps of paper, and coat pockets, drawn from everyday life.",
+        "body": [
+          "An observation does not need to be long to be precise. We gather details that easily disappear in an ordinary morning: the last warm cup, light on the stairs, or half of a conversation overheard.",
+          "These observations become two- and three-line poems. We edit, move the line breaks, and read the versions aloud. Finally, make a small series of poem cards to keep or give away."
+        ],
+        "programme": [
+          "Write down three precise everyday observations",
+          "Experiment with line breaks and omission",
+          "Make three small poem cards"
+        ],
+        "quote": "Between two stops, the day paused for a moment."
+      },
+      "ar": {
+        "title": "قصائد للحياة اليومية",
+        "description": "نجرّب نصوصًا قصيرة تتسع لها رسالة أو ورقة صغيرة أو جيب معطف."
+      },
+      "fa": {
+        "title": "شعرهایی برای هر روز",
+        "description": "آزمودن شعرهای کوتاهی که در پیام، یادداشت یا جیب پالتو جا می‌شوند."
+      },
+      "uk": {
+        "title": "Вірші на щодень",
+        "description": "Практикуємо короткі форми, які поміщаються в повідомленні, на записці чи в кишені."
+      },
+      "ku": {
+        "title": "Helbest ji bo her rojê",
+        "description": "Em şêweyên kurt diceribînin ku di peyamekê, li ser kaxezekê an di bêrîkê de cih digirin."
+      }
+    }
+  },
+  {
+    "slug": "die-stadt-hoert-zu",
+    "date": "2026-12-19",
+    "time": "18:00",
+    "place": 0,
+    "style": "conversation",
+    "text": {
+      "de": {
+        "title": "Die Stadt hört zu",
+        "description": "Lesung und Gespräch über Sichtbarkeit, Mitbestimmung und das Recht auf eine eigene Geschichte.",
+        "body": [
+          "Ein öffentlicher Platz ist nicht automatisch ein Raum, in dem sich alle gehört fühlen. Die Texte des Abends zeigen alltägliche Situationen, in denen Menschen übersehen, angesprochen oder ernst genommen werden.",
+          "Im Gespräch fragen wir, wie Zuhören praktisch werden kann. Statt fertiger Antworten sammeln wir konkrete Beobachtungen und Fragen aus dem Publikum. Beiträge können gesprochen oder auf Karten notiert werden."
+        ],
+        "programme": [
+          "Lesungen über Alltag und öffentliche Räume",
+          "Moderiertes Gespräch mit Fragen auf Karten",
+          "Gemeinsame Sammlung: Was müsste sich vor unserer Tür ändern?"
+        ],
+        "quote": "Gehört werden beginnt dort, wo jemand wirklich zuhört."
+      },
+      "en": {
+        "title": "The City Listens",
+        "description": "A reading and conversation about visibility, participation, and the right to tell your own story.",
+        "body": [
+          "A public square is not automatically a place where everyone feels heard. Tonight’s texts follow everyday situations in which people are overlooked, addressed, or taken seriously.",
+          "The conversation asks how listening can become a practical act. Rather than collecting ready-made answers, we gather observations and questions from the audience. Contributions can be spoken or written on cards."
+        ],
+        "programme": [
+          "Readings about everyday life and public spaces",
+          "A moderated conversation with questions on cards",
+          "A shared question: what needs to change on our doorstep?"
+        ],
+        "quote": "Being heard begins where someone truly listens."
+      },
+      "ar": {
+        "title": "المدينة تُصغي",
+        "description": "قراءة وحوار عن الحضور والمشاركة والحق في رواية القصة بصوت صاحبها."
+      },
+      "fa": {
+        "title": "شهر گوش می‌دهد",
+        "description": "خواندن و گفت‌وگو دربارهٔ دیده‌شدن، مشارکت و حق روایت داستان خود."
+      },
+      "uk": {
+        "title": "Місто слухає",
+        "description": "Читання й розмова про видимість, участь і право розповідати власну історію."
+      },
+      "ku": {
+        "title": "Bajar guh dide",
+        "description": "Xwendin û sohbet li ser xuya bûn, beşdarî û mafê vegotina çîroka xwe."
+      }
+    }
+  },
+  {
+    "slug": "fenster-in-andere-sprachen",
+    "date": "2027-01-09",
+    "time": "15:00",
+    "place": 3,
+    "style": "translation",
+    "text": {
+      "de": {
+        "title": "Fenster in andere Sprachen",
+        "description": "Ein offener Nachmittag mit Lieblingswörtern, Redewendungen und den Sprachen unserer Nachbar*innen.",
+        "body": [
+          "Wie sagt man, dass man sich auf jemanden freut? Welches Wort beschreibt ein Wetter, das es anderswo gar nicht gibt? Wir bringen Wörter zusammen, die in einem üblichen Sprachkurs selten nebeneinanderstehen.",
+          "An kleinen Tischen sammeln wir Klang, Schrift und mögliche Bedeutungen. Daraus entstehen kurze mehrsprachige Texte. Ihr könnt eine Sprache mitbringen, die ihr gut kennt, oder einfach als neugierige Zuhörende teilnehmen."
+        ],
+        "programme": [
+          "Ein Lieblingswort aufschreiben und vorlesen",
+          "Gemeinsam eine kleine Wörterwand gestalten",
+          "Aus drei fremden Wörtern einen eigenen Text beginnen"
+        ],
+        "quote": "Jedes neue Wort macht das Fenster ein Stück weiter auf."
+      },
+      "en": {
+        "title": "Windows into Other Languages",
+        "description": "An open afternoon of favourite words, expressions, and the languages of our neighbours.",
+        "body": [
+          "How do you say that you are looking forward to seeing someone? Which word describes weather that barely exists somewhere else? We bring together words that rarely meet in a conventional language class.",
+          "At small tables, we collect sounds, written forms, and possible meanings. These become short multilingual texts. Bring a language you know well, or come simply to listen and discover."
+        ],
+        "programme": [
+          "Write down and read out a favourite word",
+          "Build a small shared wall of words",
+          "Begin a text with three unfamiliar words"
+        ],
+        "quote": "Every new word opens the window a little wider."
+      },
+      "ar": {
+        "title": "نوافذ إلى لغات أخرى",
+        "description": "ظهيرة مفتوحة لاكتشاف كلمات وتعابير وألغاز صغيرة من لغات جيراننا."
+      },
+      "fa": {
+        "title": "پنجره‌هایی به زبان‌های دیگر",
+        "description": "بعدازظهری برای کشف واژه‌های محبوب، اصطلاح‌ها و معماهای کوچک زبان همسایه‌ها."
+      },
+      "uk": {
+        "title": "Вікна в інші мови",
+        "description": "Відкрита зустріч для знайомства з улюбленими словами й висловами мов наших сусідів."
+      },
+      "ku": {
+        "title": "Pencere ber bi zimanên din",
+        "description": "Nîvrojeke vekirî ji bo peyvên hezkirî, îfadeyan û zimanên cîranan."
+      }
+    }
+  },
+  {
+    "slug": "stimmen-am-wasser",
+    "date": "2026-10-17",
+    "time": "16:00",
+    "place": 7,
+    "style": "walk",
+    "text": {
+      "de": {
+        "title": "Stimmen am Wasser",
+        "description": "Lesungen am Ufer über Bewegung und Grenzen, mit kurzen Wegen und Momenten des Zuhörens.",
+        "body": [
+          "Das Wasser gibt keinen festen Takt vor. Mal rauscht es unter einem Satz, mal verschwindet es fast. Bei dieser Lesung sind die Umgebung und ihre Geräusche Teil des Abends. Die Texte fragen, was wir festhalten können und was weiterziehen muss.",
+          "An drei Stationen wurde gelesen und zugehört. Dazwischen blieb Zeit für eigene Notizen und Gespräche zu zweit. Die entstandenen Textfragmente nahmen die Teilnehmenden als kleine Uferkarten mit nach Hause."
+        ],
+        "programme": [
+          "Ankommen am Ufer",
+          "Drei Lesestationen entlang des Weges",
+          "Eigene Textfragmente auf kleinen Karten sammeln"
+        ],
+        "quote": "Ein Ufer ist auch eine Art, nebeneinander zu bleiben."
+      },
+      "en": {
+        "title": "Voices by the Water",
+        "description": "Waterside readings about movement and boundaries, with short walks and moments of listening.",
+        "body": [
+          "The water offers no fixed rhythm. Sometimes it murmurs beneath a sentence; sometimes it almost disappears. The surroundings and their sounds become part of this reading, which asks what we can hold onto and what must move on.",
+          "The afternoon included reading and listening at three stops. Between them, participants made notes and talked in pairs. The resulting fragments went home as small cards from the waterside."
+        ],
+        "programme": [
+          "Meet by the water",
+          "Three reading stops along the route",
+          "Collect your own fragments on small cards"
+        ],
+        "quote": "A riverbank is also a way of staying alongside one another."
+      },
+      "ar": {
+        "title": "أصوات عند الماء",
+        "description": "قراءة على الضفة عن الحركة والحدود، تتخللها مشيّات قصيرة ولحظات إصغاء."
+      },
+      "fa": {
+        "title": "صداها کنار آب",
+        "description": "شعرخوانی کنار آب دربارهٔ حرکت و مرزها، همراه با قدم‌زدن و لحظه‌های شنیدن."
+      },
+      "uk": {
+        "title": "Голоси біля води",
+        "description": "Читання на березі про рух і кордони, з короткими прогулянками та паузами для слухання."
+      },
+      "ku": {
+        "title": "Deng li ber avê",
+        "description": "Xwendinek li peravê li ser tevger û sînoran, bi meşên kurt û demên guhdarîkirinê."
+      }
+    }
+  },
+  {
+    "slug": "ein-buch-wandert-durch-die-stadt",
+    "date": "2026-10-10",
+    "time": "15:00",
+    "place": 6,
+    "style": "reading",
+    "text": {
+      "de": {
+        "title": "Ein Buch wandert durch die Stadt",
+        "description": "Eine mobile Lesung über Bücher, ihre Spuren und Geschichten, die von Hand zu Hand weiterziehen.",
+        "body": [
+          "Ein Buch ist nicht nur der Text zwischen seinen Deckeln. Es sammelt Eselsohren, Randnotizen und die Spuren seiner Wege. Unsere mobile Lesung setzte bei diesen Spuren an und verband Auszüge mit kurzen Gesprächen über das Weitergeben.",
+          "An einer gemeinsamen Lesestation kamen verschiedene Texte nebeneinander zu liegen. Zum Abschluss entstanden handgeschriebene Leseempfehlungen, die in mitgebrachten Büchern ihren nächsten Ort fanden."
+        ],
+        "programme": [
+          "Ein Buch und seine Gebrauchsspuren vorstellen",
+          "Kurze Auszüge miteinander lesen",
+          "Eine Leseempfehlung für die nächste Person schreiben"
+        ],
+        "quote": "Vielleicht liest die nächste Person genau den Satz, den du gebraucht hast."
+      },
+      "en": {
+        "title": "A Book Travels Through the City",
+        "description": "A travelling reading about books, the traces they carry, and stories passed from hand to hand.",
+        "body": [
+          "A book is more than the text between its covers. It gathers folded corners, marginal notes, and traces of its travels. This mobile reading followed those traces, pairing extracts with conversations about passing things on.",
+          "At a shared reading station, very different texts came to rest side by side. The afternoon ended with handwritten recommendations tucked into books for the next reader to discover."
+        ],
+        "programme": [
+          "Introduce a book and the traces it carries",
+          "Read short extracts together",
+          "Write a recommendation for the next reader"
+        ],
+        "quote": "Perhaps the next reader will find the very sentence you needed."
+      },
+      "ar": {
+        "title": "كتاب يتجوّل في المدينة",
+        "description": "قراءة متنقلة تتتبع حياة القصص حين ينتقل الكتاب من رف إلى مائدة في الحي."
+      },
+      "fa": {
+        "title": "کتابی در شهر می‌گردد",
+        "description": "شعرخوانی سیار دربارهٔ زندگی داستان‌ها وقتی کتاب از قفسه‌ای به میزی در محله می‌رود."
+      },
+      "uk": {
+        "title": "Книжка мандрує містом",
+        "description": "Мандрівне читання про те, як історії живуть далі, коли книжка змінює місце."
+      },
+      "ku": {
+        "title": "Pirtûkek di bajêr de digere",
+        "description": "Xwendineke gerok li ser jiyana çîrokan dema pirtûk ji cihê xwe diçe cihê din."
+      }
+    }
+  },
+  {
+    "slug": "poesie-ohne-punkt",
+    "date": "2026-09-26",
+    "time": "14:00",
+    "place": 2,
+    "style": "shortforms",
+    "text": {
+      "de": {
+        "title": "Poesie ohne Punkt",
+        "description": "Eine Werkstatt über Zeilenbruch, Tempo und die Freiheit, einem Satz eine neue Form zu geben.",
+        "body": [
+          "Wir nahmen einen einfachen Satz und ließen ihn durch verschiedene Formen wandern. Als Fließtext, Treppe oder Folge einzelner Wörter veränderte er jedes Mal seine Stimme. Daraus entwickelte sich ein Gespräch darüber, wie Schrift das Lesen lenkt.",
+          "Die Werkstatt verband kurze stille Schreibphasen mit dem lauten Ausprobieren verschiedener Fassungen. Wer wollte, konnte mit den eigenen Sprachen und Schreibrichtungen arbeiten."
+        ],
+        "programme": [
+          "Einen Satz in drei Formen setzen",
+          "Die Fassungen laut lesen und vergleichen",
+          "Eine eigene Regel erfinden und wieder brechen"
+        ],
+        "quote": "Der nächste Satz beginnt manchmal mitten im Atem."
+      },
+      "en": {
+        "title": "Poetry Without a Full Stop",
+        "description": "A workshop on line breaks, pace, and the freedom to give a sentence a different shape.",
+        "body": [
+          "We took a simple sentence and let it travel through different forms. As a paragraph, a staircase, or a sequence of separate words, it changed its voice each time. This led to a conversation about how writing guides reading.",
+          "Short, quiet writing sessions alternated with reading different versions aloud. Participants could work with their own languages and writing directions."
+        ],
+        "programme": [
+          "Set one sentence in three different forms",
+          "Read the versions aloud and compare them",
+          "Invent a rule of your own, then break it"
+        ],
+        "quote": "Sometimes the next sentence begins halfway through a breath."
+      },
+      "ar": {
+        "title": "شعر بلا نقطة",
+        "description": "ورشة عن كسر السطر والإيقاع وحرية إعادة تخيّل شكل القصيدة."
+      },
+      "fa": {
+        "title": "شعر بی‌نقطه",
+        "description": "کارگاهی دربارهٔ شکست سطر، سرعت خواندن و آزادیِ بازاندیشی در شکل شعر."
+      },
+      "uk": {
+        "title": "Поезія без крапки",
+        "description": "Майстерня про перенесення рядків, темп і свободу переосмислення поетичної форми."
+      },
+      "ku": {
+        "title": "Helbest bê xal",
+        "description": "Atolyeyek li ser şikandina rêzan, lez û azadiya ji nû ve fikirîna şêweyê."
+      }
+    }
+  },
+  {
+    "slug": "nach-dem-letzten-zug",
+    "date": "2026-09-12",
+    "time": "19:00",
+    "place": 5,
+    "style": "listening",
+    "text": {
+      "de": {
+        "title": "Nach dem letzten Zug",
+        "description": "Ein literarischer Hörabend über Nachtschichten, Heimwege und den anderen Klang der Stadt.",
+        "body": [
+          "Wenn die Schaufenster dunkel werden, beginnt für manche der Arbeitstag. Die Lesungen dieses Abends gaben den Wegen und Beobachtungen Raum, die in einer Tagesansicht der Stadt leicht fehlen. Stimmen wechselten mit kurzen aufgenommenen Alltagsgeräuschen.",
+          "Das Publikum konnte sich zurücklehnen und zuhören. Im anschließenden Gespräch ging es um Müdigkeit, unerwartete Begegnungen und die Frage, wem eine Stadt in der Nacht gehört."
+        ],
+        "programme": [
+          "Lesungen mit kurzen Klangaufnahmen",
+          "Pause ohne Hintergrundmusik",
+          "Gespräch über Arbeit, Wege und das nächtliche Berlin"
+        ],
+        "quote": "Die Stadt schläft nicht. Sie wechselt nur die Stimmen."
+      },
+      "en": {
+        "title": "After the Last Train",
+        "description": "A literary listening evening about night shifts, journeys home, and a different sound of the city.",
+        "body": [
+          "When shop windows go dark, some people are just beginning work. These readings made room for routes and observations easily missed in a daytime view of the city. Voices alternated with brief recordings of everyday sounds.",
+          "The audience was invited to settle in and listen. The discussion afterwards explored tiredness, unexpected encounters, and who a city belongs to at night."
+        ],
+        "programme": [
+          "Readings with short sound recordings",
+          "An interval without background music",
+          "A conversation about work, journeys, and Berlin at night"
+        ],
+        "quote": "The city does not sleep. It simply changes voices."
+      },
+      "ar": {
+        "title": "بعد القطار الأخير",
+        "description": "أمسية استماع أدبية عن العمل ليلًا والعودة إلى البيت وساعات المدينة المتغيّرة."
+      },
+      "fa": {
+        "title": "پس از آخرین قطار",
+        "description": "شبی برای شنیدن روایت‌های شیفت شب، راه خانه و ساعت‌هایی که شهر صدایی دیگر دارد."
+      },
+      "uk": {
+        "title": "Після останнього потяга",
+        "description": "Літературний вечір слухання про нічні зміни, дороги додому й інше звучання міста."
+      },
+      "ku": {
+        "title": "Piştî trêna dawî",
+        "description": "Êvareke guhdarîkirina edebî li ser şevkariyê, rêya malê û dengên şevê yên bajêr."
+      }
+    }
+  },
+  {
+    "slug": "geschichten-aus-dem-treppenhaus",
+    "date": "2026-08-22",
+    "time": "16:00",
+    "place": 1,
+    "style": "conversation",
+    "text": {
+      "de": {
+        "title": "Geschichten aus dem Treppenhaus",
+        "description": "Ein Erzählcafé über Nachbarschaft und die kleinen Begegnungen vor der eigenen Wohnungstür.",
+        "body": [
+          "Ein Haus besteht auch aus Geräuschen und Gewohnheiten: Schritten über uns, einem Kinderwagen im Flur, einer ausgeliehenen Leiter. Im Erzählcafé sammelten wir Beobachtungen, ohne daraus Urteile über die Menschen hinter den Türen zu machen.",
+          "Die Gespräche begannen zu zweit. Aus einer gehörten Geschichte entstand anschließend ein kurzer Text, den die erzählende Person vor dem Teilen noch einmal lesen konnte. So wurde auch das sorgfältige Wiedergeben Teil der Werkstatt."
+        ],
+        "programme": [
+          "Zu zweit eine kleine Nachbarschaftsgeschichte erzählen",
+          "Das Gehörte behutsam in einen Text verwandeln",
+          "Gemeinsam lesen und über Perspektiven sprechen"
+        ],
+        "quote": "Ein freundliches Hallo kann ein ganzes Stockwerk verändern."
+      },
+      "en": {
+        "title": "Stories from the Stairwell",
+        "description": "A storytelling café about neighbours and the small encounters outside the front door.",
+        "body": [
+          "A building is made of sounds and habits too: footsteps overhead, a pram in the hallway, a borrowed ladder. This storytelling café gathered observations without turning them into judgements about the people behind the doors.",
+          "Conversations began in pairs. Each listener then wrote a short text from a story they had heard, which its teller could read before it was shared. Careful retelling became part of the workshop itself."
+        ],
+        "programme": [
+          "Tell a small neighbourhood story in pairs",
+          "Turn what you heard into a careful short text",
+          "Read together and discuss different perspectives"
+        ],
+        "quote": "A friendly hello can change an entire floor."
+      },
+      "ar": {
+        "title": "حكايات من الدرج",
+        "description": "مقهى للحكايات عن الجيرة واللقاءات الصغيرة بين باب الشقة وصندوق البريد."
+      },
+      "fa": {
+        "title": "قصه‌های راه‌پله",
+        "description": "نشستی روایی دربارهٔ همسایگی و دیدارهای کوچک میان درِ خانه و صندوق نامه‌ها."
+      },
+      "uk": {
+        "title": "Історії зі сходової клітки",
+        "description": "Кав’ярня історій про сусідство й маленькі зустрічі між дверима квартири та поштовою скринькою."
+      },
+      "ku": {
+        "title": "Çîrokên ji derenceyan",
+        "description": "Sohbeta çîrokan li ser cîranî û hevdîtinên biçûk li ber deriyê malê."
+      }
+    }
+  },
+  {
+    "slug": "ein-abend-voller-anfaenge",
+    "date": "2026-07-25",
+    "time": "18:00",
+    "place": 7,
+    "style": "reading",
+    "text": {
+      "de": {
+        "title": "Ein Abend voller Anfänge",
+        "description": "Neue Stimmen aus unseren Schreibgruppen: erste Zeilen, unerwartete Wendungen und offene Anfänge.",
+        "body": [
+          "Zum Abschluss unserer Sommerwerkstätten kamen Texte zusammen, die auf ganz unterschiedlichen Wegen entstanden waren. Manche begannen mit einem Bild, andere mit einem Gespräch oder einer lange liegengebliebenen Notiz. Gemeinsam war ihnen die Lust, etwas Eigenes auszuprobieren.",
+          "Die Lesung ließ auch Unfertiges zu. Zwischen den Beiträgen erzählten die Schreibenden von Entscheidungen, verworfenen Zeilen und einem Satz, der geblieben war. Danach gab es Gelegenheit, die ausliegenden Texte noch einmal in Ruhe zu lesen."
+        ],
+        "programme": [
+          "Neue Texte aus den Sommerwerkstätten",
+          "Kurze Gespräche über das Schreiben und Überarbeiten",
+          "Offene Textauslage und Begegnungen im Anschluss"
+        ],
+        "quote": "Am Anfang stand kein Plan. Da war nur dieser eine Satz."
+      },
+      "en": {
+        "title": "An Evening of Beginnings",
+        "description": "New voices from our writing groups: opening lines, unexpected turns, and unfinished beginnings.",
+        "body": [
+          "The closing evening of our summer workshops brought together texts with very different beginnings. Some started from an image, others from a conversation or a note left untouched for a long time. They shared a desire to try something of their own.",
+          "Unfinished work was welcome. Between readings, the writers spoke about decisions, discarded lines, and a sentence that stayed. Afterwards, visitors could return to the displayed texts and read them at their own pace."
+        ],
+        "programme": [
+          "New writing from the summer workshops",
+          "Short conversations about drafting and revising",
+          "An open display of texts and time to meet afterwards"
+        ],
+        "quote": "There was no plan at the beginning. Just this one sentence."
+      },
+      "ar": {
+        "title": "أمسية مليئة بالبدايات",
+        "description": "نصوص جديدة من مجموعات الكتابة: سطور أولى ومنعطفات غير متوقعة وأصوات تبدأ بالظهور."
+      },
+      "fa": {
+        "title": "شبی پر از آغاز",
+        "description": "نوشته‌های تازهٔ گروه‌های نوشتن؛ سطرهای اول، چرخش‌های غافلگیرکننده و صداهایی در حال شکل‌گرفتن."
+      },
+      "uk": {
+        "title": "Вечір початків",
+        "description": "Нові тексти наших письменницьких груп: перші рядки, несподівані повороти й голоси, що народжуються."
+      },
+      "ku": {
+        "title": "Êvareke tijî destpêkan",
+        "description": "Nivîsên nû ji komên me: rêzên yekem, zivirînên neçaverêkirî û dengên ku nû dest pê dikin."
+      }
+    }
+  }
+]
