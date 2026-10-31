@@ -1,0 +1,59 @@
+---
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Text } from '$lib/components/ui/text'
+import { isLocale, localizedPath } from '@poetry/i18n'
+import BaseLayout from '../../../../layouts/BaseLayout.astro'
+import { confirmOrder } from '../../../../lib/cms'
+import { cartCookie, checkoutCookie, cookieOptions, decodeCart, decodeCheckout, orderCookie, parseIdentifier } from '../../../../lib/shop'
+import * as m from '../../../../paraglide/messages.js'
+
+const { locale: rawLocale } = Astro.params
+if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
+const locale = rawLocale
+Astro.response.headers.set('Cache-Control', 'no-store')
+const completePath = localizedPath(locale, 'shop/checkout/complete')
+const paymentIntent = Astro.url.searchParams.get('payment_intent')
+let outcome: 'pending' | 'failed' | null = null
+if (paymentIntent) {
+  const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
+  const checkout = decodeCheckout(Astro.cookies.get(checkoutCookie)?.value)
+  if (Astro.url.searchParams.get('redirect_status') === 'failed') outcome = 'failed'
+  else if (access && checkout?.paymentIntentID === paymentIntent) {
+    const orderID = await confirmOrder(access, checkout).catch((error) => { console.error(error); return null })
+    for (const name of [cartCookie, checkoutCookie]) Astro.cookies.delete(name, { path: '/' })
+    if (orderID) {
+      Astro.cookies.set(orderCookie, orderID, cookieOptions(import.meta.env.PROD, 60 * 60))
+      // Redirect so a reload shows the order instead of confirming again.
+      return Astro.redirect(completePath, 303)
+    }
+    // A paid order is still settled by the CMS webhook; clearing the cart prevents paying twice.
+    outcome = 'pending'
+  } else outcome = 'pending'
+}
+const orderID = outcome ? null : parseIdentifier(Astro.cookies.get(orderCookie)?.value ?? null)
+if (!outcome && !orderID) return Astro.redirect(localizedPath(locale, 'shop'), 303)
+const title = outcome === 'failed' ? m.shop_failed_title({}, { locale }) : outcome === 'pending' ? m.shop_pending_title({}, { locale }) : m.shop_complete_title({}, { locale })
+---
+
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/checkout/complete" noIndex alternateLocales={[]}>
+  <section class="complete">
+    <Heading level={1}>{title}</Heading>
+    {outcome === 'failed' ? (
+      <>
+        <Text variant="lead">{m.shop_failed_text({}, { locale })}</Text>
+        <Link variant="standalone" href={localizedPath(locale, 'shop/checkout')}>{m.shop_retry({}, { locale })}</Link>
+      </>
+    ) : outcome === 'pending' ? (
+      <Text variant="lead" role="status">{m.shop_pending_text({}, { locale })}</Text>
+    ) : (
+      <Text variant="lead">{m.shop_complete_text({ order: orderID! }, { locale })}</Text>
+    )}
+    <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
+  </section>
+</BaseLayout>
+
+<style>
+  .complete { display: grid; gap: var(--space-md); justify-items: start; max-inline-size: 48rem; }
+  .complete :global(h1), .complete :global(.ui-text) { margin: 0; }
+</style>

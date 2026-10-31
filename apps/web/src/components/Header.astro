@@ -22,6 +22,7 @@ const { direction } = getLocaleMetadata(locale)
     <a dir={direction} href={localizedPath(locale, 'events')}>{m.nav_events({}, messageOptions)}</a>
     <a dir={direction} href={localizedPath(locale, 'articles')}>{m.nav_articles({}, messageOptions)}</a>
     <a dir={direction} href={localizedPath(locale, 'poems')}>{m.nav_poems({}, messageOptions)}</a>
+    <a dir={direction} href={localizedPath(locale, 'shop')}>{m.nav_shop({}, messageOptions)}</a>
   </nav>
   <div class="header-controls">
     <LanguageSwitcher client:load currentLocale={locale} label={m.language_label({}, messageOptions)} path={unlocalizedPath(Astro.originPathname)} search={Astro.url.search} />

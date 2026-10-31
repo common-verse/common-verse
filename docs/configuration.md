@@ -15,14 +15,17 @@ secret settings, and kept stable across deployments. Neither builds nor producti
 startup should generate them. Rotating Payload's secret can invalidate sessions;
 rotating the preview secret invalidates previously issued preview links.
 
-| Variable                    | Deployment owner and timing                                                                                              |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `PAYLOAD_SECRET`            | CMS runtime; private and stable.                                                                                         |
-| `PREVIEW_SECRET`            | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant. |
-| `DATABASE_URL`              | CMS runtime; actual environment database credentials.                                                                    |
-| `PUBLIC_CMS_URL`            | Astro build; the CMS origin reachable by the Astro server.                                                               |
-| `PUBLIC_SITE_URL`           | Astro build and CMS runtime; the public site origin for metadata and preview links.                                      |
-| `PAYLOAD_PUBLIC_SERVER_URL` | CMS runtime; the public CMS origin.                                                                                      |
+| Variable                         | Deployment owner and timing                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `PAYLOAD_SECRET`                 | CMS runtime; private and stable.                                                                                         |
+| `PREVIEW_SECRET`                 | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant. |
+| `DATABASE_URL`                   | CMS runtime; actual environment database credentials.                                                                    |
+| `PUBLIC_CMS_URL`                 | Astro build; the CMS origin reachable by the Astro server.                                                               |
+| `PUBLIC_SITE_URL`                | Astro build and CMS runtime; the public site origin for metadata and preview links.                                      |
+| `PAYLOAD_PUBLIC_SERVER_URL`      | CMS runtime; the public CMS origin.                                                                                      |
+| `STRIPE_SECRET_KEY`              | CMS runtime; private. Without it the site runs, but shop payments fail.                                                  |
+| `STRIPE_WEBHOOKS_SIGNING_SECRET` | CMS runtime; private. Without it webhooks are ignored, including the paid-order fallback.                                |
+| `PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Astro; publishable, not secret. Use test keys locally.                                                                   |
 
 No secret should receive a `PUBLIC_` prefix. Preview links contain a bearer secret;
 share them only with intended reviewers. Development setup is not a deployment

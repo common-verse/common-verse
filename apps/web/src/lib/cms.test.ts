@@ -9,6 +9,8 @@ import {
   getUpcomingEvents,
   getEvents,
   getEventsPage,
+  getCart,
+  initiatePayment,
 } from "./cms";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -194,4 +196,48 @@ it("keeps events page request errors separate from missing editorial copy", asyn
   expect(new URL(url).pathname).toBe("/api/globals/events-page/preview");
   expect(new URL(url).searchParams.get("locale")).toBe("ar");
   expect(options.headers).toEqual({ "x-preview-secret": "runtime-secret" });
+});
+
+describe("shop requests", () => {
+  const access = { id: "7", secret: "a".repeat(40) };
+
+  it("treats foreign or purchased carts as missing and keeps request failures visible", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 403 }))
+      .mockResolvedValueOnce(
+        Response.json({ id: 7, purchasedAt: "2026-10-31" }),
+      )
+      .mockResolvedValueOnce(Response.json({ id: 7, items: [] }))
+      .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetch);
+    expect(await getCart(access, "de")).toBeNull();
+    expect(await getCart(access, "de")).toBeNull();
+    expect(await getCart(access, "de")).toEqual({ id: 7, items: [] });
+    await expect(getCart(access, "de")).rejects.toThrow("503");
+  });
+
+  it("distinguishes stock problems from other payment start failures", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ cause: { code: "OutOfStock" } }, { status: 400 }),
+      )
+      .mockResolvedValueOnce(Response.json({ message: "x" }, { status: 500 }))
+      .mockResolvedValueOnce(
+        Response.json({ clientSecret: "pi_1_secret", paymentIntentID: "pi_1" }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    const address = { country: "DE" as const };
+    expect(await initiatePayment(access, "a@b.de", address)).toEqual({
+      error: "OutOfStock",
+    });
+    expect(await initiatePayment(access, "a@b.de", address)).toEqual({
+      error: "failed",
+    });
+    expect(await initiatePayment(access, "a@b.de", address)).toEqual({
+      clientSecret: "pi_1_secret",
+      paymentIntentID: "pi_1",
+    });
+  });
 });

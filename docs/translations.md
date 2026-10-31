@@ -66,7 +66,7 @@ must not change the user's interface preference.
 - Kurmanji remains supported for website UI and editorial content.
 - German remains the default content locale and the website language at `/`.
   English UI fallback does not change that routing or content decision.
-- About, Contact, Privacy, and Legal Notice fall back to the complete English
+- About, Contact, Privacy, Legal Notice, and Terms fall back to the complete English
   page when the requested translation is missing or incomplete. Their articles
   declare the content language and direction; surrounding UI uses the route locale.
   A missing English page remains a 404. No missing-translation notice is shown.

@@ -156,6 +156,9 @@ importers:
       "@payloadcms/next":
         specifier: 3.90.2
         version: 3.90.2(@types/react@19.1.16)(graphql@16.11.0)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
+      "@payloadcms/plugin-ecommerce":
+        specifier: 3.90.2
+        version: 3.90.2(@types/react@19.1.16)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
       "@payloadcms/plugin-mcp":
         specifier: 3.90.2
         version: 3.90.2(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))
@@ -174,6 +177,9 @@ importers:
       "@poetry/i18n":
         specifier: workspace:*
         version: link:../../packages/i18n
+      "@poetry/types":
+        specifier: workspace:*
+        version: link:../../packages/types
       cross-env:
         specifier: 7.0.3
         version: 7.0.3
@@ -183,6 +189,9 @@ importers:
       graphql:
         specifier: 16.11.0
         version: 16.11.0
+      leaflet:
+        specifier: 1.9.4
+        version: 1.9.4
       next:
         specifier: 16.3.6
         version: 16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4)
@@ -198,16 +207,16 @@ importers:
       sharp:
         specifier: 0.34.4
         version: 0.34.4
-      leaflet:
-        specifier: 1.9.4
-        version: 1.9.4
-      "@poetry/types":
-        specifier: workspace:*
-        version: link:../../packages/types
+      stripe:
+        specifier: 18.5.0
+        version: 18.5.0(@types/node@26.6.4)
     devDependencies:
       "@faker-js/faker":
         specifier: 10.6.0
         version: 10.6.0
+      "@types/leaflet":
+        specifier: 1.9.21
+        version: 1.9.21
       "@types/node":
         specifier: 26.6.4
         version: 26.6.4
@@ -226,21 +235,15 @@ importers:
       vitest:
         specifier: 5.0.2
         version: 5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
-      "@types/leaflet":
-        specifier: 1.9.21
-        version: 1.9.21
 
   apps/web:
     dependencies:
-      "@payloadcms/richtext-lexical":
-        specifier: 3.90.2
-        version: 3.90.2(@faceless-ui/modal@3.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@faceless-ui/scroll-info@2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@payloadcms/next@3.90.2(@types/react@19.1.16)(graphql@16.11.0)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(@types/react@19.1.16)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(yjs@13.6.33)
       "@astrojs/node":
         specifier: 11.1.6
-        version: 11.1.6(astro@7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+        version: 11.1.6(astro@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
       "@astrojs/svelte":
         specifier: 9.0.1
-        version: 9.0.1(@types/node@22.18.6)(astro@7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(svelte@5.57.1)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.1)
+        version: 9.0.1(@types/node@26.6.4)(astro@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(svelte@5.57.1)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.1)
       "@dicebear/core":
         specifier: 10.6.0
         version: 10.6.0
@@ -249,10 +252,13 @@ importers:
         version: 10.6.0
       "@inlang/paraglide-js":
         specifier: 2.25.4
-        version: 2.25.4(typescript@5.9.3)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+        version: 2.25.4(typescript@5.9.3)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
       "@payloadcms/live-preview":
         specifier: 3.90.2
         version: 3.90.2
+      "@payloadcms/richtext-lexical":
+        specifier: 3.90.2
+        version: 3.90.2(@faceless-ui/modal@3.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@faceless-ui/scroll-info@2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@payloadcms/next@3.90.2(@types/react@19.1.16)(graphql@16.11.0)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3))(@types/react@19.1.16)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)(yjs@13.6.33)
       "@poetry/cms-ui":
         specifier: workspace:*
         version: link:../../packages/cms-ui
@@ -262,12 +268,15 @@ importers:
       "@poetry/types":
         specifier: workspace:*
         version: link:../../packages/types
+      "@stripe/stripe-js":
+        specifier: 10.1.0
+        version: 10.1.0
       "@tailwindcss/vite":
         specifier: 4.3.3
-        version: 4.3.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+        version: 4.3.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
       astro:
         specifier: 7.3.5
-        version: 7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+        version: 7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
       bits-ui:
         specifier: 2.19.3
         version: 2.19.3(@internationalized/date@3.12.4)(svelte@5.57.1)
@@ -310,7 +319,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 5.0.2
-        version: 5.0.2(@types/node@22.18.6)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+        version: 5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
 
   packages/cms-ui:
     dependencies:
@@ -3052,6 +3061,16 @@ packages:
       next: ">=15.2.9 <15.3.0 || >=15.3.9 <15.4.0 || >=15.4.11 <15.5.0 || >=16.3.3 <17.0.0"
       payload: 3.90.2
 
+  "@payloadcms/plugin-ecommerce@3.90.2":
+    resolution:
+      {
+        integrity: sha512-x/imvBbJiF1DmLW3E0fxU5jHp57GhCFlnYuDRJIsujPzT11O5Ne9ntqPOza9zE7k933ZhRG4lH5/wjsGkqegXg==,
+      }
+    peerDependencies:
+      payload: 3.90.2
+      react: ^19.0.1 || ^19.1.2 || ^19.2.1
+      react-dom: ^19.0.1 || ^19.1.2 || ^19.2.1
+
   "@payloadcms/plugin-mcp@3.90.2":
     resolution:
       {
@@ -3374,6 +3393,13 @@ packages:
       }
     hasBin: true
 
+  "@stripe/stripe-js@10.1.0":
+    resolution:
+      {
+        integrity: sha512-sLRPukMKMxvRVrgV3Za8LM0Yd2azrixQjfaiuzS8Fivlu/Gt7VbBuRiRZJIvfL3XxAw+FdfdmhHSvjAfLG3lkA==,
+      }
+    engines: { node: ">=12.16" }
+
   "@sveltejs/acorn-typescript@1.0.13":
     resolution:
       {
@@ -3598,6 +3624,12 @@ packages:
         integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==,
       }
 
+  "@types/geojson@7946.0.16":
+    resolution:
+      {
+        integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==,
+      }
+
   "@types/hast@3.0.5":
     resolution:
       {
@@ -3608,6 +3640,12 @@ packages:
     resolution:
       {
         integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==,
+      }
+
+  "@types/leaflet@1.9.21":
+    resolution:
+      {
+        integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==,
       }
 
   "@types/lodash@4.17.25":
@@ -3632,12 +3670,6 @@ packages:
     resolution:
       {
         integrity: sha512-vSYNSDe6Ix3q+6Z7ri9lyWqgGhJTmzRjZRqyq15N0Z/1/UnVsno9G/N40NBijoYx2seFDIl0+B2mgAb9mezUCA==,
-      }
-
-  "@types/node@22.18.6":
-    resolution:
-      {
-        integrity: sha512-r8uszLPpeIWbNKtvWRt/DbVi5zbqZyj1PTmhRMqBMvDnaz1QpmSKujUtJLrqGZeoM8v72MfYggDceY4K1itzWQ==,
       }
 
   "@types/node@26.6.4":
@@ -5626,6 +5658,12 @@ packages:
       }
     engines: { node: ">=20.0.0" }
 
+  leaflet@1.9.4:
+    resolution:
+      {
+        integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==,
+      }
+
   lexical@0.50.0:
     resolution:
       {
@@ -7433,6 +7471,18 @@ packages:
       }
     engines: { node: ">=14.16" }
 
+  stripe@18.5.0:
+    resolution:
+      {
+        integrity: sha512-Hp+wFiEQtCB0LlNgcFh5uVyKznpDjzyUZ+CNVEf+I3fhlYvh7rZruIg+jOwzJRCpy0ZTPMjlzm7J2/M2N6d+DA==,
+      }
+    engines: { node: ">=12.*" }
+    peerDependencies:
+      "@types/node": ">=12.x.x"
+    peerDependenciesMeta:
+      "@types/node":
+        optional: true
+
   strtok3@10.3.5:
     resolution:
       {
@@ -7720,12 +7770,6 @@ packages:
     resolution:
       {
         integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==,
-      }
-
-  undici-types@6.21.0:
-    resolution:
-      {
-        integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==,
       }
 
   undici-types@8.9.0:
@@ -8416,24 +8460,6 @@ packages:
         integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==,
       }
 
-  "@types/geojson@7946.0.16":
-    resolution:
-      {
-        integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==,
-      }
-
-  "@types/leaflet@1.9.21":
-    resolution:
-      {
-        integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==,
-      }
-
-  leaflet@1.9.4:
-    resolution:
-      {
-        integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==,
-      }
-
 snapshots:
   "@apidevtools/json-schema-ref-parser@11.9.3":
     dependencies:
@@ -8554,10 +8580,10 @@ snapshots:
       github-slugger: 2.0.0
       satteri: 0.10.5
 
-  "@astrojs/node@11.1.6(astro@7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
+  "@astrojs/node@11.1.6(astro@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
     dependencies:
       "@astrojs/internal-helpers": 0.11.0
-      astro: 7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      astro: 7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
       send: 1.2.1
       server-destroy: 1.0.1
     transitivePeerDependencies:
@@ -8567,15 +8593,15 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  "@astrojs/svelte@9.0.1(@types/node@22.18.6)(astro@7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(svelte@5.57.1)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.1)":
+  "@astrojs/svelte@9.0.1(@types/node@26.6.4)(astro@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(svelte@5.57.1)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.1)":
     dependencies:
-      "@sveltejs/vite-plugin-svelte": 7.3.1(svelte@5.57.1)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
-      astro: 7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      "@sveltejs/vite-plugin-svelte": 7.3.1(svelte@5.57.1)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      astro: 7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
       svelte: 5.57.1
       svelte2tsx: 0.7.61(svelte@5.57.1)(typescript@5.9.3)
       typescript: 5.9.3
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-      vitefu: 1.1.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      vitefu: 1.1.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
     transitivePeerDependencies:
       - "@types/node"
       - "@vitejs/devtools"
@@ -9395,21 +9421,6 @@ snapshots:
   "@img/sharp-win32-x64@0.35.4":
     optional: true
 
-  "@inlang/paraglide-js@2.25.4(typescript@5.9.3)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
-    dependencies:
-      "@inlang/recommend-sherlock": 0.2.1
-      "@inlang/sdk": 3.0.6
-      commander: 11.1.0
-      consola: 3.4.0
-      jiti: 2.7.0
-      json5: 2.2.3
-      unplugin: 2.3.11
-      urlpattern-polyfill: 10.1.0
-      valibot: 1.5.0(typescript@5.9.3)
-    optionalDependencies:
-      typescript: 5.9.3
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-
   "@inlang/paraglide-js@2.25.4(typescript@5.9.3)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
     dependencies:
       "@inlang/recommend-sherlock": 0.2.1
@@ -10028,6 +10039,21 @@ snapshots:
       - supports-color
       - typescript
 
+  "@payloadcms/plugin-ecommerce@3.90.2(@types/react@19.1.16)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)":
+    dependencies:
+      "@payloadcms/translations": 3.90.2
+      "@payloadcms/ui": 3.90.2(@types/react@19.1.16)(monaco-editor@0.57.0)(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
+      payload: 3.90.2(graphql@16.11.0)(typescript@5.9.3)
+      qs-esm: 8.0.1
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+    transitivePeerDependencies:
+      - "@types/react"
+      - monaco-editor
+      - next
+      - supports-color
+      - typescript
+
   "@payloadcms/plugin-mcp@3.90.2(next@16.3.6(@playwright/test@1.63.0)(@types/node@26.6.4)(babel-plugin-macros@3.1.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(sass@1.77.4))(payload@3.90.2(graphql@16.11.0)(typescript@5.9.3))":
     dependencies:
       "@modelcontextprotocol/sdk": 1.30.0(zod@3.25.76)
@@ -10251,18 +10277,20 @@ snapshots:
 
   "@sqlite.org/sqlite-wasm@3.48.0-build4": {}
 
+  "@stripe/stripe-js@10.1.0": {}
+
   "@sveltejs/acorn-typescript@1.0.13(acorn@8.18.0)":
     dependencies:
       acorn: 8.18.0
 
-  "@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
+  "@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
     dependencies:
       deepmerge: 4.3.1
       magic-string: 1.4.2
       obug: 2.2.1
       svelte: 5.57.1
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-      vitefu: 1.1.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      vitefu: 1.1.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
 
   "@swc/helpers@0.5.23":
     dependencies:
@@ -10329,12 +10357,12 @@ snapshots:
       "@tailwindcss/oxide-win32-arm64-msvc": 4.3.3
       "@tailwindcss/oxide-win32-x64-msvc": 4.3.3
 
-  "@tailwindcss/vite@4.3.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
+  "@tailwindcss/vite@4.3.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
     dependencies:
       "@tailwindcss/node": 4.3.3
       "@tailwindcss/oxide": 4.3.3
       tailwindcss: 4.3.3
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
 
   "@tokenizer/inflate@0.4.1":
     dependencies:
@@ -10374,11 +10402,17 @@ snapshots:
 
   "@types/estree@1.0.9": {}
 
+  "@types/geojson@7946.0.16": {}
+
   "@types/hast@3.0.5":
     dependencies:
       "@types/unist": 3.0.3
 
   "@types/json-schema@7.0.15": {}
+
+  "@types/leaflet@1.9.21":
+    dependencies:
+      "@types/geojson": 7946.0.16
 
   "@types/lodash@4.17.25": {}
 
@@ -10391,11 +10425,6 @@ snapshots:
   "@types/nlcst@2.0.3":
     dependencies:
       "@types/unist": 3.0.3
-
-  "@types/node@22.18.6":
-    dependencies:
-      undici-types: 6.21.0
-    optional: true
 
   "@types/node@26.6.4":
     dependencies:
@@ -10435,15 +10464,6 @@ snapshots:
 
   "@ungap/structured-clone@1.4.0": {}
 
-  "@vitest/mocker@5.0.2(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
-    dependencies:
-      "@jridgewell/trace-mapping": 0.3.31
-      "@vitest/spy": 5.0.2
-      estree-walker: 3.0.3
-      magic-string: 1.4.2
-    optionalDependencies:
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-
   "@vitest/mocker@5.0.2(vite@8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
     dependencies:
       "@jridgewell/trace-mapping": 0.3.31
@@ -10452,6 +10472,15 @@ snapshots:
       magic-string: 1.4.2
     optionalDependencies:
       vite: 8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+
+  "@vitest/mocker@5.0.2(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))":
+    dependencies:
+      "@jridgewell/trace-mapping": 0.3.31
+      "@vitest/spy": 5.0.2
+      estree-walker: 3.0.3
+      magic-string: 1.4.2
+    optionalDependencies:
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
 
   "@vitest/spy@5.0.2": {}
 
@@ -10571,7 +10600,7 @@ snapshots:
 
   assertion-error@2.0.1: {}
 
-  astro@7.3.5(@types/node@22.18.6)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1):
+  astro@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1):
     dependencies:
       "@astrojs/compiler-rs": 0.5.1
       "@astrojs/internal-helpers": 0.11.0
@@ -10621,13 +10650,13 @@ snapshots:
       unifont: 0.7.5
       unstorage: 1.17.5
       verkit: 0.4.1
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-      vitefu: 1.1.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      vitefu: 1.1.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
       zod: 4.6.5
     optionalDependencies:
-      sharp: 0.35.4(@types/node@22.18.6)
+      sharp: 0.35.4(@types/node@26.6.4)
     transitivePeerDependencies:
       - "@azure/app-configuration"
       - "@azure/cosmos"
@@ -11539,6 +11568,8 @@ snapshots:
   kleur@4.1.5: {}
 
   kysely@0.28.17: {}
+
+  leaflet@1.9.4: {}
 
   lexical@0.50.0(typescript@5.9.3):
     dependencies:
@@ -12590,40 +12621,6 @@ snapshots:
       "@img/sharp-win32-ia32": 0.34.4
       "@img/sharp-win32-x64": 0.34.4
 
-  sharp@0.35.4(@types/node@22.18.6):
-    dependencies:
-      "@img/colour": 1.1.0
-      detect-libc: 2.1.2
-      semver: 7.8.5
-    optionalDependencies:
-      "@img/sharp-darwin-arm64": 0.35.4
-      "@img/sharp-darwin-x64": 0.35.4
-      "@img/sharp-freebsd-wasm32": 0.35.4
-      "@img/sharp-libvips-darwin-arm64": 1.3.3
-      "@img/sharp-libvips-darwin-x64": 1.3.3
-      "@img/sharp-libvips-linux-arm": 1.3.3
-      "@img/sharp-libvips-linux-arm64": 1.3.3
-      "@img/sharp-libvips-linux-ppc64": 1.3.3
-      "@img/sharp-libvips-linux-riscv64": 1.3.3
-      "@img/sharp-libvips-linux-s390x": 1.3.3
-      "@img/sharp-libvips-linux-x64": 1.3.3
-      "@img/sharp-libvips-linuxmusl-arm64": 1.3.3
-      "@img/sharp-libvips-linuxmusl-x64": 1.3.3
-      "@img/sharp-linux-arm": 0.35.4
-      "@img/sharp-linux-arm64": 0.35.4
-      "@img/sharp-linux-ppc64": 0.35.4
-      "@img/sharp-linux-riscv64": 0.35.4
-      "@img/sharp-linux-s390x": 0.35.4
-      "@img/sharp-linux-x64": 0.35.4
-      "@img/sharp-linuxmusl-arm64": 0.35.4
-      "@img/sharp-linuxmusl-x64": 0.35.4
-      "@img/sharp-webcontainers-wasm32": 0.35.4
-      "@img/sharp-win32-arm64": 0.35.4
-      "@img/sharp-win32-ia32": 0.35.4
-      "@img/sharp-win32-x64": 0.35.4
-      "@types/node": 22.18.6
-    optional: true
-
   sharp@0.35.4(@types/node@26.6.4):
     dependencies:
       "@img/colour": 1.1.0
@@ -12762,6 +12759,12 @@ snapshots:
       ansi-regex: 5.0.1
 
   strip-json-comments@5.0.3: {}
+
+  stripe@18.5.0(@types/node@26.6.4):
+    dependencies:
+      qs: 6.16.0
+    optionalDependencies:
+      "@types/node": 26.6.4
 
   strtok3@10.3.5:
     dependencies:
@@ -12922,9 +12925,6 @@ snapshots:
 
   uncrypto@0.1.3: {}
 
-  undici-types@6.21.0:
-    optional: true
-
   undici-types@8.9.0: {}
 
   undici@7.29.0: {}
@@ -13031,22 +13031,6 @@ snapshots:
       "@types/unist": 3.0.3
       vfile-message: 4.0.3
 
-  vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1):
-    dependencies:
-      lightningcss: 1.33.0
-      picomatch: 4.0.7
-      postcss: 8.5.28
-      rolldown: 1.2.11
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      "@types/node": 22.18.6
-      esbuild: 0.28.2
-      fsevents: 2.3.3
-      jiti: 2.7.0
-      sass: 1.77.4
-      tsx: 4.22.4
-      yaml: 2.9.1
-
   vite@8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
@@ -13078,33 +13062,10 @@ snapshots:
       sass: 1.77.4
       tsx: 4.22.4
       yaml: 2.9.1
-    optional: true
 
-  vitefu@1.1.3(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)):
+  vitefu@1.1.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)):
     optionalDependencies:
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-
-  vitest@5.0.2(@types/node@22.18.6)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)):
-    dependencies:
-      "@types/chai": 5.2.3
-      "@vitest/mocker": 5.0.2(vite@8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
-      chai: 6.2.2
-      es-module-lexer: 2.3.2
-      expect-type: 1.4.0
-      magic-string: 1.4.2
-      obug: 2.2.1
-      picomatch: 4.0.7
-      std-env: 4.2.0
-      tinybench: 6.2.0
-      tinyexec: 1.3.1
-      tinyglobby: 0.2.17
-      vite: 8.3.1(@types/node@22.18.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
-      why-is-node-running: 3.2.2
-    optionalDependencies:
-      "@types/node": 22.18.6
-      happy-dom: 20.14.5
-    transitivePeerDependencies:
-      - msw
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
 
   vitest@5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)):
     dependencies:
@@ -13121,6 +13082,28 @@ snapshots:
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       vite: 8.3.1(@types/node@26.6.4)(esbuild@0.25.12)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
+      why-is-node-running: 3.2.2
+    optionalDependencies:
+      "@types/node": 26.6.4
+      happy-dom: 20.14.5
+    transitivePeerDependencies:
+      - msw
+
+  vitest@5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)):
+    dependencies:
+      "@types/chai": 5.2.3
+      "@vitest/mocker": 5.0.2(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      chai: 6.2.2
+      es-module-lexer: 2.3.2
+      expect-type: 1.4.0
+      magic-string: 1.4.2
+      obug: 2.2.1
+      picomatch: 4.0.7
+      std-env: 4.2.0
+      tinybench: 6.2.0
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      vite: 8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
       why-is-node-running: 3.2.2
     optionalDependencies:
       "@types/node": 26.6.4
@@ -13321,11 +13304,3 @@ snapshots:
   zod@4.6.5: {}
 
   zwitch@2.0.4: {}
-
-  "@types/geojson@7946.0.16": {}
-
-  "@types/leaflet@1.9.21":
-    dependencies:
-      "@types/geojson": 7946.0.16
-
-  leaflet@1.9.4: {}

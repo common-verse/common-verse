@@ -19,7 +19,7 @@ function mockPayload() {
 it("imports German and English page content with placeholders in one transaction", async () => {
   const payload = mockPayload();
   await seedFixedPages(payload as unknown as Payload);
-  expect(payload.updateGlobal).toHaveBeenCalledTimes(8);
+  expect(payload.updateGlobal).toHaveBeenCalledTimes(fixedPageKeys.length * 2);
   for (const slug of fixedPageKeys) {
     for (const locale of ["de", "en"] as const) {
       expect(payload.updateGlobal).toHaveBeenCalledWith(

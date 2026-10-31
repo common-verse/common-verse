@@ -1,0 +1,199 @@
+---
+import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from 'astro:env/server'
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Button } from '$lib/components/ui/button'
+import { Text } from '$lib/components/ui/text'
+import * as Card from '$lib/components/ui/card'
+import { isLocale, localizedPath } from '@poetry/i18n'
+import PaymentForm from '../../../../components/PaymentForm.svelte'
+import ShopTotals from '../../../../components/ShopTotals.astro'
+import BaseLayout from '../../../../layouts/BaseLayout.astro'
+import { getCart, getShopSettings, initiatePayment, type PaymentStart } from '../../../../lib/cms'
+import {
+  addressFields, cartCookie, cartSignature, cartSubtotal, checkoutCookie, cookieOptions, decodeCart, decodeCheckout, formatNumber, formatPrice,
+  isLineAvailable, lineProduct, optionalFields, parseCheckout, shippingRate, titleAttributes, type CheckoutAccess, type CheckoutError, type CheckoutField,
+} from '../../../../lib/shop'
+import * as m from '../../../../paraglide/messages.js'
+
+const { locale: rawLocale } = Astro.params
+if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
+const locale = rawLocale
+Astro.response.headers.set('Cache-Control', 'no-store')
+const cartPath = localizedPath(locale, 'shop/cart')
+const checkoutPath = localizedPath(locale, 'shop/checkout')
+const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
+const [cart, settings] = await Promise.all([access ? getCart(access, locale) : null, getShopSettings(locale)])
+const items = cart?.items ?? []
+if (!access || !items.length || !items.every(isLineAvailable)) return Astro.redirect(cartPath, 303)
+const shipping = shippingRate(settings)
+const publishableKey = shipping === null ? undefined : PUBLIC_STRIPE_PUBLISHABLE_KEY
+const signature = cartSignature(items)
+const saved = decodeCheckout(Astro.cookies.get(checkoutCookie)?.value)
+const editing = Astro.url.searchParams.has('change')
+
+let values: Partial<Record<CheckoutField, string>> = saved ? { email: saved.email, ...saved.address } : {}
+let errors: Partial<Record<CheckoutField, CheckoutError>> = {}
+let tooLong = false
+let startError: 'OutOfStock' | 'failed' | null = null
+if (Astro.request.method === 'POST' && publishableKey) {
+  const form = await Astro.request.formData().catch(() => new FormData())
+  const result = parseCheckout(form)
+  if (result.ok) {
+    values = { email: result.email, ...result.address }
+    const started: PaymentStart = await initiatePayment(access, result.email, result.address).catch((error) => {
+      console.error(error)
+      return { error: 'failed' as const }
+    })
+    if ('clientSecret' in started) {
+      const checkout: CheckoutAccess = { ...started, email: result.email, address: result.address, cart: signature }
+      Astro.cookies.set(checkoutCookie, JSON.stringify(checkout), cookieOptions(import.meta.env.PROD, 60 * 60 * 24))
+      // Redirect so a reload shows this payment instead of starting another one.
+      return Astro.redirect(checkoutPath, 303)
+    }
+    startError = started.error
+  } else {
+    ;({ values, errors, tooLong } = result)
+  }
+}
+const payment = Astro.request.method === 'GET' && !editing && saved?.cart === signature ? saved : null
+
+const t = (message: (inputs: {}, options: { locale: typeof locale }) => string) => message({}, { locale })
+const fields: { name: (typeof addressFields)[number]; autocomplete: string; inputmode?: 'numeric' }[] = [
+  { name: 'firstName', autocomplete: 'given-name' },
+  { name: 'lastName', autocomplete: 'family-name' },
+  { name: 'company', autocomplete: 'organization' },
+  { name: 'addressLine1', autocomplete: 'address-line1' },
+  { name: 'addressLine2', autocomplete: 'address-line2' },
+  { name: 'postalCode', autocomplete: 'postal-code', inputmode: 'numeric' },
+  { name: 'city', autocomplete: 'address-level2' },
+]
+const errorText = (field: CheckoutField) => {
+  const error = errors[field]
+  if (!error) return null
+  if (error === 'required') return t(m.shop_error_required)
+  return { email: t(m.shop_error_email), postalCode: t(m.shop_error_postal_code), country: t(m.shop_error_country) }[field as string] ?? t(m.shop_error_required)
+}
+const labels: Record<CheckoutField, string> = {
+  email: t(m.shop_email), firstName: t(m.shop_first_name), lastName: t(m.shop_last_name), company: t(m.shop_company), addressLine1: t(m.shop_street),
+  addressLine2: t(m.shop_address2), postalCode: t(m.shop_postal_code), city: t(m.shop_city), country: t(m.shop_country),
+}
+const invalidFields = (Object.keys(errors) as CheckoutField[]).filter((field) => errors[field])
+const stripeLocale = (['de', 'en', 'ar'] as const).find((value) => value === locale) ?? 'en'
+const returnUrl = new URL(localizedPath(locale, 'shop/checkout/complete'), import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321').href
+const title = t(m.shop_checkout_title)
+---
+
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/checkout" noIndex alternateLocales={[]}>
+  <Heading level={1}>{title}</Heading>
+  <div class="checkout-layout">
+    <div class="checkout-main">
+      {!publishableKey ? (
+        <p class="shop-alert" role="alert">{t(m.shop_payments_unavailable)}</p>
+      ) : payment ? (
+        <section class="payment-step" aria-labelledby="payment-heading">
+          <Heading level={2} id="payment-heading">{t(m.shop_payment)}</Heading>
+          <dl class="ship-to">
+            <div><dt>{t(m.shop_email)}</dt><dd><bdi>{payment.email}</bdi></dd></div>
+            <div><dt>{t(m.shop_ship_to)}</dt><dd>
+              {[[payment.address.firstName, payment.address.lastName].join(' '), payment.address.company, payment.address.addressLine1, payment.address.addressLine2, `${payment.address.postalCode} ${payment.address.city}`, t(m.shop_country_de)]
+                .filter(Boolean).map((line) => <bdi>{line}</bdi><br />)}
+            </dd></div>
+          </dl>
+          <PaymentForm client:load clientSecret={payment.clientSecret} {publishableKey} locale={stripeLocale} {returnUrl}
+            labels={{ pay: t(m.shop_pay), paying: t(m.shop_paying), loading: t(m.shop_payment_loading), loadError: t(m.shop_payment_load_error), paymentError: t(m.shop_payment_error) }} />
+          <noscript><p class="shop-alert">{t(m.shop_payment_needs_js)}</p></noscript>
+          <Link href={`${checkoutPath}?change`}>{t(m.shop_change_address)}</Link>
+        </section>
+      ) : (
+        <form class="checkout-form" method="post" action={checkoutPath}>
+          {(invalidFields.length > 0 || tooLong) && (
+            <div class="shop-alert" role="alert" tabindex="-1" autofocus>
+              <p>{tooLong ? t(m.shop_error_too_long) : t(m.shop_error_summary)}</p>
+              {invalidFields.length > 0 && <ul>{invalidFields.map((field) => <li><a href={`#${field}`}>{labels[field]}</a></li>)}</ul>}
+            </div>
+          )}
+          {startError && <p class="shop-alert" role="alert" tabindex="-1" autofocus>{startError === 'OutOfStock' ? <>{t(m.shop_out_of_stock)} <Link href={cartPath}>{t(m.shop_edit_cart)}</Link></> : t(m.shop_start_error)}</p>}
+          <div class="field">
+            <label for="email">{labels.email}</label>
+            <input class="shop-control" id="email" name="email" type="email" autocomplete="email" spellcheck="false" required dir="ltr" value={values.email} aria-invalid={errors.email ? 'true' : undefined} aria-describedby={errors.email ? 'email-hint email-error' : 'email-hint'} />
+            <p class="hint" id="email-hint">{t(m.shop_email_hint)}</p>
+            {errorText('email') && <p class="field-error" id="email-error">{errorText('email')}</p>}
+          </div>
+          <fieldset>
+            <legend>{t(m.shop_address)}</legend>
+            {fields.map(({ name, autocomplete, inputmode }) => (
+              <div class="field">
+                <label for={name}>{labels[name]}</label>
+                <input class="shop-control" id={name} {name} type="text" {autocomplete} {inputmode} spellcheck={inputmode ? 'false' : undefined} required={!optionalFields.has(name)} value={values[name]} aria-invalid={errors[name] ? 'true' : undefined} aria-describedby={errors[name] ? `${name}-error` : undefined} />
+                {errorText(name) && <p class="field-error" id={`${name}-error`}>{errorText(name)}</p>}
+              </div>
+            ))}
+            <div class="field">
+              <label for="country">{labels.country}</label>
+              <select class="shop-control" id="country" name="country" autocomplete="country" aria-describedby={errors.country ? 'country-hint country-error' : 'country-hint'} aria-invalid={errors.country ? 'true' : undefined}>
+                <option value="DE">{t(m.shop_country_de)}</option>
+              </select>
+              <p class="hint" id="country-hint">{t(m.shop_shipping_only_de)}</p>
+              {errorText('country') && <p class="field-error" id="country-error">{errorText('country')}</p>}
+            </div>
+          </fieldset>
+          <Button type="submit" size="lg">{t(m.shop_to_payment)}</Button>
+        </form>
+      )}
+      <Text variant="small" tone="muted" class="legal">
+        {t(m.shop_legal)}
+      </Text>
+      <ul class="legal-links">
+        <li><Link href={localizedPath(locale, 'terms')}>{t(m.home_terms)}</Link></li>
+        <li><Link href={localizedPath(locale, 'privacy')}>{t(m.home_privacy)}</Link></li>
+      </ul>
+    </div>
+    <Card.Root as="aside" size="sm" aria-labelledby="order-heading">
+      <Card.Header><Card.Title level={2} id="order-heading">{t(m.shop_order_summary)}</Card.Title></Card.Header>
+      <Card.Content>
+        <ul class="order-lines">
+          {items.map((item) => {
+            const product = lineProduct(item)
+            return (
+              <li>
+                <span>{product ? <span {...titleAttributes(product)}>{product.title}</span> : t(m.shop_not_available)} <bdi>× {formatNumber(item.quantity, locale)}</bdi></span>
+                <bdi class="price">{formatPrice((product?.priceInEUR ?? 0) * item.quantity, locale)}</bdi>
+              </li>
+            )
+          })}
+        </ul>
+        <ShopTotals {locale} subtotal={cartSubtotal(items)} {shipping} note={settings.priceNote} />
+      </Card.Content>
+      <Card.Footer><Link variant="standalone" href={cartPath}>{t(m.shop_edit_cart)}</Link></Card.Footer>
+    </Card.Root>
+  </div>
+</BaseLayout>
+
+<style>
+  .checkout-layout { display: grid; gap: var(--space-lg); align-items: start; }
+  .checkout-main { display: grid; gap: var(--space-md); min-inline-size: 0; }
+  .checkout-form { display: grid; gap: var(--space-md); justify-items: start; }
+  fieldset { display: grid; gap: var(--space-md); justify-self: stretch; margin: 0; padding: 0; border: 0; }
+  legend { margin-block-end: var(--space-sm); font-family: var(--font-serif); font-size: var(--font-size-lg); }
+  .field { display: grid; gap: var(--space-3xs); justify-self: stretch; max-inline-size: 32rem; }
+  label { font-weight: 600; }
+  [aria-invalid='true'] { border-color: var(--error); border-width: 2px; }
+  .hint { margin: 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
+  .field-error { margin: 0; font-size: var(--font-size-sm); color: var(--error); font-weight: 600; }
+  .shop-alert { justify-self: stretch; }
+  .shop-alert p, .shop-alert ul { margin: 0; }
+  .shop-alert ul { padding-inline-start: var(--space-md); }
+  .payment-step { display: grid; gap: var(--space-md); }
+  .payment-step :global(h2) { margin: 0; }
+  .ship-to { display: grid; gap: var(--space-sm); margin: 0; }
+  .ship-to dt { font-size: var(--font-size-sm); color: var(--muted-foreground); }
+  .ship-to dd { margin: 0; }
+  .checkout-main :global(.legal) { margin: 0; max-inline-size: 60ch; }
+  .legal-links { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-md); margin: 0; padding: 0; list-style: none; }
+  .order-lines { display: grid; gap: var(--space-xs); margin: 0 0 var(--space-md); padding: 0; list-style: none; }
+  .order-lines li { display: flex; justify-content: space-between; gap: var(--space-sm); overflow-wrap: anywhere; }
+  @media (min-width: 48rem) {
+    .checkout-layout { grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); }
+  }
+</style>

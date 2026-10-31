@@ -159,3 +159,26 @@ export interface Article {
   } | null;
   _status?: "draft" | "published";
 }
+
+export interface Product {
+  id: number | string;
+  title: string;
+  titleLanguage?: string | null;
+  slug: string;
+  image?: MediaReference | number | string | null;
+  description?: FixedPage["content"];
+  /** Cents; the ecommerce plugin treats 0 as missing. */
+  priceInEUR?: number | null;
+  /** Empty means unlimited; 0 or less is sold out. */
+  inventory?: number | null;
+  isbn?: string | null;
+  pages?: number | null;
+  publisher?: string | null;
+  year?: number | null;
+}
+
+export interface ShopSettings {
+  /** Flat Germany shipping rate in cents. */
+  shippingRate: number;
+  priceNote?: string | null;
+}

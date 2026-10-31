@@ -26,6 +26,8 @@ import { contentFields } from "./components/contentFields";
 import { FixedPages } from "./globals/FixedPages";
 import { Homepage } from "./globals/Homepage";
 import { EventsPage } from "./globals/EventsPage";
+import { ShopSettings } from "./globals/ShopSettings";
+import { shop } from "./shop/plugin";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -62,20 +64,22 @@ export default buildConfig({
       },
     },
   })),
-  globals: [Homepage, EventsPage, ...FixedPages].map((global) => ({
-    ...global,
-    fields: contentFields(global.fields),
-    admin: {
-      ...global.admin,
-      components: {
-        elements: {
-          beforeDocumentControls: [
-            "./components/CollectionLabels#CollectionLabels",
-          ],
+  globals: [Homepage, EventsPage, ...FixedPages, ShopSettings].map(
+    (global) => ({
+      ...global,
+      fields: contentFields(global.fields),
+      admin: {
+        ...global.admin,
+        components: {
+          elements: {
+            beforeDocumentControls: [
+              "./components/CollectionLabels#CollectionLabels",
+            ],
+          },
         },
       },
-    },
-  })),
+    }),
+  ),
   plugins: [
     mcpPlugin({
       overrideApiKeyCollection: (collection) => ({
@@ -114,6 +118,7 @@ export default buildConfig({
         },
       },
     }),
+    shop,
   ],
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL },

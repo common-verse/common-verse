@@ -1,0 +1,57 @@
+---
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Text } from '$lib/components/ui/text'
+import { Badge } from '$lib/components/ui/badge'
+import { isLocale, localizedPath } from '@poetry/i18n'
+import EditorialImage from '../../../components/EditorialImage.astro'
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { getProducts } from '../../../lib/cms'
+import { formatPrice, isSoldOut, titleAttributes } from '../../../lib/shop'
+import * as m from '../../../paraglide/messages.js'
+
+const { locale: rawLocale } = Astro.params
+if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
+const locale = rawLocale
+const products = await getProducts(locale)
+const title = m.shop_title({}, { locale })
+const description = m.shop_intro({}, { locale })
+---
+
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} {description} canonicalPath="shop">
+  <section class="shop">
+    <header class="shop-heading">
+      <div>
+        <Heading level={1}>{title}</Heading>
+        <Text variant="lead">{description}</Text>
+      </div>
+      <Link variant="standalone" href={localizedPath(locale, 'shop/cart')}>{m.shop_cart({}, { locale })}</Link>
+    </header>
+    {products.length ? (
+      <ul class="book-grid">
+        {products.map((product) => (
+          <li>
+            <article class="book-card">
+              <EditorialImage image={product.image} {locale} context="cover" />
+              <Heading level={2} class="book-title"><Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link></Heading>
+              {isSoldOut(product)
+                ? <Badge variant="secondary">{m.shop_sold_out({}, { locale })}</Badge>
+                : product.priceInEUR
+                  ? <p class="book-price"><bdi class="price">{formatPrice(product.priceInEUR, locale)}</bdi></p>
+                  : <Badge variant="secondary">{m.shop_not_available({}, { locale })}</Badge>}
+            </article>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="empty-message">{m.shop_empty({}, { locale })}</p>}
+  </section>
+</BaseLayout>
+
+<style>
+  .shop-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-md); margin-block-end: var(--space-lg); }
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr)); gap: var(--space-lg-xl) var(--space-lg); margin: 0; padding: 0; list-style: none; }
+  .book-card { display: grid; gap: var(--space-xs); justify-items: start; min-inline-size: 0; }
+  .book-card :global(.editorial-image) { justify-self: stretch; }
+  .book-card :global(.book-title) { margin: var(--space-2xs) 0 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
+  .book-price { margin: 0; font-weight: 700; }
+</style>

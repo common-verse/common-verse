@@ -6,7 +6,7 @@ import { FixedPages, fixedPagePreviewUrl } from "./FixedPages";
 
 afterEach(() => vi.unstubAllEnvs());
 
-it("provides four fixed editors and hides the legacy page builder", async () => {
+it("provides five fixed editors and hides the legacy page builder", async () => {
   const config = await configPromise;
   expect(FixedPages.map((page) => page.slug)).toEqual([...fixedPageKeys]);
   expect(

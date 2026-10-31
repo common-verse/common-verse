@@ -161,5 +161,22 @@
   "event_description_limit": "Bis zu 160 Zeichen. Ein kurzer Satz für das Programm.",
   "events_introduction_limit": "Bis zu 180 Zeichen. Das Programm in ein oder zwei Sätzen vorstellen.",
   "additional_featured_events": "Weitere hervorgehobene Veranstaltungen",
-  "additional_featured_events_help": "Bis zu vier weitere kommende Veranstaltungen in Anzeigereihenfolge wählen. Vergangene Veranstaltungen, Entwürfe und Duplikate werden ausgelassen."
+  "additional_featured_events_help": "Bis zu vier weitere kommende Veranstaltungen in Anzeigereihenfolge wählen. Vergangene Veranstaltungen, Entwürfe und Duplikate werden ausgelassen.",
+  "terms": "AGB & Widerruf",
+  "shop": "Shop",
+  "shop_settings": "Shop-Einstellungen",
+  "title_language": "Sprache des Titels",
+  "book_cover": "Cover",
+  "isbn": "ISBN",
+  "page_count": "Seitenzahl",
+  "publisher": "Verlag",
+  "publication_year": "Erscheinungsjahr",
+  "price": "Preis",
+  "price_help": "Mit Dezimalpunkt eingeben, z. B. 12.50, nicht 12,50.",
+  "inventory_help": "Vorrätige Exemplare. 0 bedeutet ausverkauft; leer lassen für unbegrenzt.",
+  "shipping_rate": "Versand innerhalb Deutschlands",
+  "shipping_rate_help": "Pauschale, die jeder Bestellung einmal hinzugefügt wird. Mit Dezimalpunkt eingeben, z. B. 4.50.",
+  "price_note": "Hinweis zu den Preisen",
+  "price_note_help": "Erscheint unter den Preisen und an der Kasse, z. B. ein Hinweis zur Umsatzsteuer.",
+  "slug_reserved": "Diese URL verwendet der Shop. Bitte eine andere wählen."
 }

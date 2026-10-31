@@ -21,6 +21,12 @@ const entityOrder = [
   "contact",
   "privacy",
   "legal",
+  "terms",
+  "products",
+  "orders",
+  "shop-settings",
+  "carts",
+  "transactions",
 ];
 const rank = (slug: string) => {
   const index = entityOrder.indexOf(slug);

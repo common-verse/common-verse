@@ -7,15 +7,17 @@ There is no public registration, contributor login, or account-to-author link.
 The developer is the Administrator. Content managers receive Editor accounts and
 primarily create and publish articles and events.
 
-| Capability                                           | Administrator | Editor |
-| ---------------------------------------------------- | ------------- | ------ |
-| Create, edit, publish and delete articles and events | Yes           | Yes    |
-| Manage shared locations                              | Yes           | Yes    |
-| Manage images and fixed pages                        | Yes           | Yes    |
-| Edit own account details                             | Yes           | Yes    |
-| Create Editor accounts                               | Yes           | Yes    |
-| Delete accounts and assign Administrator roles       | Yes           | No     |
-| Manage MCP API keys                                  | Yes           | No     |
+| Capability                                                | Administrator | Editor |
+| --------------------------------------------------------- | ------------- | ------ |
+| Create, edit, publish and delete articles and events      | Yes           | Yes    |
+| Manage shared locations                                   | Yes           | Yes    |
+| Manage images and fixed pages                             | Yes           | Yes    |
+| Manage shop products and settings; view and update orders | Yes           | Yes    |
+| View carts and payment transactions; delete orders        | Yes           | No     |
+| Edit own account details                                  | Yes           | Yes    |
+| Create Editor accounts                                    | Yes           | Yes    |
+| Delete accounts and assign Administrator roles            | Yes           | No     |
+| Manage MCP API keys                                       | Yes           | No     |
 
 Permissions are enforced by Payload access controls, including API requests;
 hiding controls is not the security boundary. Editors cannot promote themselves
@@ -26,6 +28,7 @@ the first account an Administrator. On an existing installation, ensure the
 intended developer account has `role: admin` before enforcing these rules.
 See [migrations](migrations.md) before upgrading an existing database.
 Do not guess an administrator from an email address or create credentials in seeds.
+Shop buyers check out as guests and never receive accounts; see [shop](shop.md).
 
 The last Administrator cannot be demoted to Editor or deleted. Promote another
 user to Administrator first. Payload rejects and rolls back changes that would

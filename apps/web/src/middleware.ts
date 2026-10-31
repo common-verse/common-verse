@@ -16,9 +16,11 @@ export const onRequest = defineMiddleware((context, next) => {
   const mainPage =
     identity === "/" ||
     fixedPageKeys.some((page) => identity === `/${page}`) ||
-    /^\/(events|poems|authors|articles)$/.test(identity);
+    /^\/(events|poems|authors|articles|shop)$/.test(identity);
   const knownPage =
-    mainPage || /^\/(events|poems|authors|articles)\/[^/]+\/?$/.test(identity);
+    mainPage ||
+    /^\/(events|poems|authors|articles|shop)\/[^/]+\/?$/.test(identity) ||
+    identity === "/shop/checkout/complete";
   const canonicalPath = localizedPath(locale, identity);
   if (knownPage && pathname !== canonicalPath) {
     if (mainPage) return context.redirect(`${canonicalPath}${search}`, 301);

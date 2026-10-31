@@ -28,7 +28,7 @@ This app renders the public website with Astro and Svelte 5. Apply the
   Paraglide messages during rendering. Do not mutate a global locale per request
   or edit generated files in `src/paraglide`.
 - Missing editorial translations must remain missing. Only About, Contact,
-  Privacy, and Legal Notice fall back to a complete English page. Preserve poem
+  Privacy, Legal Notice, and Terms fall back to a complete English page. Preserve poem
   originals and their optional explicit translations independently of UI locale.
 - Set `lang` and `dir` on content whose language differs from the surrounding UI.
   Reuse `contentDirection` for editorial languages outside the configured locales.

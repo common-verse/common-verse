@@ -3,7 +3,7 @@ import node from "@astrojs/node";
 import svelte from "@astrojs/svelte";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "astro/config";
+import { defineConfig, envField } from "astro/config";
 
 export default defineConfig({
   output: "server",
@@ -20,6 +20,15 @@ export default defineConfig({
     },
   ],
   server: { port: 4321 },
+  env: {
+    schema: {
+      PUBLIC_STRIPE_PUBLISHABLE_KEY: envField.string({
+        context: "server",
+        access: "public",
+        optional: true,
+      }),
+    },
+  },
   vite: {
     envDir: "../../",
     plugins: [tailwindcss(), paraglideVitePlugin(paraglideConfig)],

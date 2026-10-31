@@ -89,6 +89,7 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
         <a href={localizedPath(locale, "contact")}>{m.home_contact({}, { locale })}</a>
         <a href={localizedPath(locale, "privacy")}>{m.home_privacy({}, { locale })}</a>
         <a href={localizedPath(locale, "legal")}>{m.home_legal({}, { locale })}</a>
+        <a href={localizedPath(locale, "terms")}>{m.home_terms({}, { locale })}</a>
       </nav>
       <p>© {new Date().getFullYear()} The Poetry Project e.V.</p>
     </footer>

@@ -10,6 +10,7 @@ procedures; agent instructions live in the [root](../AGENTS.md),
 - [Editorial models](editorial-models.md) — Collections, fixed globals, poem originals, and naming contracts.
 - [Accounts and permissions](accounts-and-permissions.md) — Current admin/editor access and the planned contributor workflow.
 - [Homepage editing](homepage-editing.md) — Homepage controls, section selection, ordering, and visibility.
+- [Shop](shop.md) — Book products, orders, guest checkout with Stripe, and known limits.
 
 ## Languages and public pages
 

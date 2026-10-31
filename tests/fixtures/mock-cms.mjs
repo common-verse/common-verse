@@ -185,6 +185,147 @@ function homepage(locale, preview) {
   return { feature, sections, _status: preview ? "draft" : "published" };
 }
 
+const product = (id, slug, title, titleLanguage, priceInEUR, inventory) => ({
+  id,
+  slug,
+  title,
+  titleLanguage,
+  priceInEUR,
+  inventory,
+  image: media,
+  isbn: "978-3-95732-607-2",
+  pages: 240,
+  publisher: "Verbrecher Verlag",
+  year: 2024,
+});
+const products = [
+  product(101, "beside-me", "Sei neben mir", "de", 2000, null),
+  product(102, "german-only", "Nur auf Deutsch", "de", 1500, 5),
+  product(103, "sold-out", "Sold Out Anthology", "en", 0, 0),
+  product(104, "passing-words", "كلمات عابرة", "ar", 1000, 3),
+];
+// IDs from 200 exist only for cart tests and are not listed; from 300 one copy is left.
+const findProduct = (id) =>
+  products.find((entry) => String(entry.id) === String(id)) ??
+  (Number(id) >= 200
+    ? product(
+        Number(id),
+        `extra-${id}`,
+        `Extra ${id}`,
+        "en",
+        500,
+        Number(id) >= 300 ? 1 : null,
+      )
+    : null);
+// Payload omits a missing localized description.
+const localizedProduct = (entry, locale) =>
+  entry.id === 102 && locale !== "de"
+    ? entry
+    : {
+        ...entry,
+        description: plainTextToRichText(
+          `Book description ${entry.id} ${locale}`,
+        ),
+      };
+
+const carts = new Map();
+const shopLog = { initiate: [], confirm: [] };
+const readJSON = (request) =>
+  new Promise((resolve) => {
+    let body = "";
+    request.on("data", (chunk) => (body += chunk));
+    request.on("end", () => resolve(body ? JSON.parse(body) : {}));
+  });
+const cartResponse = (cart, depth) => ({
+  id: cart.id,
+  purchasedAt: cart.purchasedAt ?? null,
+  // Payload stores the subtotal of the last cart write; prices may have changed since.
+  subtotal: 1,
+  items: cart.items.map((item) => ({
+    ...item,
+    product: depth ? findProduct(item.product) : item.product,
+  })),
+});
+
+async function handleShop(request, response, url) {
+  const send = (status, body) => {
+    response.statusCode = status;
+    response.end(JSON.stringify(body));
+  };
+  const body = request.method === "POST" ? await readJSON(request) : {};
+  if (url.pathname === "/api/carts" && request.method === "POST") {
+    if (body.items.some((item) => typeof item.product !== "number"))
+      return send(400, { errors: [] });
+    const cart = {
+      id: carts.size + 1,
+      secret: `secret${carts.size + 1}`.padEnd(40, "0"),
+      items: body.items.map((item, index) => ({ id: `line${index}`, ...item })),
+    };
+    carts.set(String(cart.id), cart);
+    return send(201, {
+      doc: { ...cartResponse(cart, 0), secret: cart.secret },
+    });
+  }
+  const cartMatch = url.pathname.match(/^\/api\/carts\/(\w+)(?:\/([\w-]+))?$/);
+  if (cartMatch) {
+    const cart = carts.get(cartMatch[1]);
+    const secret = body.secret ?? url.searchParams.get("secret");
+    if (!cart || cart.secret !== secret)
+      return send(404, { success: false, message: "Not found" });
+    const action = cartMatch[2];
+    if (!action)
+      return send(200, cartResponse(cart, url.searchParams.get("depth")));
+    const line = cart.items.find((item) => item.id === body.itemID);
+    if (action === "add-item") {
+      if (typeof body.item.product !== "number") return send(404, {});
+      if (!findProduct(body.item.product)) return send(400, { errors: [] });
+      cart.items.push({
+        id: `line${cart.items.length}-${Date.now()}`,
+        product: Number(body.item.product),
+        quantity: body.quantity,
+      });
+    } else if (!line) return send(404, { success: false });
+    else if (action === "update-item") line.quantity = body.quantity;
+    else if (action === "remove-item")
+      cart.items.splice(cart.items.indexOf(line), 1);
+    return send(200, { success: true, cart: cartResponse(cart, 0) });
+  }
+  if (url.pathname === "/api/payments/stripe/initiate") {
+    const entry = { body, cookie: request.headers.cookie ?? null };
+    shopLog.initiate.push(entry);
+    const cart = carts.get(String(body.cartID));
+    if (!cart || cart.secret !== body.secret)
+      return send(404, { message: "Cart not found" });
+    if (body.customerEmail === "stock@example.org")
+      return send(400, { message: {}, cause: { code: "OutOfStock" } });
+    const paymentIntentID = `pi_test${shopLog.initiate.length}`;
+    cart.paymentIntentID = entry.paymentIntentID = paymentIntentID;
+    return send(200, {
+      message: "Payment initiated successfully",
+      clientSecret: `${paymentIntentID}_secret_test`,
+      paymentIntentID,
+    });
+  }
+  if (url.pathname === "/api/payments/stripe/confirm-order") {
+    shopLog.confirm.push(body);
+    const cart = carts.get(String(body.cartID));
+    if (
+      !cart ||
+      cart.secret !== body.secret ||
+      cart.paymentIntentID !== body.paymentIntentID ||
+      body.customerEmail === "pending@example.org"
+    )
+      return send(500, { message: "Error confirming order." });
+    cart.purchasedAt = new Date().toISOString();
+    return send(200, {
+      message: "Payment confirmed.",
+      orderID: 1001,
+      transactionID: 1,
+    });
+  }
+  return send(404, { error: "Not found" });
+}
+
 const previewTitles = new Map();
 const reversedHomepageLocales = new Set();
 
@@ -199,6 +340,13 @@ const server = http.createServer((request, response) => {
   }
   if (url.pathname === "/health")
     return response.end(JSON.stringify({ ok: true }));
+  if (url.pathname === "/shop-log")
+    return response.end(JSON.stringify(shopLog));
+  if (
+    /^\/api\/(carts|payments)\//.test(url.pathname) ||
+    url.pathname === "/api/carts"
+  )
+    return handleShop(request, response, url);
 
   if (url.pathname === "/preview-update" && request.method === "POST") {
     if (url.searchParams.get("document") === "homepage") {
@@ -231,7 +379,7 @@ const server = http.createServer((request, response) => {
 
   const locale = url.searchParams.get("locale") ?? "de";
   const fixedPage = url.pathname.match(
-    /^\/api\/globals\/(about|contact|privacy|legal)\/(public|preview)$/,
+    /^\/api\/globals\/(about|contact|privacy|legal|terms)\/(public|preview)$/,
   )?.[1];
   if (fixedPage) {
     if (fixedPage === "privacy" && locale === "fa" && !isPreview)
@@ -253,6 +401,26 @@ const server = http.createServer((request, response) => {
         _status: isPreview ? "draft" : "published",
       }),
     );
+  }
+  if (url.pathname === "/api/globals/shop-settings") {
+    // Ukrainian stands in for settings that no editor has saved yet.
+    if (locale === "uk") return response.end("{}");
+    return response.end(
+      JSON.stringify({
+        shippingRate: 400,
+        priceNote:
+          locale === "de"
+            ? "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+            : null,
+      }),
+    );
+  }
+  if (url.pathname === "/api/products") {
+    const slug = url.searchParams.get("where[slug][equals]");
+    const docs = products
+      .filter((entry) => !slug || entry.slug === slug)
+      .map((entry) => localizedProduct(entry, locale));
+    return response.end(JSON.stringify({ docs, totalDocs: docs.length }));
   }
   if (url.pathname.startsWith("/api/globals/events-page/")) {
     return response.end(

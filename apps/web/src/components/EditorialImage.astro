@@ -2,12 +2,12 @@
 import type { MediaReference } from '@poetry/types'
 import { mediaObject } from '../lib/homepage'
 import type { Locale } from '@poetry/i18n'
-interface Props { image?: MediaReference | number | string | null; locale: Locale; eager?: boolean; context?: 'event' | 'portrait'; transitionName?: string }
+interface Props { image?: MediaReference | number | string | null; locale: Locale; eager?: boolean; context?: 'event' | 'portrait' | 'cover'; transitionName?: string }
 const { image, eager = false, context = 'event', transitionName } = Astro.props
 const media = mediaObject(image)
 const url = media?.url ? new URL(media.url, import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001').href : null
 ---
-{media && url && <figure class="editorial-image" data-image-context={context} style={context === 'portrait' ? '--editorial-image-ratio: 4 / 5; --editorial-image-position: center 25%' : undefined}>
+{media && url && <figure class="editorial-image" data-image-context={context} style={context === 'portrait' ? '--editorial-image-ratio: 4 / 5; --editorial-image-position: center 25%' : context === 'cover' ? `--editorial-image-ratio: auto ${media.width ?? 1200} / ${media.height ?? 800}` : undefined}>
   <img src={url} alt={media.alt} width={media.width ?? 1200} height={media.height ?? 800} loading={eager ? 'eager' : 'lazy'} decoding="async" style={transitionName ? `view-transition-name: ${transitionName}` : undefined} />
 </figure>}
 <style>

@@ -24,10 +24,10 @@ translated navigation labels and internal field names.
 - Content-record slugs are separate from interface labels. Keep existing slugs
   stable; changes to a record's public URL require an explicit naming decision.
 
-Fixed local routes are backed by the About, Contact, Privacy, and Legal Notice
-Payload globals. German uses `/ueber-uns`, `/kontakt`, `/datenschutz`, and
-`/impressum`; other locales use `/about`, `/contact`, `/privacy`, and `/legal`
-with a locale prefix. The footer links to these local routes. Missing or incomplete
+Fixed local routes are backed by the About, Contact, Privacy, Legal Notice, and
+Terms of sale Payload globals. German uses `/ueber-uns`, `/kontakt`,
+`/datenschutz`, `/impressum`, and `/agb`; other locales use `/about`, `/contact`,
+`/privacy`, `/legal`, and `/terms` with a locale prefix. The footer links to these local routes. Missing or incomplete
 translations use the English page. If English is also unavailable, the route returns
 a 404. Language alternates include routes served with English fallback. Editors can
 supply and publish translations separately for each language.
@@ -36,7 +36,12 @@ Poems, Authors, Events and Articles use `/gedichte`, `/autoren`,
 `/veranstaltungen` and `/artikel` in German. Other locales use prefixed English
 segments: `/ar/poems`, `/ar/authors`, `/ar/events` and `/ar/articles`.
 Main-page redirects also cover collection indexes, such as `/de/articles` →
-`/artikel`. Detail-page aliases and old collection names (`blog`, `posts`,
+`/artikel`.
+
+The shop uses `shop` in every locale: `/shop` and `/ar/shop` list books,
+`/shop/<slug>` shows a book, and `/shop/cart`, `/shop/checkout`, and
+`/shop/checkout/complete` handle the order. Product slugs `cart` and `checkout`
+are therefore unavailable. Detail-page aliases and old collection names (`blog`, `posts`,
 `workshops`, `poets`) still return 404 without redirects.
 
 ## Implementation
@@ -45,7 +50,7 @@ Main-page redirects also cover collection indexes, such as `/de/articles` →
 mappings. Links, previews, metadata, and language switching use `localizedPath`;
 Astro middleware resolves German paths and rejects noncanonical paths. Query strings,
 anchors, and content-record slugs survive language switching. About, contact, privacy,
-and legal routes resolve fixed Payload globals.
+legal, and terms routes resolve fixed Payload globals.
 
 The document declares the routed locale in `lang` and `dir`; embedded content
 declares its own language. Fallback content follows the rules in

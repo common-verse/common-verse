@@ -17,6 +17,11 @@ Event metadata derives from the title, description, and cover image. Events have
 no separate SEO fields. Their structured data uses the date/time and location;
 prices and end dates are not part of the event model.
 
+Book pages emit schema.org `Book` data from the product fields that exist, with
+an `Offer` only when a price is set. Cart, checkout, and order confirmation pages
+are personal: they emit `noindex,nofollow`, no language alternates, and
+`Cache-Control: no-store`.
+
 Use `apps/web/src/layouts/BaseLayout.astro` for document metadata. Resolve URLs
 through `@poetry/i18n` as described in [routing](routing.md).
 See [draft previews](previews.md) for preview authorization and response headers.

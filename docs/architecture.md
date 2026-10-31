@@ -15,8 +15,8 @@ components that need browser state or events. Avoid `client:only`, broad
 Validate route parameters with `@poetry/i18n`. Fetch published Payload content
 server-side. Preview URLs may request drafts only after verifying the preview
 secret. Consider metadata, locale alternates, direction, empty/error behavior, and
-keyboard behavior when adding pages. Stripe and ecommerce remain deferred until
-the CMS milestone is reviewed and a separate implementation decision is made.
+keyboard behavior when adding pages. The bookshop uses Payload's ecommerce plugin
+with Stripe and guest checkout; see [shop](shop.md).
 
 ## Shared contracts
 

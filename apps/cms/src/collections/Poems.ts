@@ -4,7 +4,7 @@ import type { CollectionConfig } from "payload";
 import { authenticated, publishedOrAuthenticated } from "./access";
 import { collectionPreviewUrl, previewEndpoint } from "./preview";
 
-const languageOptions = [
+export const languageOptions = [
   { label: label("german"), value: "de" },
   { label: label("english"), value: "en" },
   { label: label("arabic"), value: "ar" },

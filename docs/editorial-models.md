@@ -19,9 +19,10 @@ not need a byline; events describe activities rather than authored texts.
 
 Keep Payload’s native dashboard and cards. Organize the editorial sidebar as
 Content (Articles, Events, Locations), Media (Images & Files), Administration (Users),
-then Pages (Home, About, Contact, Privacy, Legal Notice). Collection IDs, route identities and labels use the same editorial names, including `locations`.
+Pages (Home, About, Contact, Privacy, Legal Notice, Terms of sale), then Shop
+(Products, Orders, Shop settings). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
-Home, the Events page, About, Contact, Privacy, and Legal Notice are fixed Payload globals. Event,
+Home, the Events page, About, Contact, Privacy, Legal Notice, and Terms of sale & withdrawal are fixed Payload globals. Event,
 poet, and poem detail pages come from their collections. Articles are an MVP collection with localized native rich text, drafts, preview
 and public article routes. Do not add arbitrary pages. The legacy `pages` collection remains
 hidden to preserve existing records and is not used by public routing or bulk seeding.
@@ -103,6 +104,11 @@ The native Location drawer has a responsive maximum width of 42rem. It uses the
 same fields as the Locations page, and its save action returns to the event form.
 
 Events keep their own location snapshots, so later bookmark edits do not automatically change other events. The same structured value is used by the field, collection, search, and public website. The development experiment has been removed.
+
+Products are books in the shop. A product has one unlocalized title (the
+edition's title) with an optional title language for `lang`/`dir`, a slug, a
+required cover, an optional localized description, a price, stock, and optional
+ISBN, page count, publisher and year. Products have no drafts. See [shop](shop.md).
 
 ## Naming contracts
 

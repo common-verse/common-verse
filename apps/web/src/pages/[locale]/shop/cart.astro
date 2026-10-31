@@ -1,0 +1,166 @@
+---
+import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from 'astro:env/server'
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Button } from '$lib/components/ui/button'
+import * as Card from '$lib/components/ui/card'
+import { isLocale, localizedPath } from '@poetry/i18n'
+import ShopTotals from '../../../components/ShopTotals.astro'
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { changeCart, createCart, getCart, getShopSettings } from '../../../lib/cms'
+import {
+  availableQuantity, cartCookie, cartSubtotal, cookieOptions, decodeCart, encodeCart, formatNumber, formatPrice, isLineAvailable,
+  lineProduct, maxCartLines, maxQuantity, parseIdentifier, parseQuantity, relationID, shippingRate, titleAttributes,
+} from '../../../lib/shop'
+import * as m from '../../../paraglide/messages.js'
+
+const { locale: rawLocale } = Astro.params
+if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
+const locale = rawLocale
+const cartPath = localizedPath(locale, 'shop/cart')
+const statuses = ['added', 'updated', 'removed', 'limit', 'invalid', 'failed'] as const
+type Status = (typeof statuses)[number]
+
+async function applyChange(form: FormData): Promise<Status> {
+  const action = form.get('action')
+  const quantity = parseQuantity(form.get('quantity'))
+  const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
+  if (action === 'add') {
+    const product = parseIdentifier(form.get('product'))
+    if (!product) return 'failed'
+    if (!quantity) return 'invalid'
+    const cart = access && (await getCart(access, locale))
+    if (!access || !cart) {
+      Astro.cookies.set(cartCookie, encodeCart(await createCart(product, quantity)), cookieOptions(import.meta.env.PROD))
+      return 'added'
+    }
+    const line = cart.items?.find((item) => relationID(item.product) === product)
+    if (line) {
+      if (line.quantity + quantity > maxQuantity) return 'invalid'
+      return (await changeCart(access, { action: 'update-item', itemID: line.id, quantity: line.quantity + quantity })) ? 'added' : 'failed'
+    }
+    if ((cart.items?.length ?? 0) >= maxCartLines) return 'limit'
+    return (await changeCart(access, { action: 'add-item', product, quantity })) ? 'added' : 'failed'
+  }
+  const itemID = parseIdentifier(form.get('item'))
+  if (!access || !itemID) return 'failed'
+  if (action === 'update') {
+    if (!quantity) return 'invalid'
+    return (await changeCart(access, { action: 'update-item', itemID, quantity })) ? 'updated' : 'failed'
+  }
+  if (action === 'remove') return (await changeCart(access, { action: 'remove-item', itemID })) ? 'removed' : 'failed'
+  return 'failed'
+}
+
+if (Astro.request.method === 'POST') {
+  let status: Status = 'failed'
+  try {
+    status = await applyChange(await Astro.request.formData())
+  } catch (error) {
+    console.error(error)
+  }
+  return Astro.redirect(`${cartPath}?status=${status}`, 303)
+}
+
+Astro.response.headers.set('Cache-Control', 'no-store')
+const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
+const [cart, settings] = await Promise.all([access ? getCart(access, locale) : null, getShopSettings(locale)])
+if (Astro.cookies.has(cartCookie) && !cart) Astro.cookies.delete(cartCookie, { path: '/' })
+const items = cart?.items ?? []
+const shipping = shippingRate(settings)
+const subtotal = cartSubtotal(items)
+const paymentsAvailable = shipping !== null && Boolean(PUBLIC_STRIPE_PUBLISHABLE_KEY)
+const linesAvailable = items.every(isLineAvailable)
+const requested = Astro.url.searchParams.get('status')
+const status = statuses.find((value) => value === requested)
+const max = formatNumber(maxQuantity, locale)
+const statusMessage = status && {
+  added: m.shop_status_added({}, { locale }),
+  updated: m.shop_status_updated({}, { locale }),
+  removed: m.shop_status_removed({}, { locale }),
+  limit: m.shop_status_limit({ count: formatNumber(maxCartLines, locale) }, { locale }),
+  invalid: m.shop_status_invalid({ min: formatNumber(1, locale), max }, { locale }),
+  failed: m.shop_status_failed({}, { locale }),
+}[status]
+const title = m.shop_cart({}, { locale })
+---
+
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/cart" noIndex alternateLocales={[]}>
+  <section class="cart">
+    <Heading level={1}>{title}</Heading>
+    {statusMessage && <p class="shop-alert" data-tone={['added', 'updated', 'removed'].includes(status!) ? 'success' : undefined} role="status">{statusMessage}</p>}
+    {items.length ? (
+      <div class="cart-layout">
+        <ul class="cart-lines">
+          {items.map((item) => {
+            const product = lineProduct(item)
+            const price = product?.priceInEUR ?? 0
+            const quantities = Array.from({ length: product ? availableQuantity(product) : 0 }, (_, index) => index + 1)
+            return (
+              <li class="cart-line">
+                <div class="cart-line-info">
+                  <Heading level={2} class="cart-line-title" id={`item-${item.id}`}>
+                    {product ? <Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link> : m.shop_not_available({}, { locale })}
+                  </Heading>
+                  {price > 0 && <p class="cart-unit">{m.shop_unit_price({}, { locale })}: <bdi class="price">{formatPrice(price, locale)}</bdi></p>}
+                  {!isLineAvailable(item) && <p class="shop-alert cart-hint">{m.shop_line_unavailable({}, { locale })}</p>}
+                </div>
+                {quantities.length > 0 && <form class="cart-quantity" method="post" action={cartPath}>
+                  <input type="hidden" name="action" value="update" />
+                  <input type="hidden" name="item" value={item.id} />
+                  <label for={`quantity-${item.id}`}>{m.shop_quantity({}, { locale })}</label>
+                  <select class="shop-control" id={`quantity-${item.id}`} name="quantity" aria-describedby={`item-${item.id}`}>
+                    {quantities.map((quantity) => <option value={quantity} selected={quantity === item.quantity}>{formatNumber(quantity, locale)}</option>)}
+                  </select>
+                  <Button type="submit" variant="outline" size="sm" aria-describedby={`item-${item.id}`}>{m.shop_update({}, { locale })}</Button>
+                </form>}
+                <form method="post" action={cartPath}>
+                  <input type="hidden" name="action" value="remove" />
+                  <input type="hidden" name="item" value={item.id} />
+                  <Button type="submit" variant="ghost" size="sm" aria-describedby={`item-${item.id}`}>{m.shop_remove({}, { locale })}</Button>
+                </form>
+                <p class="cart-line-total"><bdi class="price">{formatPrice(price * item.quantity, locale)}</bdi></p>
+              </li>
+            )
+          })}
+        </ul>
+        <Card.Root as="aside" size="sm" class="cart-summary" aria-labelledby="cart-summary-heading">
+          <Card.Header><Card.Title level={2} id="cart-summary-heading">{m.shop_order_summary({}, { locale })}</Card.Title></Card.Header>
+          <Card.Content><ShopTotals {locale} {subtotal} {shipping} note={settings.priceNote} /></Card.Content>
+          <Card.Footer class="cart-actions">
+            {!paymentsAvailable
+              ? <p class="shop-alert">{m.shop_payments_unavailable({}, { locale })}</p>
+              : !linesAvailable
+                ? <p class="shop-alert">{m.shop_cart_blocked({}, { locale })}</p>
+                : <Button href={localizedPath(locale, 'shop/checkout')}>{m.shop_checkout({}, { locale })}</Button>}
+            <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
+          </Card.Footer>
+        </Card.Root>
+      </div>
+    ) : (
+      <>
+        <p class="empty-message">{m.shop_cart_empty({}, { locale })}</p>
+        <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
+      </>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .cart-layout { display: grid; gap: var(--space-lg); align-items: start; }
+  .cart-lines { display: grid; margin: 0; padding: 0; list-style: none; }
+  .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-xs) var(--space-md); padding-block: var(--space-md); border-block-start: 1px solid var(--border); }
+  .cart-line-info { grid-column: 1 / -1; min-inline-size: 0; }
+  .cart-line :global(.cart-line-title) { margin: 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
+  .cart-unit { margin: var(--space-3xs) 0 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
+  .cart-quantity { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
+  .cart-hint { margin-block-start: var(--space-xs); font-size: var(--font-size-sm); }
+  .cart-line-total { grid-column: 1 / -1; margin: 0; font-weight: 700; }
+  .cart-layout :global(.cart-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+  @media (min-width: 48rem) {
+    .cart-layout { grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); }
+    .cart-line { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+    .cart-line-info { grid-column: auto; }
+    .cart-line-total { grid-column: auto; min-inline-size: 6rem; text-align: end; }
+  }
+</style>

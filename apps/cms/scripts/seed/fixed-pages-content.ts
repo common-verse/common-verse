@@ -1,6 +1,6 @@
 import type { FixedPageKey } from "@poetry/i18n";
 
-// Starting content for the four fixed informational pages.
+// Starting content for the fixed informational pages.
 export const fixedPagesContent: Record<
   FixedPageKey,
   Record<"de" | "en", { title: string; content: string; description: string }>
@@ -179,6 +179,56 @@ Design and development
 
 Consumer dispute resolution
 We are neither obliged nor willing to participate in dispute resolution proceedings before a consumer arbitration body.`,
+    },
+  },
+  terms: {
+    de: {
+      title: "AGB & Widerrufsbelehrung",
+      description:
+        "Allgemeine Geschäftsbedingungen und Widerrufsbelehrung für Bestellungen im Shop.",
+      content: `AGB & Widerrufsbelehrung — Platzhalter, vom Verein zu ersetzen
+
+Geltungsbereich und Vertragspartner
+Beispiel-Poesieverein
+[Anschrift]
+[Postleitzahl und Ort]
+shop@example.invalid
+
+Vertragsschluss
+[Wie eine Bestellung zustande kommt]
+
+Preise, Versand und Zahlung
+[Preise, Umsatzsteuer, Versand innerhalb Deutschlands und Zahlungsarten]
+
+Widerrufsbelehrung
+[Widerrufsrecht, Widerrufsfrist und Folgen des Widerrufs]
+
+Muster-Widerrufsformular
+[Muster-Widerrufsformular]`,
+    },
+    en: {
+      title: "Terms of sale & withdrawal",
+      description:
+        "Terms and conditions and the right of withdrawal for orders from our shop.",
+      content: `Terms of sale & right of withdrawal — placeholder, to be replaced by the association
+
+Scope and contracting party
+Example Poetry Association
+[Street address]
+[Postal code and city]
+shop@example.invalid
+
+Conclusion of contract
+[How an order becomes a contract]
+
+Prices, shipping and payment
+[Prices, VAT, shipping within Germany and payment methods]
+
+Right of withdrawal
+[Right of withdrawal, withdrawal period and consequences of withdrawal]
+
+Model withdrawal form
+[Model withdrawal form]`,
     },
   },
 };

@@ -1,0 +1,124 @@
+---
+import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
+import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Text } from '$lib/components/ui/text'
+import { Badge } from '$lib/components/ui/badge'
+import { Button } from '$lib/components/ui/button'
+import * as Card from '$lib/components/ui/card'
+import { isLocale, localizedPath } from '@poetry/i18n'
+import EditorialImage from '../../../components/EditorialImage.astro'
+import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { getProduct, getShopSettings } from '../../../lib/cms'
+import { mediaObject } from '../../../lib/homepage'
+import { availableQuantity, formatNumber, formatPrice, isPurchasable, isSoldOut, shippingRate, titleAttributes } from '../../../lib/shop'
+import * as m from '../../../paraglide/messages.js'
+
+const { locale: rawLocale, slug } = Astro.params
+if (!isLocale(rawLocale) || !slug) return new Response('Not found', { status: 404 })
+const locale = rawLocale
+const [product, settings] = await Promise.all([getProduct(slug, locale), getShopSettings(locale)])
+if (!product) return new Response('Not found', { status: 404 })
+const cmsUrl = import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'
+const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321'
+const media = mediaObject(product.image)
+const image = media?.url ? new URL(media.url, cmsUrl).href : null
+const plainDescription = product.description ? convertLexicalToPlaintext({ data: product.description }).trim() : ''
+const html = plainDescription ? convertLexicalToHTML({ data: product.description!, disableContainer: true }) : ''
+const description = plainDescription.slice(0, 160) || m.shop_intro({}, { locale })
+const soldOut = isSoldOut(product)
+const shipping = shippingRate(settings)
+const purchasable = isPurchasable(product)
+const quantities = Array.from({ length: availableQuantity(product) }, (_, index) => index + 1)
+// A zero price means "not for sale"; JSX would render the 0 itself.
+const price = product.priceInEUR || null
+const url = new URL(localizedPath(locale, `shop/${slug}`), siteUrl).href
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'Book',
+  name: product.title,
+  url,
+  ...(product.titleLanguage ? { inLanguage: product.titleLanguage } : {}),
+  ...(plainDescription ? { description: plainDescription } : {}),
+  ...(image ? { image: [image] } : {}),
+  ...(product.isbn ? { isbn: product.isbn } : {}),
+  ...(product.pages ? { numberOfPages: product.pages } : {}),
+  ...(product.publisher ? { publisher: { '@type': 'Organization', name: product.publisher } } : {}),
+  ...(product.year ? { datePublished: String(product.year) } : {}),
+  ...(product.priceInEUR ? {
+    offers: {
+      '@type': 'Offer',
+      url,
+      price: (product.priceInEUR / 100).toFixed(2),
+      priceCurrency: 'EUR',
+      availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    },
+  } : {}),
+}
+const facts = [
+  [m.shop_isbn({}, { locale }), product.isbn, 'ltr'],
+  [m.shop_pages({}, { locale }), product.pages ? formatNumber(product.pages, locale) : null, undefined],
+  [m.shop_publisher({}, { locale }), product.publisher, 'auto'],
+  [m.shop_year({}, { locale }), product.year ? formatNumber(product.year, locale) : null, undefined],
+].filter((fact): fact is [string, string, 'ltr' | 'auto' | undefined] => Boolean(fact[1]))
+---
+
+<BaseLayout {locale} title={`${product.title} · ${m.site_title({}, { locale })}`} {description} {image} {structuredData} canonicalPath={`shop/${slug}`}>
+  <article class="book-page">
+    <Link variant="standalone" class="back-link" href={localizedPath(locale, 'shop')}>{m.shop_back({}, { locale })}</Link>
+    <div class="book-layout">
+      <EditorialImage image={product.image} {locale} context="cover" eager />
+      <div class="book-main">
+        <Heading level={1} {...titleAttributes(product)}>{product.title}</Heading>
+        {soldOut && <Badge variant="secondary">{m.shop_sold_out({}, { locale })}</Badge>}
+        {!soldOut && !price && <Badge variant="secondary">{m.shop_not_available({}, { locale })}</Badge>}
+        {price && <p class="book-price"><bdi class="price">{formatPrice(price, locale)}</bdi></p>}
+        {price && settings.priceNote && <Text variant="small" tone="muted">{settings.priceNote}</Text>}
+        {price && shipping !== null && <Text variant="small" tone="muted">{m.shop_shipping_note({ rate: formatPrice(shipping, locale) }, { locale })}</Text>}
+        {purchasable && (
+          <form class="add-form" method="post" action={localizedPath(locale, 'shop/cart')}>
+            <input type="hidden" name="action" value="add" />
+            <input type="hidden" name="product" value={String(product.id)} />
+            <label for="quantity">{m.shop_quantity({}, { locale })}</label>
+            <select class="shop-control" id="quantity" name="quantity">
+              {quantities.map((quantity) => <option value={quantity}>{formatNumber(quantity, locale)}</option>)}
+            </select>
+            <Button type="submit">{m.shop_add({}, { locale })}</Button>
+          </form>
+        )}
+        {html && <div class="prose rich-text book-description" set:html={html} />}
+      </div>
+      {facts.length > 0 && (
+        <Card.Root as="aside" size="sm" class="book-facts" aria-labelledby="book-facts-heading">
+          <Card.Header><Card.Title level={2} id="book-facts-heading">{m.shop_details({}, { locale })}</Card.Title></Card.Header>
+          <Card.Content>
+            <dl>
+              {facts.map(([label, value, dir]) => <div><dt>{label}</dt><dd><bdi dir={dir}>{value}</bdi></dd></div>)}
+            </dl>
+          </Card.Content>
+        </Card.Root>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .book-page { overflow-wrap: anywhere; }
+  .book-page :global(.back-link) { margin-block-end: var(--space-md-lg); }
+  .book-layout { display: grid; gap: var(--space-lg); align-items: start; }
+  .book-layout :global(.editorial-image) { max-inline-size: 24rem; }
+  .book-main { display: grid; gap: var(--space-sm); justify-items: start; min-inline-size: 0; }
+  .book-main :global(h1) { margin: 0; font-size: var(--font-size-xxl); }
+  .book-main :global(.ui-text) { margin: 0; }
+  .book-price { margin: 0; font-size: var(--font-size-lg); font-weight: 700; }
+  .add-form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); margin-block: var(--space-sm); }
+  .book-description { max-inline-size: 65ch; margin: 0; line-height: 1.75; }
+  dl { margin: 0; display: grid; gap: var(--space-md); }
+  dt { font-size: var(--font-size-sm); color: var(--muted-foreground); margin-block-end: var(--space-3xs); }
+  dd { margin: 0; }
+  @media (min-width: 48rem) {
+    .book-layout { grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr); }
+    .book-layout :global(.book-facts) { grid-column: 1; }
+  }
+</style>

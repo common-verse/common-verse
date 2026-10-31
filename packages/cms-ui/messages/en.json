@@ -161,5 +161,22 @@
   "event_description_limit": "Up to 160 characters. One short sentence for the programme.",
   "events_introduction_limit": "Up to 180 characters. Introduce the programme in one or two sentences.",
   "additional_featured_events": "More featured events",
-  "additional_featured_events_help": "Choose up to four additional upcoming events, in display order. Past events, drafts, and duplicates are omitted."
+  "additional_featured_events_help": "Choose up to four additional upcoming events, in display order. Past events, drafts, and duplicates are omitted.",
+  "terms": "Terms of sale & withdrawal",
+  "shop": "Shop",
+  "shop_settings": "Shop settings",
+  "title_language": "Title language",
+  "book_cover": "Cover",
+  "isbn": "ISBN",
+  "page_count": "Number of pages",
+  "publisher": "Publisher",
+  "publication_year": "Year of publication",
+  "price": "Price",
+  "price_help": "Use a decimal point, e.g. 12.50, not 12,50.",
+  "inventory_help": "Copies in stock. 0 means sold out; leave empty for no limit.",
+  "shipping_rate": "Shipping within Germany",
+  "shipping_rate_help": "Flat rate added once to every order. Use a decimal point, e.g. 4.50.",
+  "price_note": "Price note",
+  "price_note_help": "Shown below prices and at checkout, e.g. a VAT notice.",
+  "slug_reserved": "The shop uses this URL. Choose another one."
 }

@@ -36,6 +36,7 @@ export default defineConfig({
             PLAYWRIGHT_PREVIEW_SECRET: "test-preview",
             PUBLIC_CMS_URL: `http://127.0.0.1:${cmsPort}`,
             PUBLIC_SITE_URL: `http://127.0.0.1:${webPort}`,
+            PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_playwright",
             HOST: "127.0.0.1",
             PORT: webPort,
           },

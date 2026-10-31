@@ -46,7 +46,13 @@ export const localeMetadata: Record<Locale, LocaleMetadata> = {
 
 export const defaultLocale: Locale = "de";
 
-export const fixedPageKeys = ["about", "contact", "privacy", "legal"] as const;
+export const fixedPageKeys = [
+  "about",
+  "contact",
+  "privacy",
+  "legal",
+  "terms",
+] as const;
 export type FixedPageKey = (typeof fixedPageKeys)[number];
 
 export function isLocale(value: string | undefined): value is Locale {
@@ -67,6 +73,8 @@ export const routeSegments = {
   contact: { de: "kontakt", international: "contact" },
   privacy: { de: "datenschutz", international: "privacy" },
   legal: { de: "impressum", international: "legal" },
+  terms: { de: "agb", international: "terms" },
+  shop: { de: "shop", international: "shop" },
 } as const;
 
 /** Resolves a public pathname back to its stable page identity. */

@@ -25,6 +25,8 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { EditorAccessibility as EditorAccessibility_8ea082617d58b45c96951564b3f10cb6 } from '../../../components/EventFields'
 import { LocationAliasLabel as LocationAliasLabel_a7abfb4442f001086aefc41caa86c17c } from '../../../components/LocationField'
 import { RoleField as RoleField_f96784b8b8f3c6be62056c5b6c5bfa8d } from '../../../components/RoleField'
+import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloadcms/plugin-ecommerce/client'
+import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { Nav as Nav_0def0093354eba26caa57440017abaea } from '../../../components/Nav'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -57,6 +59,8 @@ export const importMap = {
   "./components/EventFields#EditorAccessibility": EditorAccessibility_8ea082617d58b45c96951564b3f10cb6,
   "./components/LocationField#LocationAliasLabel": LocationAliasLabel_a7abfb4442f001086aefc41caa86c17c,
   "./components/RoleField#RoleField": RoleField_f96784b8b8f3c6be62056c5b6c5bfa8d,
+  "@payloadcms/plugin-ecommerce/client#PriceCell": PriceCell_e27bf7b8cc50640dcdd584767b8eac3c,
+  "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
   "./components/Nav#Nav": Nav_0def0093354eba26caa57440017abaea,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

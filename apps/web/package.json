@@ -22,6 +22,7 @@
     "@poetry/cms-ui": "workspace:*",
     "@poetry/i18n": "workspace:*",
     "@poetry/types": "workspace:*",
+    "@stripe/stripe-js": "10.1.0",
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.3.5",
     "bits-ui": "2.19.3",
