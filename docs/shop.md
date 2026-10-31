@@ -39,6 +39,45 @@ administrators only. See [accounts and permissions](accounts-and-permissions.md)
 The CMS must be called from the Astro server without cookies or API keys: a signed-in
 user would become the order's customer.
 
+## Legal duties
+
+Not legal advice: the association decides how to meet these norms. Texts were read
+on gesetze-im-internet.de on 2026-10-31; re-read the linked norm before relying on
+a detail.
+
+- **Start of checkout**: state clearly that delivery is to Germany only and which
+  payment methods are accepted
+  ([§ 312j Abs. 1 BGB](https://www.gesetze-im-internet.de/bgb/__312j.html)).
+- **Directly before the order button**: show, highlighted, the books' main
+  features, the total price and the shipping costs (§ 312j Abs. 2 BGB with
+  [Art. 246a § 1 Abs. 1 Nr. 1, 5, 7 EGBGB](https://www.gesetze-im-internet.de/bgbeg/art_246a__1.html)),
+  and give the withdrawal conditions with the model
+  [notice](https://www.gesetze-im-internet.de/bgbeg/art_253anlage_1.html) and
+  [form](https://www.gesetze-im-internet.de/bgbeg/art_253anlage_2.html)
+  (Art. 246a § 1 Abs. 2 EGBGB). On narrow screens the order summary must still
+  come before the button.
+- **Order button**: easily readable, labelled „Zahlungspflichtig bestellen“ or an
+  equally unambiguous wording, with no other text (§ 312j Abs. 3 BGB); otherwise
+  no contract is formed (Abs. 4). Other locales translate `shop_pay` faithfully.
+- **Around the order**: buyers can correct input errors before ordering, receive
+  an electronic receipt confirmation without delay, and can retrieve and save
+  the terms
+  ([§ 312i Abs. 1 Nr. 1, 3, 4 BGB](https://www.gesetze-im-internet.de/bgb/__312i.html)).
+  Whether Stripe's receipt counts as that confirmation is for the association
+  to decide.
+- **Prices**: say whether VAT is included and state shipping costs
+  ([§ 6 PAngV](https://www.gesetze-im-internet.de/pangv_2022/__6.html)).
+- **Withdrawal function**: books carry the 14-day withdrawal right
+  ([§ 312g Abs. 2 BGB](https://www.gesetze-im-internet.de/bgb/__312g.html) has no
+  exception for them). Since 2026-06-19,
+  [§ 356a BGB](https://www.gesetze-im-internet.de/bgb/__356a.html) requires an
+  easily readable, prominent function labelled „Vertrag widerrufen“ (or equally
+  unambiguous), reachable for the whole withdrawal period and not behind a
+  login. Buyers enter or confirm their name, the order, and where to receive the
+  confirmation, then send it with „Widerruf bestätigen“. The shop must
+  acknowledge it without delay on a durable medium, with its content and the date
+  and time of receipt.
+
 ## Configuration
 
 Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOKS_SIGNING_SECRET` for the CMS and
@@ -68,6 +107,8 @@ Locally, forward webhooks with
 berechnet.`) is a placeholder to confirm with the treasurer.
 - Terms of sale & withdrawal is a placeholder page; the association must replace it
   before launch.
+- There is no withdrawal function as § 356a BGB requires; it must exist before
+  launch.
 - A buyer who pays the same cart in two tabs is charged twice, and the webhook
   confirms both orders. Refund the duplicate in the Stripe Dashboard.
 - Abandoned carts and pending transactions remain in the database.
