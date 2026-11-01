@@ -8,14 +8,14 @@ import * as Card from '$lib/components/ui/card'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import CheckoutForm from '../../../../components/CheckoutForm.svelte'
 import PaymentForm from '../../../../components/PaymentForm.svelte'
-import ShopTotals from '../../../../components/ShopTotals.astro'
+import ShopTotals from '../../../../components/ShopTotals.svelte'
 import BaseLayout from '../../../../layouts/BaseLayout.astro'
 import { getCart, getShopSettings, initiatePayment, type PaymentStart } from '../../../../lib/cms'
 import type { Notice } from '../../../../lib/notifications'
 import {
-  cartCookie, cartSignature, cartSubtotal, checkoutCookie, cookieOptions, decodeCart, decodeCheckout, formatNumber, formatPrice,
-  isLineAvailable, lineProduct, parseCheckout, shippingRate, titleAttributes, type CheckoutAccess, type CheckoutError, type CheckoutField, type CheckoutValues,
+  cartCookie, cartSignature, cartSubtotal, checkoutCookie, cookieOptions, decodeCart, formatNumber, formatPrice, isLineAvailable, lineProduct, shippingRate, titleAttributes,
 } from '../../../../lib/shop'
+import { decodeCheckout, parseCheckout, type CheckoutAccess, type CheckoutError, type CheckoutField, type CheckoutValues } from '../../../../lib/checkout'
 import * as m from '../../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params

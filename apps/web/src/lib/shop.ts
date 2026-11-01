@@ -1,31 +1,21 @@
 import type { Locale } from "@poetry/i18n";
 import type { Product, ShopSettings } from "@poetry/types";
-import { type } from "arktype";
-import * as m from "../paraglide/messages.js";
 import { eventFormatLocale } from "./event-date";
-import { contentDirection } from "./homepage";
+import { contentDirection, mediaObject } from "./homepage";
 
 export const maxQuantity = 10;
 /** Stripe metadata values hold at most 500 characters; the cart snapshot fits seven lines. */
 export const maxCartLines = 7;
-const maxAddressLength = 500;
 
 export const cartCookie = "poetry-cart";
+/** Number of copies, so pages can show the cart button without asking the CMS. */
+export const cartCountCookie = "poetry-cart-count";
 export const checkoutCookie = "poetry-checkout";
 export const orderCookie = "poetry-order";
 
 export interface CartAccess {
   id: string;
   secret: string;
-}
-
-export interface CheckoutAccess {
-  paymentIntentID: string;
-  clientSecret: string;
-  email: string;
-  address: ShippingAddress;
-  /** Cart contents the payment was started for; see cartSignature. */
-  cart: string;
 }
 
 export interface CartLine {
@@ -45,6 +35,9 @@ export function formatPrice(cents: number, locale: Locale): string {
     currency: "EUR",
   }).format(cents / 100);
 }
+
+/** Keeps a title's own direction inside a translated sentence, where markup like <bdi> cannot go. */
+export const isolate = (text: string) => `\u2068${text}\u2069`;
 
 /** Book titles are not translated; declare the edition's own language. */
 export const titleAttributes = ({
@@ -92,6 +85,84 @@ export const cartSubtotal = (lines: CartLine[]) =>
     0,
   );
 
+export const cartCount = (lines: CartLine[]) =>
+  lines.reduce((sum, line) => sum + line.quantity, 0);
+
+export const decodeCartCount = (value: string | undefined) =>
+  /^\d{1,3}$/.test(value ?? "") ? Number(value) : 0;
+
+export interface CartViewLine {
+  id: string;
+  product: string | null;
+  title: string | null;
+  titleLanguage: string | null;
+  slug: string | null;
+  cover: { url: string; width: number; height: number } | null;
+  unitPrice: number;
+  quantity: number;
+  /** Highest quantity that can be ordered: 10, or the stock if lower; 0 when sold out or deleted. */
+  max: number;
+  /** Lower than 10 because of stock. */
+  stockLimited: boolean;
+  available: boolean;
+}
+
+export interface CartView {
+  lines: CartViewLine[];
+  subtotal: number;
+  shipping: number | null;
+  priceNote: string | null;
+  count: number;
+  checkout: "ready" | "payments-unavailable" | "blocked";
+}
+
+/** What the cart page and the drawer show; computed on the server, rendered in both. */
+export function cartView(
+  lines: (CartLine & { id: string })[],
+  settings: Partial<ShopSettings>,
+  paymentsConfigured: boolean,
+  cmsUrl: string,
+): CartView {
+  const shipping = shippingRate(settings);
+  return {
+    lines: lines.map((line) => {
+      const product = lineProduct(line);
+      const media = mediaObject(product?.image);
+      const max =
+        product && isPurchasable(product) ? availableQuantity(product) : 0;
+      return {
+        id: line.id,
+        product: relationID(line.product),
+        title: product?.title ?? null,
+        titleLanguage: product?.titleLanguage ?? null,
+        slug: product?.slug ?? null,
+        cover: media?.url
+          ? {
+              url: new URL(media.url, cmsUrl).href,
+              width: media.width ?? 1,
+              height: media.height ?? 1,
+            }
+          : null,
+        unitPrice: product?.priceInEUR ?? 0,
+        quantity: line.quantity,
+        max,
+        stockLimited: max > 0 && max < maxQuantity,
+        available: isLineAvailable(line),
+      };
+    }),
+    subtotal: cartSubtotal(lines),
+    shipping,
+    priceNote: settings.priceNote ?? null,
+    count: cartCount(lines),
+    checkout:
+      shipping === null || !paymentsConfigured
+        ? "payments-unavailable"
+        : lines.every(isLineAvailable)
+          ? "ready"
+          : "blocked",
+  };
+}
+
 export const cartSignature = (lines: CartLine[]) =>
   lines.map((line) => `${relationID(line.product)}x${line.quantity}`).join(",");
 
@@ -118,30 +189,6 @@ export function decodeCart(value: string | undefined): CartAccess | null {
     : null;
 }
 
-export function decodeCheckout(
-  value: string | undefined,
-): CheckoutAccess | null {
-  try {
-    const data = JSON.parse(value ?? "");
-    return typeof data?.paymentIntentID === "string" &&
-      /^pi_\w+$/.test(data.paymentIntentID) &&
-      typeof data.clientSecret === "string" &&
-      typeof data.cart === "string" &&
-      data.address?.country === "DE" &&
-      email.allows(data.email)
-      ? {
-          paymentIntentID: data.paymentIntentID,
-          clientSecret: data.clientSecret,
-          email: data.email,
-          address: data.address,
-          cart: data.cart,
-        }
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 /** Payload relationships can be populated objects or bare IDs. */
 export const relationID = (
   value: Product | number | string | null | undefined,
@@ -158,111 +205,4 @@ export function parseQuantity(value: FormDataEntryValue | null) {
   if (typeof value !== "string" || !/^\d{1,2}$/.test(value)) return null;
   const quantity = Number(value);
   return quantity >= 1 && quantity <= maxQuantity ? quantity : null;
-}
-
-export const addressFields = [
-  "firstName",
-  "lastName",
-  "company",
-  "addressLine1",
-  "addressLine2",
-  "postalCode",
-  "city",
-] as const;
-export const optionalFields = new Set<string>(["company", "addressLine2"]);
-/** Form order; the browser focuses the first invalid field. */
-export const checkoutFields = ["email", ...addressFields, "country"] as const;
-
-export type CheckoutField = (typeof checkoutFields)[number];
-export type CheckoutValues = Record<CheckoutField, string>;
-export type CheckoutError = "required" | "invalid";
-export interface ShippingAddress
-  extends Partial<Record<(typeof addressFields)[number], string>> {
-  country: "DE";
-}
-
-export type CheckoutResult =
-  | { ok: true; email: string; address: ShippingAddress }
-  | {
-      ok: false;
-      values: Partial<CheckoutValues>;
-      errors: Partial<Record<CheckoutField, CheckoutError>>;
-      tooLong: boolean;
-    };
-
-const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
-const filled = type("string > 0");
-
-const shippingAddress = (values: CheckoutValues): ShippingAddress => {
-  const address: ShippingAddress = { country: "DE" };
-  for (const field of addressFields)
-    if (values[field]) address[field] = values[field];
-  return address;
-};
-
-/** Shared by the server and the browser; shipping is limited to Germany. */
-export const checkoutSchema = type({
-  email,
-  firstName: filled,
-  lastName: filled,
-  company: "string",
-  addressLine1: filled,
-  addressLine2: "string",
-  postalCode: /^\d{5}$/,
-  city: filled,
-  country: "'DE'",
-});
-
-export const checkoutValues = (
-  read: (name: CheckoutField) => unknown,
-): CheckoutValues =>
-  Object.fromEntries(
-    checkoutFields.map((field) => {
-      const value = read(field);
-      return [field, typeof value === "string" ? value.trim() : ""];
-    }),
-  ) as CheckoutValues;
-
-/**
- * An empty required field is missing; anything else the schema rejects is invalid.
- * The address length is checked beside the schema, so it is reported together with field errors.
- */
-export function checkoutProblems(values: CheckoutValues) {
-  const errors: Partial<Record<CheckoutField, CheckoutError>> = {};
-  const result = checkoutSchema(values);
-  if (result instanceof type.errors)
-    for (const { path } of result) {
-      const field = path[0] as CheckoutField;
-      errors[field] =
-        !values[field] && field !== "country" ? "required" : "invalid";
-    }
-  const tooLong =
-    JSON.stringify(shippingAddress(values)).length >= maxAddressLength;
-  return { errors, tooLong };
-}
-
-const invalidMessages: Partial<
-  Record<CheckoutField, (inputs: {}, options: { locale: Locale }) => string>
-> = {
-  email: m.shop_error_email,
-  postalCode: m.shop_error_postal_code,
-  country: m.shop_error_country,
-};
-
-/** Every message a field can show, so its reserved line fits the longest one. */
-export function fieldMessages(field: CheckoutField, locale: Locale) {
-  const messages: Partial<Record<CheckoutError, string>> = {};
-  if (field !== "country" && !optionalFields.has(field))
-    messages.required = m.shop_error_required({}, { locale });
-  const invalid = invalidMessages[field];
-  if (invalid) messages.invalid = invalid({}, { locale });
-  return messages;
-}
-
-export function parseCheckout(form: FormData): CheckoutResult {
-  const values = checkoutValues((name) => form.get(name));
-  const { errors, tooLong } = checkoutProblems(values);
-  if (Object.keys(errors).length || tooLong)
-    return { ok: false, values, errors, tooLong };
-  return { ok: true, email: values.email, address: shippingAddress(values) };
 }

@@ -86,15 +86,50 @@ usually from a `?status=` redirect; islands call `notify()` from
 `$lib/notifications` (calls before the area has mounted are dropped).
 
 Server-rendered errors without a field to focus, including cart errors, take
-focus (`noticeFocus`) and are read that way. Other server-rendered notices are
-repeated once in a hidden live text after hydration, because text already in a
-live region at load is not announced. Without JavaScript the close control is a
+focus (`noticeFocus`) and are read that way; after a checkout field error the
+focused field reads its own error, so that notice is not announced. A
+server-rendered success is repeated once in a hidden live text after hydration,
+because text already in a live region at load is not announced. Without JavaScript the close control is a
 link to `noticeCloseHref` (the page without its status) or, by default,
 `#notice-closed`, a hidden target that hides the notices in place; with
 JavaScript it is a button that keeps keyboard focus from the link, and Escape
 closes a focused notice. Reduced motion fades instead of sliding but keeps the
 6 s. Persistent states, such as unavailable payments or cart lines, are quiet
 text without a box.
+
+## Cart drawer
+
+The shop list and product pages render `CartDrawer`, one island with the floating
+cart button and the drawer. From 40rem the drawer is non-modal and pushes the
+page aside below the full-width sticky header; below 40rem it is a modal bottom
+sheet (90 % high, swipe down on its head, Escape or the close button). It stays on
+the physical right in every language; only its text follows the locale. Focus
+moves to the heading on open and back to the opener on close, or to the card's
+"Im Warenkorb" when the add button has turned into it. While the push drawer
+opens or closes, shop cards move to their new columns in a view transition;
+reduced motion skips it.
+
+Add-to-cart forms (`data-add-to-cart`) and links to the cart (`data-open-cart`)
+work without JavaScript: they post to and link to `/shop/cart`. With JavaScript
+the drawer intercepts them and talks to `/api/cart`, an Astro route that calls the
+CMS through `src/lib/cms.ts` with the httpOnly cart cookie. The cart page and the
+drawer render the same `CartLines` and `CartSummary` from one `cartView`: a
+quantity stepper (submit buttons without JavaScript), the limit hint at 10 or the
+stock, an inline undo row without a timer after removing, totals, one line each
+for delivery within Germany and the payment methods, and the checkout button
+(quiet text when checkout is blocked). A new line slides in and is briefly tinted
+(a still tint with reduced motion); its sentence goes to the drawer's polite status
+line. Without JavaScript the cart page tints the added line instead of showing a
+notice, and a quantity change returns to `#line-<id>`. Drawer requests run one at
+a time, quantity presses are sent after 400 ms, and waiting presses are sent before
+checkout. Errors use the page notification.
+
+The floating button shows the number of copies from the httpOnly
+`poetry-cart-count` cookie, which every cart read and change updates, so pages need
+no CMS request for it. It sits above the bottom bar on narrow screens, hides while
+the drawer is open, and widens the page's bottom scroll padding so focused content
+is never behind it. Book titles inside translated sentences are wrapped in Unicode
+isolates to keep their own direction.
 
 ## Header
 

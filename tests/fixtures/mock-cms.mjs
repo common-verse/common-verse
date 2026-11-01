@@ -417,7 +417,8 @@ const server = http.createServer((request, response) => {
   }
   if (url.pathname === "/api/products") {
     const slug = url.searchParams.get("where[slug][equals]");
-    const docs = products
+    const id = url.searchParams.get("where[id][equals]");
+    const docs = (id ? [findProduct(id)].filter(Boolean) : products)
       .filter((entry) => !slug || entry.slug === slug)
       .map((entry) => localizedProduct(entry, locale));
     return response.end(JSON.stringify({ docs, totalDocs: docs.length }));

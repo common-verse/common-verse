@@ -1,36 +1,16 @@
 import { describe, expect, it } from "vitest";
-import * as m from "../paraglide/messages.js";
 import {
   cartSignature,
+  cartView,
+  decodeCartCount,
   cartSubtotal,
   decodeCart,
-  checkoutProblems,
-  checkoutValues,
-  decodeCheckout,
   encodeCart,
-  fieldMessages,
   formatPrice,
   isLineAvailable,
   isPurchasable,
-  parseCheckout,
   parseQuantity,
 } from "./shop";
-
-const form = (entries: Record<string, string>) => {
-  const data = new FormData();
-  for (const [key, value] of Object.entries(entries)) data.set(key, value);
-  return data;
-};
-
-const address = {
-  email: " reader@example.org ",
-  firstName: "Amira",
-  lastName: "Haddad",
-  addressLine1: "Oranienstraße 1",
-  postalCode: "10999",
-  city: "Berlin",
-  country: "DE",
-};
 
 describe("prices", () => {
   it("formats cents as euros with the project's Arabic digits", () => {
@@ -78,6 +58,92 @@ describe("cart lines", () => {
     expect(isLineAvailable(line)).toBe(expected);
   });
 
+  it("describes lines for the drawer and the cart page", () => {
+    const cover = {
+      id: 9,
+      url: "/media/cover.jpg",
+      alt: "Cover",
+      width: 600,
+      height: 900,
+    };
+    const view = cartView(
+      [
+        {
+          id: "a",
+          product: { ...book(2000, null), image: cover },
+          quantity: 2,
+        },
+        { id: "b", product: { ...book(1500, 4), id: 2 }, quantity: 5 },
+        { id: "c", product: { ...book(1000, 0), id: 3 }, quantity: 1 },
+        { id: "d", product: null, quantity: 1 },
+        { id: "e", product: { ...book(0, null), id: 4 }, quantity: 1 },
+      ],
+      { shippingRate: 400, priceNote: "Note" },
+      true,
+      "https://cms.example",
+    );
+    expect(
+      view.lines.map(({ id, max, stockLimited, available }) => ({
+        id,
+        max,
+        stockLimited,
+        available,
+      })),
+    ).toEqual([
+      { id: "a", max: 10, stockLimited: false, available: true },
+      { id: "b", max: 4, stockLimited: true, available: false },
+      { id: "c", max: 0, stockLimited: false, available: false },
+      { id: "d", max: 0, stockLimited: false, available: false },
+      { id: "e", max: 0, stockLimited: false, available: false },
+    ]);
+    expect(view.lines[0]).toMatchObject({
+      product: "1",
+      cover: {
+        url: "https://cms.example/media/cover.jpg",
+        width: 600,
+        height: 900,
+      },
+    });
+    expect(view.lines[3]).toMatchObject({
+      product: null,
+      title: null,
+      cover: null,
+    });
+    expect(view).toMatchObject({
+      count: 10,
+      subtotal: 2000 * 2 + 1500 * 5 + 1000,
+      shipping: 400,
+      priceNote: "Note",
+      checkout: "blocked",
+    });
+  });
+
+  it.each([
+    [{ shippingRate: 400 }, true, "ready"],
+    [{ shippingRate: 400 }, false, "payments-unavailable"],
+    [{}, true, "payments-unavailable"],
+  ] as const)(
+    "offers checkout for settings %o and payments %s: %s",
+    (settings, payments, checkout) => {
+      const lines = [{ id: "a", product: book(2000, null), quantity: 1 }];
+      expect(
+        cartView(lines, settings, payments, "https://cms.example").checkout,
+      ).toBe(checkout);
+    },
+  );
+
+  it.each([
+    ["3", 3],
+    ["0", 0],
+    ["999", 999],
+    ["1000", 0],
+    ["-1", 0],
+    ["2x", 0],
+    [undefined, 0],
+  ])("reads the cart count cookie %o as %o", (value, expected) => {
+    expect(decodeCartCount(value)).toBe(expected);
+  });
+
   it("changes the signature when a quantity changes", () => {
     const lines = [{ product: book(2000, null), quantity: 1 }];
     expect(cartSignature(lines)).not.toBe(
@@ -99,24 +165,6 @@ describe("cookies", () => {
     ])
       expect(decodeCart(value)).toBeNull();
   });
-
-  it("restores a started payment from the checkout cookie", () => {
-    const value = {
-      paymentIntentID: "pi_123",
-      clientSecret: "pi_123_secret_x",
-      email: "a@b.de",
-      address: { country: "DE", city: "Berlin" },
-      cart: "1x2",
-    };
-    expect(decodeCheckout(JSON.stringify(value))).toEqual(value);
-    expect(
-      decodeCheckout(JSON.stringify({ ...value, paymentIntentID: "x" })),
-    ).toBeNull();
-    expect(
-      decodeCheckout(JSON.stringify({ ...value, address: { country: "AT" } })),
-    ).toBeNull();
-    expect(decodeCheckout("{")).toBeNull();
-  });
 });
 
 describe("form input", () => {
@@ -130,97 +178,5 @@ describe("form input", () => {
     [null, null],
   ])("parses quantity %o as %o", (value, expected) => {
     expect(parseQuantity(value)).toBe(expected);
-  });
-
-  it("returns a trimmed German shipping address", () => {
-    expect(parseCheckout(form(address))).toEqual({
-      ok: true,
-      email: "reader@example.org",
-      address: {
-        firstName: "Amira",
-        lastName: "Haddad",
-        addressLine1: "Oranienstraße 1",
-        postalCode: "10999",
-        city: "Berlin",
-        country: "DE",
-      },
-    });
-  });
-
-  it("reports missing and invalid fields and keeps entered values", () => {
-    const result = parseCheckout(
-      form({
-        ...address,
-        email: "reader@",
-        lastName: " ",
-        postalCode: "1099",
-        country: "AT",
-      }),
-    );
-    expect(result).toMatchObject({
-      ok: false,
-      values: { email: "reader@", postalCode: "1099" },
-      errors: {
-        email: "invalid",
-        lastName: "required",
-        postalCode: "invalid",
-        country: "invalid",
-      },
-      tooLong: false,
-    });
-    expect(result.ok || Object.keys(result.errors)).toHaveLength(4);
-  });
-
-  it("rejects addresses that exceed Stripe's metadata limit, also beside field errors", () => {
-    expect(
-      parseCheckout(form({ ...address, company: "x".repeat(400) })),
-    ).toMatchObject({ ok: false, tooLong: true, errors: {} });
-    expect(
-      parseCheckout(
-        form({ ...address, company: "x".repeat(400), postalCode: "1" }),
-      ),
-    ).toMatchObject({
-      ok: false,
-      tooLong: true,
-      errors: { postalCode: "invalid" },
-    });
-  });
-
-  it("maps empty required fields to missing and other rejections to invalid", () => {
-    const values = checkoutValues(
-      (name) => address[name as keyof typeof address],
-    );
-    expect(checkoutProblems({ ...values, email: "", city: "" })).toEqual({
-      errors: { email: "required", city: "required" },
-      tooLong: false,
-    });
-    expect(
-      checkoutProblems({ ...values, email: "a@b", country: "" }).errors,
-    ).toEqual({
-      email: "invalid",
-      country: "invalid",
-    });
-  });
-
-  it("offers each field only the messages it can show, in the requested locale", () => {
-    const en = { locale: "en" } as const;
-    expect(fieldMessages("email", "en")).toEqual({
-      required: m.shop_error_required({}, en),
-      invalid: m.shop_error_email({}, en),
-    });
-    expect(fieldMessages("postalCode", "ar")).toEqual({
-      required: m.shop_error_required({}, { locale: "ar" }),
-      invalid: m.shop_error_postal_code({}, { locale: "ar" }),
-    });
-    expect(fieldMessages("city", "en")).toEqual({
-      required: m.shop_error_required({}, en),
-    });
-    expect(fieldMessages("company", "en")).toEqual({});
-    expect(fieldMessages("country", "en")).toEqual({
-      invalid: m.shop_error_country({}, en),
-    });
-    expect(fieldMessages("email", "de")).not.toEqual(
-      fieldMessages("email", "en"),
-    );
   });
 });

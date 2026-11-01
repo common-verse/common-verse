@@ -5,7 +5,8 @@ import { Text } from '$lib/components/ui/text'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import BaseLayout from '../../../../layouts/BaseLayout.astro'
 import { confirmOrder } from '../../../../lib/cms'
-import { cartCookie, checkoutCookie, cookieOptions, decodeCart, decodeCheckout, orderCookie, parseIdentifier } from '../../../../lib/shop'
+import { cartCookie, cartCountCookie, checkoutCookie, cookieOptions, decodeCart, orderCookie, parseIdentifier } from '../../../../lib/shop'
+import { decodeCheckout } from '../../../../lib/checkout'
 import * as m from '../../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
@@ -21,7 +22,7 @@ if (paymentIntent) {
   if (Astro.url.searchParams.get('redirect_status') === 'failed') outcome = 'failed'
   else if (access && checkout?.paymentIntentID === paymentIntent) {
     const orderID = await confirmOrder(access, checkout).catch((error) => { console.error(error); return null })
-    for (const name of [cartCookie, checkoutCookie]) Astro.cookies.delete(name, { path: '/' })
+    for (const name of [cartCookie, cartCountCookie, checkoutCookie]) Astro.cookies.delete(name, { path: '/' })
     if (orderID) {
       Astro.cookies.set(orderCookie, orderID, cookieOptions(import.meta.env.PROD, 60 * 60))
       // Redirect so a reload shows the order instead of confirming again.

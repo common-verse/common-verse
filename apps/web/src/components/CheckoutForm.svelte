@@ -8,7 +8,7 @@
   import {
     addressFields, checkoutFields, checkoutProblems, checkoutValues, fieldMessages, optionalFields,
     type CheckoutError, type CheckoutField, type CheckoutValues,
-  } from '$lib/shop'
+  } from '$lib/checkout'
   import * as m from '../paraglide/messages.js'
 
   let { action, locale, values: initialValues, errors: serverErrors }: {

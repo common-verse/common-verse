@@ -1035,3 +1035,22 @@ footer {
     opacity: 0;
   }
 }
+
+/* Cart drawer: from 40rem it pushes the page aside below the full-width header. */
+:root {
+  --cart-width: 26rem;
+}
+@media (min-width: 40rem) {
+  /* The content keeps its left edge, in line with the logo; only its width shrinks. */
+  html.cart-pushed main {
+    margin-left: max(0px, (100% - 72rem) / 2);
+    margin-right: var(--cart-width);
+  }
+  html.cart-pushed .site-footer {
+    margin-right: var(--cart-width);
+  }
+}
+/* Shop cards glide to their new columns while the drawer opens or closes. */
+html[data-cart-transition] .book-card {
+  view-transition-name: var(--card-transition);
+}

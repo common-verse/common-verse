@@ -1,142 +1,85 @@
 ---
-import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from 'astro:env/server'
 import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
-import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { isLocale, localizedPath } from '@poetry/i18n'
-import ShopTotals from '../../../components/ShopTotals.astro'
+import CartLines, { type CartEntry } from '../../../components/CartLines.svelte'
+import CartSummary from '../../../components/CartSummary.svelte'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
-import { changeCart, createCart, getCart, getShopSettings } from '../../../lib/cms'
-import {
-  availableQuantity, cartCookie, cartSubtotal, cookieOptions, decodeCart, encodeCart, formatNumber, formatPrice, isLineAvailable,
-  lineProduct, maxCartLines, maxQuantity, parseIdentifier, parseQuantity, relationID, shippingRate, titleAttributes,
-} from '../../../lib/shop'
+import { applyChange, cartStatuses, isSuccess, loadCart, statusMessage, type CartStatus } from '../../../lib/cart-actions'
+import { getProductByID } from '../../../lib/cms'
+import { parseIdentifier, parseQuantity } from '../../../lib/shop'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
 const cartPath = localizedPath(locale, 'shop/cart')
-const statuses = ['added', 'updated', 'removed', 'limit', 'invalid', 'failed'] as const
-type Status = (typeof statuses)[number]
 
-async function applyChange(form: FormData): Promise<Status> {
-  const action = form.get('action')
-  const quantity = parseQuantity(form.get('quantity'))
-  const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
-  if (action === 'add') {
-    const product = parseIdentifier(form.get('product'))
-    if (!product) return 'failed'
-    if (!quantity) return 'invalid'
-    const cart = access && (await getCart(access, locale))
-    if (!access || !cart) {
-      Astro.cookies.set(cartCookie, encodeCart(await createCart(product, quantity)), cookieOptions(import.meta.env.PROD))
-      return 'added'
-    }
-    const line = cart.items?.find((item) => relationID(item.product) === product)
-    if (line) {
-      if (line.quantity + quantity > maxQuantity) return 'invalid'
-      return (await changeCart(access, { action: 'update-item', itemID: line.id, quantity: line.quantity + quantity })) ? 'added' : 'failed'
-    }
-    if ((cart.items?.length ?? 0) >= maxCartLines) return 'limit'
-    return (await changeCart(access, { action: 'add-item', product, quantity })) ? 'added' : 'failed'
-  }
-  const itemID = parseIdentifier(form.get('item'))
-  if (!access || !itemID) return 'failed'
-  if (action === 'update') {
-    if (!quantity) return 'invalid'
-    return (await changeCart(access, { action: 'update-item', itemID, quantity })) ? 'updated' : 'failed'
-  }
-  if (action === 'remove') return (await changeCart(access, { action: 'remove-item', itemID })) ? 'removed' : 'failed'
-  return 'failed'
-}
-
+// The full cart without JavaScript; the drawer shows the same lines with the same forms.
 if (Astro.request.method === 'POST') {
-  let status: Status = 'failed'
+  let result: Awaited<ReturnType<typeof applyChange>> = { status: 'failed' }
+  const form = Object.fromEntries(await Astro.request.formData().catch(() => new FormData()))
   try {
-    status = await applyChange(await Astro.request.formData())
+    result = await applyChange(Astro.cookies, locale, form)
   } catch (error) {
     console.error(error)
   }
-  return Astro.redirect(`${cartPath}?status=${status}`, 303)
+  // The query names no person, only the book; the fragment moves the page and the next Tab to the line.
+  const query = new URLSearchParams({ status: result.status })
+  let target = ''
+  if (result.removed) {
+    query.set('product', result.removed.product)
+    query.set('quantity', String(result.removed.quantity))
+    target = `#undo-${result.removed.product}`
+  } else if (result.status === 'added') {
+    const product = parseIdentifier(typeof form.product === 'string' ? form.product : null)
+    if (product) query.set('product', product)
+  } else if (result.status === 'updated') {
+    const item = parseIdentifier(typeof form.item === 'string' ? form.item : null)
+    if (item) target = `#line-${item}`
+  }
+  return Astro.redirect(`${cartPath}?${query}${target}`, 303)
 }
 
 Astro.response.headers.set('Cache-Control', 'no-store')
-const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
-const [cart, settings] = await Promise.all([access ? getCart(access, locale) : null, getShopSettings(locale)])
-if (Astro.cookies.has(cartCookie) && !cart) Astro.cookies.delete(cartCookie, { path: '/' })
-const items = cart?.items ?? []
-const shipping = shippingRate(settings)
-const subtotal = cartSubtotal(items)
-const paymentsAvailable = shipping !== null && Boolean(PUBLIC_STRIPE_PUBLISHABLE_KEY)
-const linesAvailable = items.every(isLineAvailable)
-const requested = Astro.url.searchParams.get('status')
-const status = statuses.find((value) => value === requested)
-const max = formatNumber(maxQuantity, locale)
-const statusText = status && {
-  added: m.shop_status_added({}, { locale }),
-  updated: m.shop_status_updated({}, { locale }),
-  removed: m.shop_status_removed({}, { locale }),
-  limit: m.shop_status_limit({ count: formatNumber(maxCartLines, locale) }, { locale }),
-  invalid: m.shop_status_invalid({ min: formatNumber(1, locale), max }, { locale }),
-  failed: m.shop_status_failed({}, { locale }),
-}[status]
-const successes: (Status | undefined)[] = ['added', 'updated', 'removed']
-const notice = statusText ? { tone: successes.includes(status) ? ('success' as const) : ('error' as const), text: statusText } : undefined
-const checkoutBlocked = !paymentsAvailable ? m.shop_payments_unavailable({}, { locale }) : !linesAvailable ? m.shop_cart_blocked({}, { locale }) : null
+const { view } = await loadCart(Astro.cookies, locale)
+const params = Astro.url.searchParams
+const status = cartStatuses.find((value) => value === params.get('status')) as CartStatus | undefined
+// After a removal the page offers to put the book back; its title is looked up by ID.
+const removedProduct = status === 'removed' ? parseIdentifier(params.get('product')) : null
+const removedQuantity = parseQuantity(params.get('quantity'))
+const removed = removedProduct && removedQuantity && !view.lines.some((line) => line.product === removedProduct)
+  ? await getProductByID(removedProduct, locale).catch(() => null)
+  : null
+// A book just added is tinted like in the drawer instead of a notice covering the heading.
+const addedProduct = status === 'added' ? parseIdentifier(params.get('product')) : null
+const entries: CartEntry[] = [
+  ...(removed && removedQuantity ? [{ kind: 'undo' as const, product: removedProduct!, quantity: removedQuantity, title: removed.title, titleLanguage: removed.titleLanguage ?? null }] : []),
+  ...view.lines.map((line) => ({ kind: 'line' as const, line, fresh: Boolean(addedProduct) && line.product === addedProduct })),
+]
+const fresh = entries.some((entry) => entry.kind === 'line' && entry.fresh)
+const notice = status && !(status === 'removed' && removed) && !(status === 'added' && fresh)
+  ? { tone: isSuccess(status) ? ('success' as const) : ('error' as const), text: statusMessage(status, locale) }
+  : undefined
 const title = m.shop_cart({}, { locale })
 ---
 
 <BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/cart" noIndex alternateLocales={[]} {notice} noticeFocus={notice?.tone === 'error'} noticeCloseHref={cartPath}>
   <section class="cart">
     <Heading level={1}>{title}</Heading>
-    {items.length ? (
+    {entries.length > 0 && (
       <div class="cart-layout">
-        <ul class="cart-lines">
-          {items.map((item) => {
-            const product = lineProduct(item)
-            const price = product?.priceInEUR ?? 0
-            const quantities = Array.from({ length: product ? availableQuantity(product) : 0 }, (_, index) => index + 1)
-            return (
-              <li class="cart-line">
-                <div class="cart-line-info">
-                  <Heading level={2} class="cart-line-title" id={`item-${item.id}`}>
-                    {product ? <Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link> : m.shop_not_available({}, { locale })}
-                  </Heading>
-                  {price > 0 && <p class="cart-unit">{m.shop_unit_price({}, { locale })}: <bdi class="price">{formatPrice(price, locale)}</bdi></p>}
-                  {!isLineAvailable(item) && <p class="cart-hint">{m.shop_line_unavailable({}, { locale })}</p>}
-                </div>
-                {quantities.length > 0 && <form class="cart-quantity" method="post" action={cartPath}>
-                  <input type="hidden" name="action" value="update" />
-                  <input type="hidden" name="item" value={item.id} />
-                  <label for={`quantity-${item.id}`}>{m.shop_quantity({}, { locale })}</label>
-                  <select class="shop-control" id={`quantity-${item.id}`} name="quantity" aria-describedby={`item-${item.id}`}>
-                    {quantities.map((quantity) => <option value={quantity} selected={quantity === item.quantity}>{formatNumber(quantity, locale)}</option>)}
-                  </select>
-                  <Button type="submit" variant="outline" size="sm" aria-describedby={`item-${item.id}`}>{m.shop_update({}, { locale })}</Button>
-                </form>}
-                <form method="post" action={cartPath}>
-                  <input type="hidden" name="action" value="remove" />
-                  <input type="hidden" name="item" value={item.id} />
-                  <Button type="submit" variant="ghost" size="sm" aria-describedby={`item-${item.id}`}>{m.shop_remove({}, { locale })}</Button>
-                </form>
-                <p class="cart-line-total"><bdi class="price">{formatPrice(price * item.quantity, locale)}</bdi></p>
-              </li>
-            )
-          })}
-        </ul>
-        <Card.Root as="aside" size="sm" class="cart-summary" aria-labelledby="cart-summary-heading">
-          <Card.Header><Card.Title level={2} id="cart-summary-heading">{m.shop_order_summary({}, { locale })}</Card.Title></Card.Header>
-          <Card.Content><ShopTotals {locale} {subtotal} {shipping} note={settings.priceNote} /></Card.Content>
-          <Card.Footer class="cart-actions">
-            <Button href={localizedPath(locale, 'shop/checkout')} disabled={Boolean(checkoutBlocked)} aria-describedby={checkoutBlocked ? 'checkout-blocked' : undefined}>{m.shop_checkout({}, { locale })}</Button>
-            <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
-            {checkoutBlocked && <p class="checkout-blocked" id="checkout-blocked">{checkoutBlocked}</p>}
-          </Card.Footer>
-        </Card.Root>
+        <CartLines {entries} {locale} action={cartPath} />
+        {view.lines.length > 0 && (
+          <Card.Root as="aside" size="sm" aria-labelledby="cart-summary-heading">
+            <Card.Header><Card.Title level={2} id="cart-summary-heading">{m.shop_order_summary({}, { locale })}</Card.Title></Card.Header>
+            <Card.Content><CartSummary {view} {locale} /></Card.Content>
+          </Card.Root>
+        )}
       </div>
-    ) : (
+    )}
+    {!view.lines.length && (
       <>
         <p class="empty-message">{m.shop_cart_empty({}, { locale })}</p>
         <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
@@ -147,20 +90,7 @@ const title = m.shop_cart({}, { locale })
 
 <style>
   .cart-layout { display: grid; gap: var(--space-lg); align-items: start; }
-  .cart-lines { display: grid; margin: 0; padding: 0; list-style: none; }
-  .cart-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-xs) var(--space-md); padding-block: var(--space-md); border-block-start: 1px solid var(--border); }
-  .cart-line-info { grid-column: 1 / -1; min-inline-size: 0; }
-  .cart-line :global(.cart-line-title) { margin: 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
-  .cart-unit { margin: var(--space-3xs) 0 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
-  .cart-quantity { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
-  .cart-hint { margin-block: var(--space-xs) 0; font-size: var(--font-size-sm); color: var(--error-text); }
-  .checkout-blocked { flex-basis: 100%; margin: 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
-  .cart-line-total { grid-column: 1 / -1; margin: 0; font-weight: 700; }
-  .cart-layout :global(.cart-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
   @media (min-width: 48rem) {
     .cart-layout { grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); }
-    .cart-line { grid-template-columns: minmax(0, 1fr) auto auto auto; }
-    .cart-line-info { grid-column: auto; }
-    .cart-line-total { grid-column: auto; min-inline-size: 6rem; text-align: end; }
   }
 </style>

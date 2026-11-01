@@ -13,14 +13,10 @@ import type {
   Product,
   ShopSettings,
 } from "@poetry/types";
-import type {
-  CartAccess,
-  CartLine,
-  CheckoutAccess,
-  ShippingAddress,
-} from "./shop";
+import type { CartAccess, CartLine } from "./shop";
+import type { CheckoutAccess, ShippingAddress } from "./checkout";
 
-const cmsUrl = import.meta.env.PUBLIC_CMS_URL ?? "http://localhost:3001";
+export const cmsUrl = import.meta.env.PUBLIC_CMS_URL ?? "http://localhost:3001";
 
 type Collection = "events" | "poems" | "authors" | "articles" | "products";
 
@@ -64,6 +60,7 @@ async function fetchDocument<T>(
   slug: string,
   locale: Locale,
   previewSecret?: string,
+  field: "slug" | "id" = "slug",
 ): Promise<T | null> {
   const preview = Boolean(previewSecret);
   const path = preview ? `/api/${collection}/preview` : `/api/${collection}`;
@@ -72,7 +69,7 @@ async function fetchDocument<T>(
   url.searchParams.set("fallback-locale", "none");
   url.searchParams.set("depth", "2");
   if (preview) url.searchParams.set("slug", slug);
-  else url.searchParams.set("where[slug][equals]", slug);
+  else url.searchParams.set(`where[${field}][equals]`, slug);
   url.searchParams.set("limit", "1");
   const response = await fetch(url, {
     headers: previewSecret ? { "x-preview-secret": previewSecret } : {},
@@ -324,6 +321,10 @@ export const getProducts = (locale: Locale) =>
 
 export const getProduct = (slug: string, locale: Locale) =>
   fetchDocument<Product>("products", slug, locale);
+
+/** For the no-JavaScript undo row, which knows only the removed product's ID. */
+export const getProductByID = (id: string, locale: Locale) =>
+  fetchDocument<Product>("products", id, locale, undefined, "id");
 
 export async function getShopSettings(
   locale: Locale,

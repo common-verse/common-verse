@@ -28,8 +28,9 @@
     const focused = document.activeElement?.matches('.notice-close') ? (document.activeElement.closest('.notice') as HTMLElement).dataset.tone : undefined
     hydrated = true
     if (focused) tick().then(() => area.querySelector<HTMLElement>(`[data-tone="${focused}"] .notice-close`)?.focus())
-    // Text already in a live region at load is not announced; focused errors are read through focus.
-    const initial = shown.success ?? (focus ? undefined : shown.error)
+    // Text already in a live region at load is not announced. Server errors are read through focus:
+    // the notice itself, or the first invalid field and its own error.
+    const initial = shown.success
     if (initial && !initial.link) requestAnimationFrame(() => { if (shown[initial.tone]?.key === 0) shown[initial.tone]!.relay = true })
     return listen((next) => { shown[next.tone] = { ...next, key: ++key } })
   })

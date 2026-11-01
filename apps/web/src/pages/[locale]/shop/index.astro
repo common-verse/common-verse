@@ -1,57 +1,114 @@
 ---
+import { Check, Plus } from 'lucide-svelte'
 import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
 import { Text } from '$lib/components/ui/text'
-import { Badge } from '$lib/components/ui/badge'
+import { Button } from '$lib/components/ui/button'
 import { isLocale, localizedPath } from '@poetry/i18n'
+import CartDrawer from '../../../components/CartDrawer.svelte'
 import EditorialImage from '../../../components/EditorialImage.astro'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
+import { loadCart } from '../../../lib/cart-actions'
 import { getProducts } from '../../../lib/cms'
-import { formatPrice, isSoldOut, titleAttributes } from '../../../lib/shop'
+import { cartCookie, formatNumber, formatPrice, isPurchasable, isSoldOut, titleAttributes } from '../../../lib/shop'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
-const products = await getProducts(locale)
-const title = m.shop_title({}, { locale })
-const description = m.shop_intro({}, { locale })
+const o = { locale }
+// Only visitors with a cart cost a cart request, to mark the books already in it.
+// A failed cart read only loses the marks and the count; the list still renders.
+const [products, cart] = await Promise.all([
+  getProducts(locale),
+  Astro.cookies.has(cartCookie)
+    ? loadCart(Astro.cookies, locale).catch((error) => {
+        console.error(error)
+        return null
+      })
+    : null,
+])
+if (cart) Astro.response.headers.set('Cache-Control', 'no-store')
+const inCart = new Set(cart?.view.lines.map((line) => line.product))
+const cartPath = localizedPath(locale, 'shop/cart')
+const languageNames = new Intl.DisplayNames([locale], { type: 'language' })
+const meta = (product: (typeof products)[number]) =>
+  [
+    product.titleLanguage && languageNames.of(product.titleLanguage),
+    product.pages && m.shop_book_pages({ count: formatNumber(product.pages, locale) }, o),
+    product.year && formatNumber(product.year, locale),
+  ].filter(Boolean).join(m.shop_list_separator({}, o))
+const title = m.shop_title({}, o)
+const description = m.shop_intro({}, o)
 ---
 
-<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} {description} canonicalPath="shop">
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, o)}`} {description} canonicalPath="shop">
   <section class="shop">
     <header class="shop-heading">
-      <div>
-        <Heading level={1}>{title}</Heading>
-        <Text variant="lead">{description}</Text>
-      </div>
-      <Link variant="standalone" href={localizedPath(locale, 'shop/cart')}>{m.shop_cart({}, { locale })}</Link>
+      <Heading level={1}>{title}</Heading>
+      <Text variant="lead">{description}</Text>
     </header>
     {products.length ? (
       <ul class="book-grid">
         {products.map((product) => (
           <li>
-            <article class="book-card">
-              <EditorialImage image={product.image} {locale} context="cover" />
-              <Heading level={2} class="book-title"><Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link></Heading>
-              {isSoldOut(product)
-                ? <Badge variant="secondary">{m.shop_sold_out({}, { locale })}</Badge>
-                : product.priceInEUR
-                  ? <p class="book-price"><bdi class="price">{formatPrice(product.priceInEUR, locale)}</bdi></p>
-                  : <Badge variant="secondary">{m.shop_not_available({}, { locale })}</Badge>}
+            <article class="book-card" style={`--card-transition: card-${product.id}`} aria-labelledby={`book-${product.id}`}>
+              <div class="book-cover"><EditorialImage image={product.image} {locale} context="cover" /></div>
+              <Heading level={2} class="book-title" id={`book-${product.id}`}><Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link></Heading>
+              <p class="book-meta">{meta(product)}</p>
+              <p class="book-price">{product.priceInEUR ? <bdi class="price">{formatPrice(product.priceInEUR, locale)}</bdi> : null}</p>
+              <div class="book-action" data-cart-product={String(product.id)} data-in-cart={inCart.has(String(product.id)) ? '' : undefined}>
+                {isPurchasable(product) ? (
+                  <>
+                    <form class="book-add" method="post" action={cartPath} data-add-to-cart>
+                      <input type="hidden" name="action" value="add" />
+                      <input type="hidden" name="product" value={String(product.id)} />
+                      <input type="hidden" name="quantity" value="1" />
+                      <Button type="submit" variant="outline" aria-describedby={`book-${product.id}`}><Plus aria-hidden="true" />{m.shop_add({}, o)}</Button>
+                    </form>
+                    <Button class="book-in-cart" href={cartPath} variant="secondary" data-open-cart aria-describedby={`book-${product.id}`}><Check aria-hidden="true" />{m.shop_in_cart({}, o)}</Button>
+                  </>
+                ) : (
+                  <p class="book-unavailable">{isSoldOut(product) ? m.shop_sold_out({}, o) : m.shop_not_available({}, o)}</p>
+                )}
+              </div>
             </article>
           </li>
         ))}
       </ul>
-    ) : <p class="empty-message">{m.shop_empty({}, { locale })}</p>}
+    ) : <p class="empty-message">{m.shop_empty({}, o)}</p>}
   </section>
+  <CartDrawer client:load {locale} count={cart?.view.count ?? 0} {cartPath} />
 </BaseLayout>
 
 <style>
-  .shop-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-md); margin-block-end: var(--space-lg); }
-  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr)); gap: var(--space-lg-xl) var(--space-lg); margin: 0; padding: 0; list-style: none; }
-  .book-card { display: grid; gap: var(--space-xs); justify-items: start; min-inline-size: 0; }
-  .book-card :global(.editorial-image) { justify-self: stretch; }
-  .book-card :global(.book-title) { margin: var(--space-2xs) 0 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
+  .shop-heading { display: grid; gap: var(--space-xs); margin-block-end: var(--space-lg); }
+  .shop-heading :global(:is(h1, p)) { margin: 0; }
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: var(--space-lg) var(--space-sm); margin: 0; padding: 0; list-style: none; }
+  /* Subgrid: cover, title, details, price and button line up across a row. */
+  .book-grid > li, .book-card { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: var(--space-2xs); min-inline-size: 0; }
+  /* Every cover in the same square grey frame, so rows keep no white gaps. */
+  .book-cover {
+    display: grid; place-items: center; aspect-ratio: 1; margin-block-end: var(--space-2xs); padding: var(--space-xs);
+    border-radius: 0.75rem; corner-shape: squircle; background: var(--muted); overflow: hidden;
+  }
+  .book-cover :global(.editorial-image) { block-size: 100%; inline-size: 100%; }
+  .book-cover :global(img) { block-size: 100%; aspect-ratio: auto; object-fit: contain; border-radius: 0; }
+  .book-card :global(.book-title) { margin: 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
+  .book-meta { margin: 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
   .book-price { margin: 0; font-weight: 700; }
+  .book-action { padding-block-start: var(--space-2xs); }
+  .book-action :global([data-slot='button']) { inline-size: 100%; }
+  /* A transparent border keeps the filled button's outline in forced colours. */
+  .book-action :global(.book-in-cart) { border: 1px solid transparent; }
+  .book-action[data-in-cart] .book-add, .book-action:not([data-in-cart]) :global(.book-in-cart) { display: none; }
+  /* Narrow columns: the label alone fits on one line. */
+  @media (max-width: 25rem) {
+    .book-action :global([data-slot='button']) { padding-inline: var(--space-2xs); }
+    .book-action :global(svg) { display: none; }
+  }
+  .book-unavailable { margin: 0; align-self: center; font-weight: 600; color: var(--muted-foreground); }
+  @media (min-width: 40rem) {
+    .book-grid { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: var(--space-xl) var(--space-md); }
+  }
 </style>

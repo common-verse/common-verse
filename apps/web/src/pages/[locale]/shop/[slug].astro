@@ -8,11 +8,12 @@ import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { isLocale, localizedPath } from '@poetry/i18n'
+import CartDrawer from '../../../components/CartDrawer.svelte'
 import EditorialImage from '../../../components/EditorialImage.astro'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
 import { getProduct, getShopSettings } from '../../../lib/cms'
 import { mediaObject } from '../../../lib/homepage'
-import { availableQuantity, formatNumber, formatPrice, isPurchasable, isSoldOut, shippingRate, titleAttributes } from '../../../lib/shop'
+import { availableQuantity, cartCountCookie, decodeCartCount, formatNumber, formatPrice, isPurchasable, isSoldOut, shippingRate, titleAttributes } from '../../../lib/shop'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale, slug } = Astro.params
@@ -77,7 +78,7 @@ const facts = [
         {price && settings.priceNote && <Text variant="small" tone="muted">{settings.priceNote}</Text>}
         {price && shipping !== null && <Text variant="small" tone="muted">{m.shop_shipping_note({ rate: formatPrice(shipping, locale) }, { locale })}</Text>}
         {purchasable && (
-          <form class="add-form" method="post" action={localizedPath(locale, 'shop/cart')}>
+          <form class="add-form" method="post" action={localizedPath(locale, 'shop/cart')} data-add-to-cart>
             <input type="hidden" name="action" value="add" />
             <input type="hidden" name="product" value={String(product.id)} />
             <label for="quantity">{m.shop_quantity({}, { locale })}</label>
@@ -101,6 +102,7 @@ const facts = [
       )}
     </div>
   </article>
+  <CartDrawer client:load {locale} count={decodeCartCount(Astro.cookies.get(cartCountCookie)?.value)} cartPath={localizedPath(locale, 'shop/cart')} />
 </BaseLayout>
 
 <style>
