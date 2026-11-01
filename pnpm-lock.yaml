@@ -274,6 +274,9 @@ importers:
       "@tailwindcss/vite":
         specifier: 4.3.3
         version: 4.3.3(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1))
+      arktype:
+        specifier: 2.2.9
+        version: 2.2.9
       astro:
         specifier: 7.3.5
         version: 7.3.5(@types/node@26.6.4)(jiti@2.7.0)(sass@1.77.4)(tsx@4.22.4)(yaml@2.9.1)
@@ -369,6 +372,18 @@ packages:
         integrity: sha512-60vepv88RwcJtSHrD6MjIL6Ta3SOYbgfnkHb+ppAVK+o9mXprRtulx7VlRl3lN3bbvysAfCS7WMVfhUYemB0IQ==,
       }
     engines: { node: ">= 16" }
+
+  "@ark/schema@0.56.8":
+    resolution:
+      {
+        integrity: sha512-R05TOe85oQBGFFw2zKMuZpqkXibLKuC/aJt6VwFn5Cjc4x3NkWfhvGRpRDycNkj3ddcHnOPtIsmjVowJO9Yxdw==,
+      }
+
+  "@ark/util@0.56.8":
+    resolution:
+      {
+        integrity: sha512-XLiQyGfpJcws1zCtp2Cva8s1oheCdFn1Rt6JSyC4NnkDrpwCJnlaiawuuOc1Z97vMH+jEzW5vyyf0xOju5wUQA==,
+      }
 
   "@astrojs/astro2tsx@0.1.2":
     resolution:
@@ -3945,6 +3960,18 @@ packages:
         integrity: sha512-COROpnaoap1E2F000S62r6A60uHZnmlvomhfyT2DlTcrY1OrBKn2UhH7qn5wTC9zMvD0AY7csdPSNwKP+7WiQw==,
       }
     engines: { node: ">= 0.4" }
+
+  arkregex@0.0.14:
+    resolution:
+      {
+        integrity: sha512-G3I/uCtWE0IKQiPh0qqmmAFDdtjZKZQ5mNPR6gJBeAMZ7VqYCpoaDeXnLju2Zo6ywExtmxZJELeVFb0MPDjPyA==,
+      }
+
+  arktype@2.2.9:
+    resolution:
+      {
+        integrity: sha512-Cja0IMEn19rB35on9da1i1z6QMasuS7ULffXbetCry09jvCGYT8Bi1KgYiqri5FymF4nQAXkM90yksYkgSK2EA==,
+      }
 
   array-timsort@1.0.3:
     resolution:
@@ -8467,6 +8494,12 @@ snapshots:
       "@types/json-schema": 7.0.15
       js-yaml: 4.3.2
 
+  "@ark/schema@0.56.8":
+    dependencies:
+      "@ark/util": 0.56.8
+
+  "@ark/util@0.56.8": {}
+
   "@astrojs/astro2tsx@0.1.2(@emnapi/runtime@1.11.3)":
     dependencies:
       "@emnapi/core": 1.11.3
@@ -10595,6 +10628,16 @@ snapshots:
   aria-query@5.3.1: {}
 
   aria-query@5.3.2: {}
+
+  arkregex@0.0.14:
+    dependencies:
+      "@ark/util": 0.56.8
+
+  arktype@2.2.9:
+    dependencies:
+      "@ark/schema": 0.56.8
+      "@ark/util": 0.56.8
+      arkregex: 0.0.14
 
   array-timsort@1.0.3: {}
 

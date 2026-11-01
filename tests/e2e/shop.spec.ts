@@ -56,6 +56,24 @@ async function addToCart(page: Page, path: string, quantity = "1") {
   await page.locator(".add-form button").click();
 }
 
+const notice = (page: Page, tone: "success" | "error") =>
+  page.locator(`.notice[data-tone="${tone}"]`);
+const noticeText = (page: Page, tone: "success" | "error") =>
+  notice(page, tone).locator(".notice-text");
+
+// The 6 s timer is a CSS animation, which page.clock does not drive; DevTools' playback rate does.
+async function fastAnimations(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Animation.enable");
+  await cdp.send("Animation.setPlaybackRate", { playbackRate: 100 });
+}
+
+// Astro removes `ssr` from an island once it has hydrated.
+const hydrated = (page: Page, selector: string) =>
+  expect(page.locator(`astro-island:has(${selector})`)).not.toHaveAttribute(
+    "ssr",
+  );
+
 async function fillCheckout(page: Page, email = "reader@example.org") {
   await page.locator("#email").fill(email);
   await page.locator("#firstName").fill("Amira");
@@ -164,7 +182,7 @@ test("cart adds, updates and removes books by keyboard with httpOnly cookies", a
   await expect(page.locator(".add-form button")).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/shop\/cart\?status=added$/);
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(noticeText(page, "success")).toHaveText(
     "Das Buch liegt jetzt in deinem Warenkorb.",
   );
   await expect(page.locator(".shop-totals")).toContainText("40,00 €");
@@ -189,7 +207,7 @@ test("cart adds, updates and removes books by keyboard with httpOnly cookies", a
 
   await page.locator(".cart-line select").selectOption("5");
   await page.getByRole("button", { name: "Aktualisieren" }).click();
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(noticeText(page, "success")).toHaveText(
     "Dein Warenkorb wurde aktualisiert.",
   );
   await expect(page.locator(".cart-line-total")).toHaveText("100,00 €");
@@ -200,7 +218,7 @@ test("cart adds, updates and removes books by keyboard with httpOnly cookies", a
     .locator(".cart-line", { hasText: "Sei neben mir" })
     .getByRole("button", { name: "Entfernen" })
     .click();
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(noticeText(page, "success")).toHaveText(
     "Das Buch wurde aus deinem Warenkorb entfernt.",
   );
   await expect(page.locator(".cart-line")).toHaveCount(1);
@@ -237,13 +255,13 @@ test("cart rejects cross-site posts, invalid quantities and an eighth distinct b
   expect(await post("207")).toBe("?status=limit");
   expect(await post("101", "10")).toBe("?status=invalid");
   await page.goto("/shop/cart?status=limit");
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(noticeText(page, "error")).toHaveText(
     "Pro Bestellung passen bis zu 7 verschiedene Bücher in den Warenkorb.",
   );
   await expect(page.locator(".cart-line")).toHaveCount(7);
 });
 
-test("checkout validates on the server and starts payment without forwarding cookies", async ({
+test("checkout validates fields in the browser and starts payment without forwarding cookies", async ({
   page,
 }) => {
   const errors = collectErrors(page);
@@ -254,32 +272,74 @@ test("checkout validates on the server and starts payment without forwarding coo
   await expect(
     page.getByRole("link", { name: "AGB & Widerruf" }).first(),
   ).toHaveAttribute("href", "/agb");
+  // Hydrated: the browser validates with the shared schema.
+  await hydrated(page, ".checkout-form");
 
-  await page
-    .locator(".checkout-form")
-    .evaluate((form: HTMLFormElement) => (form.noValidate = true));
-  await page.locator("#email").fill("reader@");
-  await page.locator("#postalCode").fill("1099");
-  await page.getByRole("button", { name: "Weiter zur Zahlung" }).click();
-  await expect(page.getByRole("alert")).toContainText(
-    "Bitte prüfe die markierten Felder.",
-  );
-  await expect(page.getByRole("alert")).toBeFocused();
-  await expect(page.locator("#email")).toHaveAttribute("aria-invalid", "true");
+  const email = page.locator("#email");
+  const emailField = page.locator(".field", { has: email });
+  const height = (await emailField.boundingBox())!.height;
+  await email.focus();
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#firstName")).toBeFocused();
+  await expect(email).not.toHaveAttribute("aria-invalid");
+
+  await email.fill("reader@");
+  await expect(email).not.toHaveAttribute("aria-invalid");
+  await page.keyboard.press("Tab");
+  await expect(email).toHaveAttribute("aria-invalid", "true");
+  await expect(email).toHaveAttribute("aria-describedby", "email-error");
   await expect(page.locator("#email-error")).toHaveText(
     "Bitte gib eine gültige E-Mail-Adresse ein.",
   );
+  await expect(page.locator("#email-error")).toBeVisible();
+  await expect(page.locator("#email-hint")).toBeHidden();
+  expect((await emailField.boundingBox())!.height).toBe(height);
+  // Hint and errors share one reserved line instead of stacking.
+  expect(
+    (await emailField.locator(".field-message").boundingBox())!.height,
+  ).toBe((await page.locator("#email-error").boundingBox())!.height);
+
+  await email.pressSequentially("example.org");
+  await expect(email).not.toHaveAttribute("aria-invalid");
+  await expect(email).toHaveAttribute("aria-describedby", "email-hint");
+  await expect(page.locator("#email-hint")).toBeVisible();
+  expect((await emailField.boundingBox())!.height).toBe(height);
+  // Once fixed, the error waits for the next blur instead of flashing while typing.
+  await email.fill("reader@");
+  await expect(email).not.toHaveAttribute("aria-invalid");
+  await email.fill("reader@example.org");
+
+  const postalField = page.locator(".field", {
+    has: page.locator("#postalCode"),
+  });
+  const postalHeight = (await postalField.boundingBox())!.height;
+  await page.locator("#postalCode").fill("1099");
+  await page.locator("#postalCode").blur();
   await expect(page.locator("#postalCode-error")).toHaveText(
     "Bitte gib eine fünfstellige Postleitzahl ein.",
+  );
+  expect((await postalField.boundingBox())!.height).toBe(postalHeight);
+
+  // A valid field that was left stays quiet while it is edited again.
+  await page.locator("#city").fill("Berlin");
+  await page.locator("#city").blur();
+  await page.locator("#city").fill("");
+  await expect(page.locator("#city")).not.toHaveAttribute("aria-invalid");
+
+  await page.getByRole("button", { name: "Weiter zur Zahlung" }).click();
+  await expect(page.locator("#firstName")).toBeFocused();
+  await expect(page.locator("#firstName")).toHaveAttribute(
+    "aria-invalid",
+    "true",
   );
   await expect(page.locator("#lastName-error")).toHaveText(
     "Bitte fülle dieses Feld aus.",
   );
-  await expect(page.locator("#company")).not.toHaveAttribute(
-    "aria-invalid",
-    "true",
-  );
-  await expect(page.locator("#postalCode")).toHaveValue("1099");
+  await expect(page.locator("#company")).not.toHaveAttribute("aria-invalid");
+  await expect(notice(page, "error")).toHaveCount(0);
+  expect(await initiatedFor("reader@example.org")).toBeUndefined();
+  // Contrast is checked once the 160 ms fade has ended.
+  await expect(page.locator("#city-error")).toHaveCSS("opacity", "1");
   await expectAccessible(page);
 
   await fillCheckout(page);
@@ -317,9 +377,252 @@ test("checkout validates on the server and starts payment without forwarding coo
   await expectAccessible(page);
 
   await pay.click();
-  await expect(page.getByRole("alert")).toHaveText("Your card was declined.");
-  await expect(page.getByRole("alert")).toBeFocused();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
+  await expect(notice(page, "error").locator("..")).toHaveAttribute(
+    "aria-live",
+    "assertive",
+  );
+  await expect(pay).toBeFocused();
   expect(errors).toEqual([]);
+});
+
+test("checkout keeps what was typed before the form hydrated", async ({
+  page,
+}) => {
+  await addToCart(page, "/shop/beside-me");
+  let release = () => {};
+  const loaded = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/_astro/CheckoutForm.*.js", async (route) => {
+    await loaded;
+    await route.continue();
+  });
+  await page.goto("/shop/checkout", { waitUntil: "domcontentloaded" });
+  await page.locator("#email").fill("early@");
+  release();
+  await hydrated(page, ".checkout-form");
+  await expect(page.locator("#email")).toHaveValue("early@");
+  // Counted as edited, so leaving it shows the error.
+  await page.locator("#email").focus();
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#email")).toHaveAttribute("aria-invalid", "true");
+});
+
+test("one press of the checkout button sends the form once", async ({
+  page,
+}) => {
+  await addToCart(page, "/shop/beside-me");
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  await fillCheckout(page, "twice@example.org");
+  // Count submissions the form lets through, without leaving the page.
+  await page.evaluate(() => {
+    const counted = window as unknown as { sent: number };
+    counted.sent = 0;
+    addEventListener("submit", (event) => {
+      if (!event.defaultPrevented) counted.sent++;
+      event.preventDefault();
+    });
+  });
+  const submit = page.getByRole("button", { name: "Weiter zur Zahlung" });
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  await expect(page.locator(".checkout-form")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  await submit.click({ force: true });
+  await page.locator("#city").press("Enter");
+  expect(
+    await page.evaluate(() => (window as unknown as { sent: number }).sent),
+  ).toBe(1);
+});
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("checkout reports server errors in the fields and one notification", async ({
+    page,
+  }) => {
+    await addToCart(page, "/shop/beside-me");
+    await page.goto("/shop/checkout");
+    await fillCheckout(page, "reader@example");
+    await page.locator("#lastName").fill("");
+    await page.locator("#postalCode").fill("1099");
+    // Keyboard submit: in this no-JavaScript page Playwright's click kept reporting the
+    // scrolled button as not stable until it timed out.
+    await page.locator("#postalCode").press("Enter");
+    await expect(noticeText(page, "error")).toHaveText(
+      "Bitte prüfe die markierten Felder.",
+    );
+    await expect(page.locator("#email")).toBeFocused();
+    await expect(page.locator("#email")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(page.locator("#email-error")).toHaveText(
+      "Bitte gib eine gültige E-Mail-Adresse ein.",
+    );
+    await expect(page.locator("#postalCode-error")).toHaveText(
+      "Bitte gib eine fünfstellige Postleitzahl ein.",
+    );
+    await expect(page.locator("#lastName-error")).toHaveText(
+      "Bitte fülle dieses Feld aus.",
+    );
+    await expect(page.locator("#postalCode")).toHaveValue("1099");
+    await expect(page.locator("#city")).not.toHaveAttribute("aria-invalid");
+    // The skip link leaves the notification alone; its close link hides it in place.
+    await page.locator(".skip-link").press("Enter");
+    await expect(notice(page, "error")).toBeVisible();
+    const close = notice(page, "error").getByRole("link", {
+      name: "Meldung schließen",
+    });
+    await expect(close).toHaveAttribute("href", "#notice-closed");
+    await close.press("Enter");
+    await expect(notice(page, "error")).toBeHidden();
+    await expect(page.locator("#postalCode")).toHaveValue("1099");
+  });
+
+  test("cart status closes with a link to the page without status", async ({
+    page,
+  }) => {
+    await page.goto("/en/shop/cart?status=failed");
+    const close = notice(page, "error").getByRole("link", {
+      name: "Close message",
+    });
+    await expect(close).toHaveAttribute("href", "/en/shop/cart");
+    await close.press("Enter");
+    await expect(page).toHaveURL(/\/en\/shop\/cart$/);
+    await expect(notice(page, "error")).toHaveCount(0);
+  });
+});
+
+test("success notifications close themselves; errors stay until closed", async ({
+  page,
+}) => {
+  await page.goto("/en/shop/cart");
+  const heading = page.getByRole("heading", { level: 1 });
+  const top = (await heading.boundingBox())!.y;
+
+  await page.goto("/en/shop/cart?status=removed");
+  await expect(notice(page, "success")).toBeVisible();
+  expect((await heading.boundingBox())!.y).toBe(top);
+  // Announced once after hydration: the visible text is repeated in the live region.
+  await expect(page.locator('[aria-live="polite"] .sr-only')).toHaveText(
+    "The book has been removed from your cart.",
+  );
+  await expect(notice(page, "success").locator(".notice-text")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  await expect(notice(page, "success")).not.toBeFocused();
+  await fastAnimations(page);
+  await expect(notice(page, "success")).toHaveCount(0);
+
+  // A pointer resting on it pauses the timer.
+  await page.goto("/en/shop/cart?status=updated");
+  await notice(page, "success").hover();
+  await fastAnimations(page);
+  await page.waitForTimeout(300);
+  await expect(notice(page, "success")).toBeVisible();
+  await page.mouse.move(5, 600);
+  await expect(notice(page, "success")).toHaveCount(0);
+
+  // Reduced motion fades instead of sliding but keeps the reading time.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/en/shop/cart?status=updated");
+  await expect(notice(page, "success")).toBeVisible();
+  await expect(notice(page, "success")).toHaveCSS("translate", "none");
+  await fastAnimations(page);
+  await expect(notice(page, "success")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  await page.goto("/en/shop/cart?status=failed");
+  await expect(noticeText(page, "error")).toHaveText(
+    "Your cart could not be updated. Please try again.",
+  );
+  await expect(notice(page, "error")).toBeFocused();
+  expect((await heading.boundingBox())!.y).toBe(top);
+  await fastAnimations(page);
+  // 300 ms at 100× is 30 s.
+  await page.waitForTimeout(300);
+  await expect(notice(page, "error")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(notice(page, "error")).toHaveCount(0);
+  await expect(page.locator("#main")).toBeFocused();
+});
+
+test("keyboard focus on the close link moves to the close button on hydration", async ({
+  page,
+}) => {
+  let release = () => {};
+  const loaded = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/_astro/PageNotification.*.js", async (route) => {
+    await loaded;
+    await route.continue();
+  });
+  await page.goto("/en/shop/cart?status=failed", {
+    waitUntil: "domcontentloaded",
+  });
+  await notice(page, "error")
+    .getByRole("link", { name: "Close message" })
+    .focus();
+  release();
+  await expect(
+    notice(page, "error").getByRole("button", { name: "Close message" }),
+  ).toBeFocused();
+});
+
+test("touch: a tap on a success notice does not stop its timer", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 375, height: 700 },
+  });
+  const page = await context.newPage();
+  await page.goto("/en/shop/cart?status=updated");
+  await page.locator(".notice-text").tap();
+  await fastAnimations(page);
+  await expect(notice(page, "success")).toHaveCount(0);
+  await context.close();
+});
+
+test("the bottom bar never covers a focused checkout field", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await addToCart(page, "/shop/beside-me");
+  await page.goto("/shop/checkout");
+  // The bar's resting position, even if it has tucked away while scrolling.
+  const barTop = await page.evaluate(
+    () =>
+      innerHeight -
+      document.querySelector<HTMLElement>(".site-header nav")!.offsetHeight,
+  );
+  await page.locator("#email").focus();
+  for (const id of [
+    "#firstName",
+    "#lastName",
+    "#company",
+    "#addressLine1",
+    "#addressLine2",
+    "#postalCode",
+    "#city",
+  ]) {
+    await page.keyboard.press("Tab");
+    await expect(page.locator(id)).toBeFocused();
+    // Focus scrolls smoothly; wait for it to settle.
+    await expect
+      .poll(
+        async () => {
+          const field = (await page.locator(id).boundingBox())!;
+          return field.y + field.height;
+        },
+        { message: id },
+      )
+      .toBeLessThanOrEqual(barTop);
+  }
 });
 
 test("Arabic checkout completes the order once and clears the cart", async ({
@@ -421,12 +724,13 @@ test("out-of-stock responses from the CMS keep the address and point back to the
   await page.goto("/en/shop/checkout");
   await fillCheckout(page, "stock@example.org");
   await page.getByRole("button", { name: "Continue to payment" }).click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(notice(page, "error")).toContainText(
     "no longer available in this quantity",
   );
+  await expect(notice(page, "error")).toBeFocused();
   await expect(page.locator("#city")).toHaveValue("Berlin");
   await expect(
-    page.getByRole("alert").getByRole("link", { name: "Edit cart" }),
+    notice(page, "error").getByRole("link", { name: "Edit cart" }),
   ).toHaveAttribute("href", "/en/shop/cart");
 });
 
@@ -450,7 +754,13 @@ test("unavailable cart lines block checkout until they are changed", async ({
     "Dieses Buch ist in dieser Menge nicht verfügbar. Bitte verringere die Menge oder entferne es.",
   );
   await expect(page.locator(".cart-line option")).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Zur Kasse" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Zur Kasse" })).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await expect(
+    page.getByRole("link", { name: "Zur Kasse" }),
+  ).not.toHaveAttribute("href");
   await expect(
     page.getByText("Bitte passe die markierten Bücher an"),
   ).toBeVisible();
@@ -458,7 +768,10 @@ test("unavailable cart lines block checkout until they are changed", async ({
   await expect(page).toHaveURL(/\/shop\/cart$/);
 
   await page.getByRole("button", { name: "Aktualisieren" }).click();
-  await expect(page.getByRole("link", { name: "Zur Kasse" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Zur Kasse" })).toHaveAttribute(
+    "href",
+    "/shop/checkout",
+  );
 });
 
 test("unsaved shop settings keep the shop visible but disable checkout", async ({
@@ -468,13 +781,13 @@ test("unsaved shop settings keep the shop visible but disable checkout", async (
   await expect(page.locator(".shop-totals div")).toHaveCount(1);
   await expect(
     page.getByRole("link", { name: "Оформити замовлення" }),
-  ).toHaveCount(0);
+  ).toHaveAttribute("aria-disabled", "true");
   await expect(
     page.getByText("Онлайн-оплата зараз недоступна.", { exact: false }),
   ).toBeVisible();
   await page.goto("/uk/shop/checkout");
-  await expect(page.getByRole("alert")).toContainText(
-    "Онлайн-оплата зараз недоступна.",
-  );
+  await expect(
+    page.getByText("Онлайн-оплата зараз недоступна.", { exact: false }),
+  ).toBeVisible();
   await expect(page.locator("form.checkout-form")).toHaveCount(0);
 });

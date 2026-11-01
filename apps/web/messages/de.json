@@ -127,5 +127,8 @@
   "shop_retry": "Erneut versuchen",
   "shop_line_unavailable": "Dieses Buch ist in dieser Menge nicht verfügbar. Bitte verringere die Menge oder entferne es.",
   "shop_cart_blocked": "Bitte passe die markierten Bücher an, bevor du zur Kasse gehst.",
-  "shop_change_address": "Adresse ändern"
+  "shop_change_address": "Adresse ändern",
+  "notice_success": "Erledigt",
+  "notice_error": "Fehler",
+  "notice_close": "Meldung schließen"
 }

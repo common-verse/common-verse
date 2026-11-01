@@ -5,14 +5,19 @@ import * as m from '../paraglide/messages.js'
 import LanguageSwitcher from './LanguageSwitcher.astro'
 import ThemeSwitcher from './ThemeSwitcher.svelte'
 import BrandLogo from './BrandLogo.astro'
+import PageNotification from './PageNotification.svelte'
+import type { Notice } from '../lib/notifications'
 import type { ThemePreference } from '../lib/theme'
 
 interface Props {
   locale: Locale
   themePreference: ThemePreference
+  notice?: Notice
+  noticeFocus?: boolean
+  noticeCloseHref?: string
 }
 
-const { locale, themePreference } = Astro.props
+const { locale, themePreference, notice, noticeFocus, noticeCloseHref } = Astro.props
 const messageOptions = { locale }
 const { direction } = getLocaleMetadata(locale)
 const path = unlocalizedPath(Astro.originPathname)
@@ -39,4 +44,5 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
     <LanguageSwitcher currentLocale={locale} label={m.language_label({}, messageOptions)} path={path} search={Astro.url.search} />
     <ThemeSwitcher client:load preference={themePreference} {locale} />
   </div>
+  <PageNotification client:load {locale} {notice} focus={noticeFocus} closeHref={noticeCloseHref} />
 </header>

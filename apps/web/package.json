@@ -24,6 +24,7 @@
     "@poetry/types": "workspace:*",
     "@stripe/stripe-js": "10.1.0",
     "@tailwindcss/vite": "4.3.3",
+    "arktype": "2.2.9",
     "astro": "7.3.5",
     "bits-ui": "2.19.3",
     "clsx": "2.1.1",

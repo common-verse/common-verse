@@ -14,6 +14,7 @@ require it. They use the existing semantic tokens in `src/styles/token.css`.
 | `Eyebrow`   | `as`: p, span                                                                                               | Small introductory paragraph                                      |
 | `Card.Root` | `as`: div, article, section, aside; `variant`: default, accent; `size`: default, sm                         | Neutral card surface                                              |
 | `Badge`     | `variant`: default, secondary, outline, destructive; optional `href`                                        | Primary badge rendered as a span                                  |
+| `Field`     | Required `id`, `label`; optional `hint`, `messages`, `error`, `control` snippet                             | Label, input and one reserved line for hint or error              |
 
 Native HTML attributes, including `id`, `lang`, `dir`, ARIA attributes and event
 handlers, are forwarded. Use `class` for layout; use component props for typography
@@ -51,6 +52,49 @@ contrast. Use the existing component primitives for patterns needing managed
 focus or ARIA. Verify affected UI with keyboard input, a narrow viewport, German
 or English, and Arabic or Persian. Use `web-accessibility` for deeper evaluation;
 record checks actually performed rather than claiming accessibility from a scan.
+
+## Fields and validation
+
+`Field` renders a label, an input (or the `control` snippet, for example a
+select) and one line below it for the hint or the error. `messages` lists every
+error the field can show and `error` names the current one. All of them sit in
+the same grid cell, so the field keeps its height in all states; the error fades
+over the hint in `motion-fast` without an icon. The invalid border is `error`
+plus a 1px shadow, the text `error-text`. The control gets `aria-invalid` and
+`aria-describedby` pointing to the error or the hint.
+
+Forms validate with one ArkType schema that the Astro page and the hydrated form
+share (`checkoutSchema` in `src/lib/shop.ts`); the address length limit is
+checked beside it, so it is reported together with field errors. An error
+appears when an edited field is left invalid; while it shows, it updates on
+input and disappears once the value is valid, then waits for the next blur.
+Submit marks every invalid field and focuses the first one; a valid submit
+disables the button so one press sends the form once. The form is `novalidate`
+also without JavaScript: the server renders the same field errors, focuses the
+first invalid field and shows one error notification.
+
+On narrow screens `scroll-padding-block-end` keeps focused fields clear of the
+bottom bar.
+
+## Notifications
+
+Page feedback slides out under the sticky header and overlays the content, so
+nothing moves. There are two kinds: success (polite live region, closes itself
+after 6 s, paused on focus and, with a pointer that can hover, on hover) and
+error (assertive, stays until closed). Pages pass `notice` to `BaseLayout`,
+usually from a `?status=` redirect; islands call `notify()` from
+`$lib/notifications` (calls before the area has mounted are dropped).
+
+Server-rendered errors without a field to focus, including cart errors, take
+focus (`noticeFocus`) and are read that way. Other server-rendered notices are
+repeated once in a hidden live text after hydration, because text already in a
+live region at load is not announced. Without JavaScript the close control is a
+link to `noticeCloseHref` (the page without its status) or, by default,
+`#notice-closed`, a hidden target that hides the notices in place; with
+JavaScript it is a button that keeps keyboard focus from the link, and Escape
+closes a focused notice. Reduced motion fades instead of sliding but keeps the
+6 s. Persistent states, such as unavailable payments or cart lines, are quiet
+text without a box.
 
 ## Header
 

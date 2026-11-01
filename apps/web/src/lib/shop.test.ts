@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import * as m from "../paraglide/messages.js";
 import {
   cartSignature,
   cartSubtotal,
   decodeCart,
+  checkoutProblems,
+  checkoutValues,
   decodeCheckout,
   encodeCart,
+  fieldMessages,
   formatPrice,
   isLineAvailable,
   isPurchasable,
@@ -167,9 +171,56 @@ describe("form input", () => {
     expect(result.ok || Object.keys(result.errors)).toHaveLength(4);
   });
 
-  it("rejects addresses that exceed Stripe's metadata limit", () => {
+  it("rejects addresses that exceed Stripe's metadata limit, also beside field errors", () => {
     expect(
       parseCheckout(form({ ...address, company: "x".repeat(400) })),
     ).toMatchObject({ ok: false, tooLong: true, errors: {} });
+    expect(
+      parseCheckout(
+        form({ ...address, company: "x".repeat(400), postalCode: "1" }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      tooLong: true,
+      errors: { postalCode: "invalid" },
+    });
+  });
+
+  it("maps empty required fields to missing and other rejections to invalid", () => {
+    const values = checkoutValues(
+      (name) => address[name as keyof typeof address],
+    );
+    expect(checkoutProblems({ ...values, email: "", city: "" })).toEqual({
+      errors: { email: "required", city: "required" },
+      tooLong: false,
+    });
+    expect(
+      checkoutProblems({ ...values, email: "a@b", country: "" }).errors,
+    ).toEqual({
+      email: "invalid",
+      country: "invalid",
+    });
+  });
+
+  it("offers each field only the messages it can show, in the requested locale", () => {
+    const en = { locale: "en" } as const;
+    expect(fieldMessages("email", "en")).toEqual({
+      required: m.shop_error_required({}, en),
+      invalid: m.shop_error_email({}, en),
+    });
+    expect(fieldMessages("postalCode", "ar")).toEqual({
+      required: m.shop_error_required({}, { locale: "ar" }),
+      invalid: m.shop_error_postal_code({}, { locale: "ar" }),
+    });
+    expect(fieldMessages("city", "en")).toEqual({
+      required: m.shop_error_required({}, en),
+    });
+    expect(fieldMessages("company", "en")).toEqual({});
+    expect(fieldMessages("country", "en")).toEqual({
+      invalid: m.shop_error_country({}, en),
+    });
+    expect(fieldMessages("email", "de")).not.toEqual(
+      fieldMessages("email", "en"),
+    );
   });
 });

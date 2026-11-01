@@ -1,5 +1,7 @@
 import type { Locale } from "@poetry/i18n";
 import type { Product, ShopSettings } from "@poetry/types";
+import { type } from "arktype";
+import * as m from "../paraglide/messages.js";
 import { eventFormatLocale } from "./event-date";
 import { contentDirection } from "./homepage";
 
@@ -126,8 +128,7 @@ export function decodeCheckout(
       typeof data.clientSecret === "string" &&
       typeof data.cart === "string" &&
       data.address?.country === "DE" &&
-      typeof data.email === "string" &&
-      isEmail(data.email)
+      email.allows(data.email)
       ? {
           paymentIntentID: data.paymentIntentID,
           clientSecret: data.clientSecret,
@@ -159,9 +160,6 @@ export function parseQuantity(value: FormDataEntryValue | null) {
   return quantity >= 1 && quantity <= maxQuantity ? quantity : null;
 }
 
-const isEmail = (value: string) =>
-  value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
 export const addressFields = [
   "firstName",
   "lastName",
@@ -172,11 +170,11 @@ export const addressFields = [
   "city",
 ] as const;
 export const optionalFields = new Set<string>(["company", "addressLine2"]);
+/** Form order; the browser focuses the first invalid field. */
+export const checkoutFields = ["email", ...addressFields, "country"] as const;
 
-export type CheckoutField =
-  | "email"
-  | "country"
-  | (typeof addressFields)[number];
+export type CheckoutField = (typeof checkoutFields)[number];
+export type CheckoutValues = Record<CheckoutField, string>;
 export type CheckoutError = "required" | "invalid";
 export interface ShippingAddress
   extends Partial<Record<(typeof addressFields)[number], string>> {
@@ -187,35 +185,84 @@ export type CheckoutResult =
   | { ok: true; email: string; address: ShippingAddress }
   | {
       ok: false;
-      values: Partial<Record<CheckoutField, string>>;
+      values: Partial<CheckoutValues>;
       errors: Partial<Record<CheckoutField, CheckoutError>>;
       tooLong: boolean;
     };
 
-/** Validates the guest checkout form; shipping is limited to Germany. */
-export function parseCheckout(form: FormData): CheckoutResult {
-  const text = (name: CheckoutField) => {
-    const value = form.get(name);
-    return typeof value === "string" ? value.trim() : "";
-  };
-  const values: Partial<Record<CheckoutField, string>> = {};
-  const errors: Partial<Record<CheckoutField, CheckoutError>> = {};
-  const email = text("email");
-  values.email = email;
-  if (!email) errors.email = "required";
-  else if (!isEmail(email)) errors.email = "invalid";
+const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
+const filled = type("string > 0");
+
+const shippingAddress = (values: CheckoutValues): ShippingAddress => {
   const address: ShippingAddress = { country: "DE" };
-  for (const field of addressFields) {
-    const value = text(field);
-    values[field] = value;
-    if (value) address[field] = value;
-    else if (!optionalFields.has(field)) errors[field] = "required";
-  }
-  if (address.postalCode && !/^\d{5}$/.test(address.postalCode))
-    errors.postalCode = "invalid";
-  if (text("country") !== "DE") errors.country = "invalid";
-  const tooLong = JSON.stringify(address).length >= maxAddressLength;
+  for (const field of addressFields)
+    if (values[field]) address[field] = values[field];
+  return address;
+};
+
+/** Shared by the server and the browser; shipping is limited to Germany. */
+export const checkoutSchema = type({
+  email,
+  firstName: filled,
+  lastName: filled,
+  company: "string",
+  addressLine1: filled,
+  addressLine2: "string",
+  postalCode: /^\d{5}$/,
+  city: filled,
+  country: "'DE'",
+});
+
+export const checkoutValues = (
+  read: (name: CheckoutField) => unknown,
+): CheckoutValues =>
+  Object.fromEntries(
+    checkoutFields.map((field) => {
+      const value = read(field);
+      return [field, typeof value === "string" ? value.trim() : ""];
+    }),
+  ) as CheckoutValues;
+
+/**
+ * An empty required field is missing; anything else the schema rejects is invalid.
+ * The address length is checked beside the schema, so it is reported together with field errors.
+ */
+export function checkoutProblems(values: CheckoutValues) {
+  const errors: Partial<Record<CheckoutField, CheckoutError>> = {};
+  const result = checkoutSchema(values);
+  if (result instanceof type.errors)
+    for (const { path } of result) {
+      const field = path[0] as CheckoutField;
+      errors[field] =
+        !values[field] && field !== "country" ? "required" : "invalid";
+    }
+  const tooLong =
+    JSON.stringify(shippingAddress(values)).length >= maxAddressLength;
+  return { errors, tooLong };
+}
+
+const invalidMessages: Partial<
+  Record<CheckoutField, (inputs: {}, options: { locale: Locale }) => string>
+> = {
+  email: m.shop_error_email,
+  postalCode: m.shop_error_postal_code,
+  country: m.shop_error_country,
+};
+
+/** Every message a field can show, so its reserved line fits the longest one. */
+export function fieldMessages(field: CheckoutField, locale: Locale) {
+  const messages: Partial<Record<CheckoutError, string>> = {};
+  if (field !== "country" && !optionalFields.has(field))
+    messages.required = m.shop_error_required({}, { locale });
+  const invalid = invalidMessages[field];
+  if (invalid) messages.invalid = invalid({}, { locale });
+  return messages;
+}
+
+export function parseCheckout(form: FormData): CheckoutResult {
+  const values = checkoutValues((name) => form.get(name));
+  const { errors, tooLong } = checkoutProblems(values);
   if (Object.keys(errors).length || tooLong)
     return { ok: false, values, errors, tooLong };
-  return { ok: true, email, address };
+  return { ok: true, email: values.email, address: shippingAddress(values) };
 }

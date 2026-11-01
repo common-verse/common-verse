@@ -127,5 +127,8 @@
   "shop_retry": "تلاش دوباره",
   "shop_line_unavailable": "این کتاب به این تعداد موجود نیست. لطفاً تعداد را کم کنید یا آن را حذف کنید.",
   "shop_cart_blocked": "لطفاً پیش از تکمیل خرید، کتاب‌های مشخص‌شده را اصلاح کنید.",
-  "shop_change_address": "تغییر نشانی"
+  "shop_change_address": "تغییر نشانی",
+  "notice_success": "انجام شد",
+  "notice_error": "خطا",
+  "notice_close": "بستن پیام"
 }

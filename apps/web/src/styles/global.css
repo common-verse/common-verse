@@ -174,6 +174,12 @@ html {
   body {
     padding-block-end: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   }
+  /* Focused fields scroll clear of the bottom bar. */
+  html {
+    scroll-padding-block-end: calc(
+      4.75rem + var(--space-xs) + env(safe-area-inset-bottom, 0px)
+    );
+  }
   .site-header nav {
     position: fixed;
     inset: auto 0 0;
@@ -969,21 +975,6 @@ footer {
   }
 }
 
-.shop-alert {
-  margin: 0;
-  padding: var(--space-sm);
-  border-inline-start: 3px solid var(--error);
-  background: var(--card);
-  color: var(--error-text);
-}
-.shop-alert[data-tone="success"] {
-  border-color: var(--success);
-  color: var(--foreground);
-}
-.shop-alert a {
-  color: inherit;
-  text-decoration: underline;
-}
 .shop-control {
   min-block-size: 2.75rem;
   padding-inline: var(--space-xs);

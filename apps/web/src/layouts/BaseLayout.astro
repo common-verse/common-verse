@@ -7,6 +7,7 @@ import BrandLogo from '../components/BrandLogo.astro'
 import * as m from '../paraglide/messages.js'
 import '../styles/global.css'
 import { themePreference } from '../lib/theme'
+import type { Notice } from '../lib/notifications'
 
 interface Props {
   locale: Locale
@@ -20,6 +21,10 @@ interface Props {
   structuredData?: Record<string, unknown>
   alternateLocales?: readonly Locale[]
   mainClass?: string
+  /** Page feedback below the header. */
+  notice?: Notice
+  noticeFocus?: boolean
+  noticeCloseHref?: string
 }
 
 const {
@@ -34,6 +39,9 @@ const {
   structuredData,
   alternateLocales = locales,
   mainClass,
+  notice,
+  noticeFocus,
+  noticeCloseHref,
 } = Astro.props
 if (preview) {
   Astro.response.headers.set('Cache-Control', 'no-store')
@@ -79,7 +87,7 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
   </head>
   <body>
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>
-    <Header {locale} themePreference={theme} />
+    <Header {locale} themePreference={theme} {notice} {noticeFocus} {noticeCloseHref} />
     {preview && <p class="preview-banner" role="status" lang={editorLanguage} dir={getLocaleMetadata(editorLanguage).direction}>{message('draft_preview', editorLanguage)}</p>}
     {preview && <div id="payload-live-preview" data-server-url={import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'} />}
     <main id="main" tabindex="-1" class={mainClass}><slot /></main>

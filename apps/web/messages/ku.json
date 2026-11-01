@@ -127,5 +127,8 @@
   "shop_retry": "Dîsa biceribîne",
   "shop_line_unavailable": "Ev pirtûk bi vê hejmarê tune ye. Ji kerema xwe hejmarê kêm bike an wê rake.",
   "shop_cart_blocked": "Ji kerema xwe berî kasê pirtûkên nîşankirî biguherîne.",
-  "shop_change_address": "Navnîşanê biguherîne"
+  "shop_change_address": "Navnîşanê biguherîne",
+  "notice_success": "Qediya",
+  "notice_error": "Çewtî",
+  "notice_close": "Peyamê bigire"
 }

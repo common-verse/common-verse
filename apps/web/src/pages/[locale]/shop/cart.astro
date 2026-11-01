@@ -74,7 +74,7 @@ const linesAvailable = items.every(isLineAvailable)
 const requested = Astro.url.searchParams.get('status')
 const status = statuses.find((value) => value === requested)
 const max = formatNumber(maxQuantity, locale)
-const statusMessage = status && {
+const statusText = status && {
   added: m.shop_status_added({}, { locale }),
   updated: m.shop_status_updated({}, { locale }),
   removed: m.shop_status_removed({}, { locale }),
@@ -82,13 +82,15 @@ const statusMessage = status && {
   invalid: m.shop_status_invalid({ min: formatNumber(1, locale), max }, { locale }),
   failed: m.shop_status_failed({}, { locale }),
 }[status]
+const successes: (Status | undefined)[] = ['added', 'updated', 'removed']
+const notice = statusText ? { tone: successes.includes(status) ? ('success' as const) : ('error' as const), text: statusText } : undefined
+const checkoutBlocked = !paymentsAvailable ? m.shop_payments_unavailable({}, { locale }) : !linesAvailable ? m.shop_cart_blocked({}, { locale }) : null
 const title = m.shop_cart({}, { locale })
 ---
 
-<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/cart" noIndex alternateLocales={[]}>
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/cart" noIndex alternateLocales={[]} {notice} noticeFocus={notice?.tone === 'error'} noticeCloseHref={cartPath}>
   <section class="cart">
     <Heading level={1}>{title}</Heading>
-    {statusMessage && <p class="shop-alert" data-tone={['added', 'updated', 'removed'].includes(status!) ? 'success' : undefined} role="status">{statusMessage}</p>}
     {items.length ? (
       <div class="cart-layout">
         <ul class="cart-lines">
@@ -103,7 +105,7 @@ const title = m.shop_cart({}, { locale })
                     {product ? <Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link> : m.shop_not_available({}, { locale })}
                   </Heading>
                   {price > 0 && <p class="cart-unit">{m.shop_unit_price({}, { locale })}: <bdi class="price">{formatPrice(price, locale)}</bdi></p>}
-                  {!isLineAvailable(item) && <p class="shop-alert cart-hint">{m.shop_line_unavailable({}, { locale })}</p>}
+                  {!isLineAvailable(item) && <p class="cart-hint">{m.shop_line_unavailable({}, { locale })}</p>}
                 </div>
                 {quantities.length > 0 && <form class="cart-quantity" method="post" action={cartPath}>
                   <input type="hidden" name="action" value="update" />
@@ -128,12 +130,9 @@ const title = m.shop_cart({}, { locale })
           <Card.Header><Card.Title level={2} id="cart-summary-heading">{m.shop_order_summary({}, { locale })}</Card.Title></Card.Header>
           <Card.Content><ShopTotals {locale} {subtotal} {shipping} note={settings.priceNote} /></Card.Content>
           <Card.Footer class="cart-actions">
-            {!paymentsAvailable
-              ? <p class="shop-alert">{m.shop_payments_unavailable({}, { locale })}</p>
-              : !linesAvailable
-                ? <p class="shop-alert">{m.shop_cart_blocked({}, { locale })}</p>
-                : <Button href={localizedPath(locale, 'shop/checkout')}>{m.shop_checkout({}, { locale })}</Button>}
+            <Button href={localizedPath(locale, 'shop/checkout')} disabled={Boolean(checkoutBlocked)} aria-describedby={checkoutBlocked ? 'checkout-blocked' : undefined}>{m.shop_checkout({}, { locale })}</Button>
             <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
+            {checkoutBlocked && <p class="checkout-blocked" id="checkout-blocked">{checkoutBlocked}</p>}
           </Card.Footer>
         </Card.Root>
       </div>
@@ -154,7 +153,8 @@ const title = m.shop_cart({}, { locale })
   .cart-line :global(.cart-line-title) { margin: 0; font-size: var(--font-size-md); overflow-wrap: anywhere; }
   .cart-unit { margin: var(--space-3xs) 0 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
   .cart-quantity { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
-  .cart-hint { margin-block-start: var(--space-xs); font-size: var(--font-size-sm); }
+  .cart-hint { margin-block: var(--space-xs) 0; font-size: var(--font-size-sm); color: var(--error-text); }
+  .checkout-blocked { flex-basis: 100%; margin: 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
   .cart-line-total { grid-column: 1 / -1; margin: 0; font-weight: 700; }
   .cart-layout :global(.cart-actions) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
   @media (min-width: 48rem) {

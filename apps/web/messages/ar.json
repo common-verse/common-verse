@@ -127,5 +127,8 @@
   "shop_retry": "حاول مرة أخرى",
   "shop_line_unavailable": "هذا الكتاب غير متوفر بهذه الكمية. يُرجى تقليل الكمية أو إزالته.",
   "shop_cart_blocked": "يُرجى تعديل الكتب المحددة قبل إتمام الشراء.",
-  "shop_change_address": "تغيير العنوان"
+  "shop_change_address": "تغيير العنوان",
+  "notice_success": "تم",
+  "notice_error": "خطأ",
+  "notice_close": "إغلاق الرسالة"
 }

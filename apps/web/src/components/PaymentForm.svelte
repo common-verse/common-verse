@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte'
+  import { onMount } from 'svelte'
   import { loadStripe, type Stripe, type StripeElementLocale, type StripeElements } from '@stripe/stripe-js'
   import { Button } from '$lib/components/ui/button'
+  import { notify } from '$lib/notifications'
 
   let { clientSecret, publishableKey, locale, returnUrl, labels }: {
     clientSecret: string
@@ -12,16 +13,11 @@
   } = $props()
 
   let state = $state<'loading' | 'ready' | 'submitting' | 'failed'>('loading')
-  let error = $state('')
   let container: HTMLDivElement
-  let errorElement: HTMLParagraphElement
   let stripe: Stripe | null = null
   let elements: StripeElements | null = null
 
-  function fail(message: string) {
-    error = message
-    tick().then(() => errorElement.focus())
-  }
+  const fail = (text: string) => notify({ tone: 'error', text })
 
   onMount(() => {
     loadStripe(publishableKey)
@@ -41,7 +37,6 @@
     event.preventDefault()
     if (!stripe || !elements || state !== 'ready') return
     state = 'submitting'
-    error = ''
     // Resolves only on failure; success navigates to the return URL.
     const { error: result } = await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl } })
     state = 'ready'
@@ -52,7 +47,6 @@
 <form class="payment-form" onsubmit={submit} aria-busy={state === 'loading' || state === 'submitting'}>
   <div bind:this={container}></div>
   {#if state === 'loading'}<p class="payment-loading" role="status">{labels.loading}</p>{/if}
-  <p class="shop-alert" role="alert" tabindex="-1" bind:this={errorElement} hidden={!error}>{error}</p>
   <Button type="submit" size="lg" disabled={state !== 'ready'}>{state === 'submitting' ? labels.paying : labels.pay}</Button>
 </form>
 
