@@ -38,9 +38,15 @@ for (const locale of ["de", "ar"] as const) {
     });
     await trigger.focus();
     await page.keyboard.press("Enter");
-    await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    const popup = page.locator('[data-slot="popover-content"]');
+    const popup = page.getByRole("dialog", {
+      name: locale === "de" ? "Sprache" : "اللغة",
+    });
+    await expect(popup).toBeVisible();
     await expect(popup.getByRole("link")).toHaveCount(6);
+    // Native name plus the name in the current UI language.
+    await expect(popup.locator('a[hreflang="en"]')).toHaveText(
+      locale === "de" ? "EnglishEnglisch" : "Englishالإنجليزية",
+    );
     await expect(popup.locator('[lang="fa"][dir="rtl"]')).toHaveText("فارسی");
     await expect(popup.locator('a[aria-current="page"]')).toContainText(
       locale === "de" ? "Deutsch" : "العربية",
@@ -57,9 +63,16 @@ for (const locale of ["de", "ar"] as const) {
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    await page.keyboard.press("Tab");
+    await expect(popup.getByRole("link").first()).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(trigger).toBeFocused();
-    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await expect(popup).toBeHidden();
+    // Leaving the menu with the keyboard closes it, so it never covers the focus.
+    await page.keyboard.press("Enter");
+    await expect(popup).toBeVisible();
+    for (let step = 0; step < 7; step++) await page.keyboard.press("Tab");
+    await expect(popup).toBeHidden();
   });
 }
 
@@ -68,7 +81,9 @@ test("language links preserve the content path, query, and anchor when returning
 }) => {
   await page.goto("/en/events/test?ref=invite#main");
   await page.getByRole("button", { name: "Language: English" }).click();
-  await page.getByRole("link", { name: "Deutsch", exact: true }).click();
+  const popup = page.getByRole("dialog", { name: "Language" });
+  await expect(popup).toBeVisible();
+  await popup.getByRole("link", { name: /^Deutsch/ }).click();
   await expect(page).toHaveURL(/\/veranstaltungen\/test\?ref=invite#main$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 });
@@ -80,8 +95,8 @@ test("language selection remains available without JavaScript", async ({
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto(`${baseURL}/`);
-  await page.locator(".language-fallback summary").click();
-  await page.getByRole("link", { name: "English", exact: true }).click();
+  await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
+  await page.getByRole("link", { name: /^English/ }).click();
   await expect(page).toHaveURL(/\/en$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await context.close();
@@ -106,9 +121,9 @@ test("German page names share route identity, alternates, and query/hash with ot
     `${baseURL}/ar/poems/test-poem`,
   );
   await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
-  await page.getByRole("link", { name: "العربية", exact: true }).click();
+  await page.getByRole("link", { name: /^العربية/ }).click();
   await expect(page).toHaveURL(/\/ar\/poems\/test-poem\?ref=invite#main$/);
   await page.getByRole("button", { name: /العربية$/ }).click();
-  await page.getByRole("link", { name: "Deutsch", exact: true }).click();
+  await page.getByRole("link", { name: /^Deutsch/ }).click();
   await expect(page).toHaveURL(/\/gedichte\/test-poem\?ref=invite#main$/);
 });

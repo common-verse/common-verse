@@ -65,6 +65,30 @@ test("primary navigation is keyboard accessible", async ({ page }) => {
   await expect(page.getByRole("link", { name: /zum inhalt/i })).toBeFocused();
 });
 
+test("the mobile bottom bar shows named icon links and marks the current section", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 780 });
+  await page.goto("/en/events");
+  const nav = page.getByRole("navigation", { name: "Primary navigation" });
+  const links = nav.getByRole("link");
+  await expect(links).toHaveText(["Events", "Articles", "Poems", "Shop"]);
+  for (const link of await links.all()) {
+    await expect(link.locator(".nav-label")).toHaveCSS(
+      "clip-path",
+      "inset(50%)",
+    );
+    await expect(link.locator("svg")).toBeVisible();
+  }
+  await expect(nav.getByRole("link", { name: "Events" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(nav.locator("[aria-current]")).toHaveCount(1);
+  const bar = (await nav.boundingBox())!;
+  expect(bar.y + bar.height).toBeCloseTo(780, 0);
+});
+
 test("primary navigation targets render collection indexes", async ({
   page,
 }) => {
@@ -84,7 +108,7 @@ test("language switcher changes the locale URL and document direction", async ({
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
-  await page.getByRole("link", { name: "العربية", exact: true }).click();
+  await page.getByRole("link", { name: /^العربية/ }).click();
   await expect(page).toHaveURL(/\/ar$/);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 });

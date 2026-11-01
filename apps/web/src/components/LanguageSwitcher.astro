@@ -1,0 +1,56 @@
+---
+import { localeMetadata, locales, localizedPath, type Locale } from '@poetry/i18n'
+import { Languages, ChevronDown, Check } from 'lucide-svelte'
+
+interface Props {
+  currentLocale: Locale
+  label: string
+  path: string
+  search: string
+}
+
+const { currentLocale, label, path, search } = Astro.props
+const current = localeMetadata[currentLocale]
+const displayNames = new Intl.DisplayNames([currentLocale], { type: 'language' })
+// Each language also appears in the reader's current language, unless that repeats the native name.
+const translatedName = (locale: Locale) => {
+  const name = locale === currentLocale ? '' : (displayNames.of(locale) ?? '')
+  return name.toLowerCase() === localeMetadata[locale].label.toLowerCase() ? '' : name
+}
+---
+
+<button class="language-trigger" type="button" popovertarget="language-menu">
+  <Languages size={18} aria-hidden="true" />
+  <span class="sr-only">{label}:</span>
+  <span lang={currentLocale} dir={current.direction}>{current.label}</span>
+  <ChevronDown size={16} aria-hidden="true" class="language-chevron" />
+</button>
+<div popover id="language-menu" class="language-popover" role="dialog" aria-labelledby="language-menu-title" dir={current.direction}>
+  <p class="language-title" id="language-menu-title">{label}</p>
+  <ul class="language-options">
+    {locales.map((locale) => (
+      <li>
+        <a href={`${localizedPath(locale, path)}${search}`} hreflang={locale} aria-current={locale === currentLocale ? 'page' : undefined}>
+          <span class="language-native" lang={locale} dir={localeMetadata[locale].direction}>{localeMetadata[locale].label}</span>
+          {translatedName(locale) && <span class="language-translated">{translatedName(locale)}</span>}
+          {locale === currentLocale && <Check size={18} aria-hidden="true" class="language-check" />}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script>
+  const menu = document.getElementById('language-menu')!
+  const trigger = document.querySelector('[popovertarget="language-menu"]')
+  // The server never sees the URL fragment; keep the reader's anchor when switching language.
+  menu.addEventListener('click', (event) => {
+    const link = (event.target as Element).closest<HTMLAnchorElement>('a')
+    if (link) link.hash = location.hash
+  })
+  // Close when keyboard focus moves on, so the menu never covers the focused element.
+  menu.addEventListener('focusout', (event) => {
+    const next = event.relatedTarget as Node | null
+    if (next && !menu.contains(next) && next !== trigger) menu.hidePopover()
+  })
+</script>

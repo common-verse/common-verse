@@ -6,7 +6,7 @@
   } from 'svelte/elements'
 
   export const buttonVariants = tv({
-    base: 'inline-flex shrink-0 items-center justify-center gap-2 rounded-full [corner-shape:squircle] text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+    base: 'inline-flex shrink-0 items-center justify-center gap-2 rounded-(--control-radius) [corner-shape:squircle] text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary-hover',

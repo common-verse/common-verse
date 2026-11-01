@@ -75,7 +75,7 @@ test("fixed routes reject legacy German paths and preserve language switching", 
   expect(response.status()).toBe(404);
   await page.goto("/kontakt?ref=test#main");
   await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
-  await page.getByRole("link", { name: "العربية", exact: true }).click();
+  await page.getByRole("link", { name: /^العربية/ }).click();
   await expect(page).toHaveURL(/\/ar\/contact\?ref=test#main$/);
   expect((await request.get("/en/not-a-page")).status()).toBe(404);
 });

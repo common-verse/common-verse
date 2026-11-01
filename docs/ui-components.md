@@ -52,6 +52,32 @@ focus or ARIA. Verify affected UI with keyboard input, a narrow viewport, German
 or English, and Arabic or Persian. Use `web-accessibility` for deeper evaluation;
 record checks actually performed rather than claiming accessibility from a scan.
 
+## Header
+
+The header stays `dir="ltr"`; its links and labels carry the locale direction.
+On wide screens the navigation sits beside the logo, with language and theme at
+the end. With large text on narrow screens the controls wrap below the logo
+instead of overflowing. Header, main content, footer and bottom bar keep clear of safe areas
+(`viewport-fit=cover`).
+
+The language menu is a native `popover` rendered by Astro (there is no popover
+primitive in `ui`), so it opens, closes with Escape or an outside click, and
+returns focus without JavaScript. It is a dialog named by its title and fades in without moving. Each
+language shows its native name and, below it, its name in the current UI
+language from `Intl.DisplayNames`. A small script carries the URL fragment over
+to the chosen language and closes the menu when focus moves outside it. Without
+anchor positioning the menu sits at a fixed place below the header's end.
+
+Below 52rem the primary navigation becomes a bottom bar of four icons
+(`mic-vocal`, `newspaper`, `quote`, `shopping-bag`). It is the same `<nav>`:
+labels stay in the markup as accessible names and are only visually hidden.
+The current section is marked with `aria-current` and a soft pink squircle
+(an outline in forced-colors mode).
+A `scroll-state` container query tucks the bar away while scrolling down and
+brings it back on scrolling up or keyboard focus; browsers without that query
+keep it visible. The theme button is described in
+[design tokens](design-tokens.md#preferences-and-verification).
+
 ## Profile portraits
 
 Public poet cards and profile pages use DiceBear Open Peeps with the Bold Pop

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 for (const locale of ["de", "ar"] as const) {
-  test(`${locale} theme choices work on mobile and survive navigation`, async ({
+  test(`${locale} theme toggle works on mobile and survives navigation`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 780 });
@@ -12,21 +12,21 @@ for (const locale of ["de", "ar"] as const) {
     const dark = locale === "de" ? "Dunkel" : "داكن";
     const light = locale === "de" ? "Hell" : "فاتح";
     const system = locale === "de" ? "System" : "النظام";
+    const html = page.locator("html");
     const trigger = page.getByRole("button", { name: new RegExp(`^${name}:`) });
+    await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
+    await expect(trigger).toBeEnabled();
+    // From System, the first press shows the opposite of what is visible.
     await trigger.press("Enter");
-    await page.getByRole("radio", { name: dark, exact: true }).check();
     await expect(trigger).toHaveAccessibleName(`${name}: ${dark}`);
     await expect(trigger).toBeFocused();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(html).toHaveAttribute("data-theme", "dark");
     const background = await page
       .locator("body")
       .evaluate((el) => getComputedStyle(el).backgroundColor);
     await page.reload();
     await expect(trigger).toHaveAccessibleName(`${name}: ${dark}`);
-    await trigger.click();
-    await expect(
-      page.getByRole("radio", { name: dark, exact: true }),
-    ).toBeChecked();
+    await expect(trigger).toBeEnabled();
     expect(
       (
         await new AxeBuilder({ page })
@@ -39,14 +39,13 @@ for (const locale of ["de", "ar"] as const) {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await page.getByRole("radio", { name: light, exact: true }).check();
-    // Wait for the closing popover to unmount before auditing the new theme.
-    await expect(page.locator("[data-popover-content]")).toHaveCount(0);
-    expect(
-      await page
-        .locator("body")
-        .evaluate((el) => getComputedStyle(el).backgroundColor),
-    ).not.toBe(background);
+    await trigger.click();
+    await expect(html).toHaveAttribute("data-theme", "light");
+    await expect(trigger).toHaveAccessibleName(`${name}: ${light}`);
+    await expect(page.locator("body")).not.toHaveCSS(
+      "background-color",
+      background,
+    );
     expect(
       (
         await new AxeBuilder({ page })
@@ -54,8 +53,9 @@ for (const locale of ["de", "ar"] as const) {
           .analyze()
       ).violations,
     ).toEqual([]);
-    await trigger.click();
-    await page.getByRole("radio", { name: system, exact: true }).check();
+    // Right-click and Delete return to System.
+    await trigger.click({ button: "right" });
+    await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(page.locator("body")).toHaveCSS(
       "background-color",
@@ -66,6 +66,10 @@ for (const locale of ["de", "ar"] as const) {
       "background-color",
       background,
     );
+    await trigger.press("Enter");
+    await expect(html).toHaveAttribute("data-theme", "dark");
+    await trigger.press("Delete");
+    await expect(html).toHaveAttribute("data-theme", "system");
     await page.goto("/en/events/test");
     await expect(
       page.getByRole("button", { name: "Appearance: System" }),
@@ -73,7 +77,62 @@ for (const locale of ["de", "ar"] as const) {
   });
 }
 
-test.describe("server-rendered brand and slate themes", () => {
+test("a touch long-press on the theme toggle returns to System", async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    baseURL,
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 375, height: 780 },
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  await page.goto("/");
+  const trigger = page.getByRole("button", { name: /^Darstellung:/ });
+  await expect(trigger).toBeEnabled();
+  await trigger.tap();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  // Pointer events target the document root while the reveal runs.
+  await page.waitForFunction(
+    () => !document.documentElement.matches(":active-view-transition"),
+  );
+  const box = (await trigger.boundingBox())!;
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [point],
+  });
+  await page.waitForTimeout(700);
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "system");
+  await context.close();
+});
+
+test("presses during the theme reveal are not lost", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  const html = page.locator("html");
+  const trigger = page.getByRole("button", { name: /^Darstellung:/ });
+  await expect(trigger).toBeEnabled();
+  const box = (await trigger.boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  // Raw mouse events: the second press lands while the 400 ms reveal runs.
+  await page.mouse.click(x, y);
+  await page.mouse.click(x, y);
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.mouse.click(x, y);
+  await page.mouse.click(x, y, { button: "right" });
+  await expect(html).toHaveAttribute("data-theme", "system");
+});
+
+test.describe("server-rendered themes", () => {
   test.use({ javaScriptEnabled: false });
 
   for (const locale of ["de", "ar"] as const) {
@@ -113,21 +172,19 @@ test.describe("server-rendered brand and slate themes", () => {
             ["muted-foreground", "muted", 4.5],
             ["accent-foreground", "accent", 4.5],
             ["header-foreground", "header-background", 4.5],
-            ["header-foreground", "header-control-background", 4.5],
-            ["header-foreground", "header-control-hover", 4.5],
             ["newsletter-foreground", "newsletter-background", 4.5],
             ["input", "background", 3],
             ["input", "card", 3],
-            ["header-control-border", "header-control-background", 3],
-            ["header-control-border", "header-control-hover", 3],
+            ["primary", "background", 3],
+            ["error", "background", 3],
+            ["error-text", "background", 4.5],
+            ["error-text", "card", 4.5],
+            ["error-foreground", "error", 4.5],
+            ["success-foreground", "success", 4.5],
             ["ring", "background", 3],
             ["ring", "card", 3],
             ["ring", "header-background", 3],
           ];
-          for (const status of ["success", "warning", "error", "info"]) {
-            pairs.push([`${status}-foreground`, status, 4.5]);
-            pairs.push([status, `${status}-subtle`, 4.5]);
-          }
           const probe = document.createElement("span");
           document.body.append(probe);
           // Computed colours may be RGB, OKLCH, or color(). Sample sRGB pixels
@@ -180,16 +237,19 @@ test.describe("server-rendered brand and slate themes", () => {
             const b = luminance(card, layers.slice(0, -1));
             return {
               luminance: b,
-              pairs: ["foreground", "muted-foreground", "primary-text"].map(
-                (token) => {
-                  probe.style.color = `var(--${token})`;
-                  const a = luminance(getComputedStyle(probe).color, layers);
-                  return {
-                    token,
-                    ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05),
-                  };
-                },
-              ),
+              pairs: [
+                "foreground",
+                "muted-foreground",
+                "primary-text",
+                "error-text",
+              ].map((token) => {
+                probe.style.color = `var(--${token})`;
+                const a = luminance(getComputedStyle(probe).color, layers);
+                return {
+                  token,
+                  ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05),
+                };
+              }),
             };
           });
           const alpha = (color: string) => {
@@ -204,8 +264,6 @@ test.describe("server-rendered brand and slate themes", () => {
           const backgroundLuminance = luminance(pageBackground);
           probe.style.color = "var(--primary)";
           const primary = rgb(getComputedStyle(probe).color);
-          probe.style.color = "var(--primary-base)";
-          const primaryBase = rgb(getComputedStyle(probe).color);
           probe.style.color = "var(--primary-foreground)";
           const primaryForeground = rgb(getComputedStyle(probe).color);
           probe.style.color = "var(--black)";
@@ -219,7 +277,6 @@ test.describe("server-rendered brand and slate themes", () => {
             pairs: results,
             backgroundLuminance,
             primary,
-            primaryBase,
             primaryForeground,
             black,
             header,
@@ -255,8 +312,7 @@ test.describe("server-rendered brand and slate themes", () => {
             ).toBeGreaterThanOrEqual(4.5);
           }
         }
-        expect(results.primaryBase).toEqual([255, 3, 61]);
-        expect(results.primary).toEqual(results.primaryBase);
+        expect(results.primary).toEqual([255, 61, 94]);
         expect(results.primaryForeground).toEqual(results.black);
         expect(results.headerAlpha).toBe(1);
         for (const result of results.pairs) {
@@ -267,27 +323,28 @@ test.describe("server-rendered brand and slate themes", () => {
         // axe injects scripts into frames; the interactive tests audit the DOM.
         // This context specifically checks CSS and SSR with scripting disabled.
         await page.screenshot({
-          path: `/tmp/poetry-gold-${locale}-${theme}.png`,
+          path: `/tmp/poetry-theme-${locale}-${theme}.png`,
           fullPage: true,
         });
-        const ramp = await page.evaluate(() => {
+        // Derived roles follow a changed HEX input.
+        const derived = await page.evaluate(() => {
           const root = document.documentElement;
           const probe = document.createElement("span");
           document.body.append(probe);
           const colours = () =>
-            [50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((shade) => {
-              probe.style.color = `var(--slate-${shade})`;
+            ["primary", "primary-text", "accent"].map((token) => {
+              probe.style.color = `var(--${token})`;
               return getComputedStyle(probe).color;
             });
           const before = colours();
-          root.style.setProperty("--slate", "#37684a");
+          root.style.setProperty("--pink", "#37684a");
           const after = colours();
-          root.style.removeProperty("--slate");
+          root.style.removeProperty("--pink");
           probe.remove();
           return { before, after };
         });
-        ramp.before.forEach((colour, index) => {
-          expect(ramp.after[index]).not.toBe(colour);
+        derived.before.forEach((colour, index) => {
+          expect(derived.after[index]).not.toBe(colour);
         });
       });
     }

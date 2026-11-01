@@ -9,98 +9,87 @@ typography, geometry tokens, shadows, and `color-scheme` selection.
 
 Only these HEX inputs define the palette:
 
-| Input   | Value   | Purpose                                 |
-| ------- | ------- | --------------------------------------- |
-| `black` | #101010 | Neutral near-black anchor               |
-| `white` | #FDFDFC | Near-white anchor                       |
-| `gold`  | #F1A60A | Original site brand yellow              |
-| `pink`  | #FF033D | Primary brand colour                    |
-| `mint`  | #00FCC2 | Light surface tint                      |
-| `slate` | #26465A | Restrained slate-blue secondary accents |
-| `green` | #176848 | Success                                 |
-| `red`   | #B42318 | Error                                   |
-| `blue`  | #215F93 | Information                             |
+| Input         | Value   | Purpose                                 |
+| ------------- | ------- | --------------------------------------- |
+| `black`       | #101010 | Ink, dark page                          |
+| `white`       | #FDFDFC | Paper, light page                       |
+| `pink`        | #FF3D5E | Primary brand colour                    |
+| `green`       | #00C853 | Success                                 |
+| `red`         | #D70000 | Error fills, field borders, error icons |
+| `red-on-dark` | #FF8A80 | Readable error text in dark mode        |
 
-`primary-base`, `secondary-base`, `success-base`, `error-base`, and `info-base`
-convert the corresponding HEX input automatically with `oklch(from … l c h)`.
-Warning derives from gold. There is no conversion script or separate numeric
-OKLCH value to maintain.
-
-The `brand-50`–`brand-900` and `slate-50`–`slate-900` ramps mix each base towards
-white or black in OKLCH. The 500 step retains the exact input. These ramps are
-palette primitives; components should use semantic roles instead.
+The system is monochrome: surfaces, text, borders and the header are mixes of
+black and white without a brand tint. Pink is the only brand colour. Semantic
+roles derive from the inputs with `color-mix()`; there is no conversion script
+or separate numeric value to maintain.
 
 ## Surfaces and elevation
 
-Light cards, menus, and the header mix 99.8% white with 0.2% mint for a faint complementary
-tint. The page mixes this neutral with 0.5% black, giving cards a quiet paper-like
-backdrop. The dark page mixes 99% neutral black with 1% primary. Dark elevation
-overlays mix 99% white with 1% primary before applying alpha. Secondary blue does not tint
-general surfaces or neutral text: light surfaces use mint, while dark surfaces and text derive their tint from the primary input.
-These percentages describe OKLCH interpolation weights, not alpha. The brand colour stays
-concentrated in primary actions and meaningful highlights. The header is opaque
-and warm near-white in light mode; dark mode uses an opaque composite of 5% pale tint
-over the dark page. Header hover states and general accent surfaces mix 20% primary
-with the warm light surface. The newsletter card uses this light primary tint
-with the matching accent foreground. Dark accent surfaces use primary at 12% alpha.
+Light surfaces are exactly `white` and text exactly `black`; dark mode swaps them.
+Dark cards add white at 5% alpha (#1C1C1C on the page), raised and muted states
+8%. Card backgrounds use alpha, not element opacity, so nested cards accumulate
+light while text stays opaque. Text pairings are verified against up to three
+nested card layers; placing these overlays on photographs requires its own
+checks. Menus and the dark header are opaque sRGB composites (#2C2C2C and
+#1C1C1C) because content behind them must not bleed through.
 
-| Surface              | Light                              | Dark                                                 |
-| -------------------- | ---------------------------------- | ---------------------------------------------------- |
-| Page                 | Opaque paper neutral               | Opaque near-black with a primary tint                |
-| Card                 | Opaque warm white, small shadow    | Pale primary-tinted background at 5% alpha           |
-| Secondary controls   | Pale slate-blue surface            | Pale slate-blue tint at 12% alpha                    |
-| Muted / raised state | Warm neutral surface               | Pale primary-tinted background at 8% alpha           |
-| Menu / popover       | Opaque warm white, floating shadow | Opaque composite of 12% pale tint over the dark page |
-
-Dark card backgrounds use alpha, not element opacity. Nested cards therefore
-accumulate light while text stays opaque. Text pairings are verified against up
-to three nested card layers; arbitrary nesting or placing these overlays on
-photographs requires its own checks. Floating menus use an opaque composite
-because portalled content cannot rely on a parent surface, and underlying text
-must not bleed through. The opaque menu mix uses sRGB to match alpha compositing.
+| Surface              | Light                    | Dark                     |
+| -------------------- | ------------------------ | ------------------------ |
+| Page, header         | `white`                  | `black` / opaque #1C1C1C |
+| Card                 | `white`, small shadow    | White at 5% alpha        |
+| Muted / secondary    | Black 5% into white      | White at 8% alpha        |
+| Accent (hover, item) | Pink 20% into white      | Pink 16% into black      |
+| Menu / popover       | `white`, floating shadow | Opaque #2C2C2C           |
 
 Light hierarchy uses three shadow tokens: `shadow-card` (2px offset / 6px blur),
 `shadow-raised` (6px / 20px), and `shadow-floating` (12px / 36px). All use the black
 anchor at 8% alpha in light mode and a transparent shadow colour in dark mode.
-Card shadows apply consistently to editorial, event, and participation panels.
 
 ## Semantic roles
 
-| Role                 | Tokens                                                                       |
-| -------------------- | ---------------------------------------------------------------------------- |
-| Page and text        | `background`, `foreground`                                                   |
-| Cards and menus      | `card`, `card-foreground`, `popover`, `popover-foreground`                   |
-| Main action          | `primary`, `primary-foreground`, `primary-hover`, `primary-text`             |
-| Supporting surfaces  | `secondary`, `muted`, `accent`, each with `-foreground`                      |
-| Boundaries and focus | `border`, `input`, `ring`                                                    |
-| Feedback             | `success`, `warning`, `error`, `info`, each with `-foreground` and `-subtle` |
+| Role                 | Tokens                                                           |
+| -------------------- | ---------------------------------------------------------------- |
+| Page and text        | `background`, `foreground`                                       |
+| Cards and menus      | `card`, `card-foreground`, `popover`, `popover-foreground`       |
+| Main action          | `primary`, `primary-foreground`, `primary-hover`, `primary-text` |
+| Supporting surfaces  | `secondary`, `muted`, `accent`, each with `-foreground`          |
+| Boundaries and focus | `border`, `input`, `ring`                                        |
+| Feedback             | `success`, `error`, each with `-foreground`; `error-text`        |
 
-Text derives from the neutral anchors: main light text mixes black with 4% primary,
-and main dark text mixes white with 4% primary. Secondary text mixes towards the
-page surface. Status text uses controlled lightness (42% light / 80% dark) and
-capped chroma, with subtle fills mixed into the active page background. A fixed
-OKLCH lightness difference does not guarantee a WCAG contrast ratio.
+Pink fills carry black labels (5.51:1). Pink itself is only large text or a fill:
+event titles use the exact primary pink (3.39:1 on light, large text). Small pink
+text uses `primary-text` (pink 70% into black in light mode, 75% into white in
+dark mode). `secondary-text` aliases `primary-text` for eyebrows, notes and
+supporting links. The logo indentation uses `primary`.
 
-Primary backgrounds retain the vibrant pink input with near-black labels.
-Event titles use the exact primary pink in both themes, with no outlines or halos.
-The small-text role `primary-text` caps light-theme OKLCH lightness at 55% and raises
-dark-theme lightness to at least 85% for readable contrast. The logo indent stays the original gold.
+`secondary` is the quiet neutral control and badge surface (it equals `muted`);
+`accent` is the soft pink hover and selection surface. Secondary buttons
+therefore still show a visible change on hover.
+
+There are two statuses. `error` (= `destructive`) is a real red, kept clearly
+apart from the pink: it fills icons and destructive controls with white labels
+and marks invalid field borders; it is never a button fill for actions. Text
+uses `error-text`, which is the same red in light mode and #FF8A80 in dark mode.
+`success` is green with black labels. Info and warning are not statuses.
 
 Use semantic Tailwind utilities such as `bg-primary text-primary-foreground`,
-or semantic variables in project CSS. `destructive` aliases error. Compatibility
-aliases `paper`, `ink`, `soft`, and `white` map existing editorial layouts onto the
-same system. The Tailwind `white` compatibility alias represents the card surface;
-the raw `--white` input represents the neutral anchor.
-
-`secondary-text` uses the slate-blue base in light mode and raises its OKLCH
-lightness to 80% in dark mode while preserving chroma and hue. Supporting links
-and editorial notes use this role; secondary controls use blue-tinted fills
-with matching text. Muted surfaces remain neutral so blue never becomes the
-general page background.
+or semantic variables in project CSS. Compatibility aliases `paper`, `ink`,
+`soft`, and `white` map existing editorial layouts onto the same system. The
+Tailwind `white` compatibility alias represents the card surface; the raw
+`--white` input represents the neutral anchor.
 
 Use `border` for decorative dividers and `input` for control boundaries. Use
 `ring` for keyboard focus. Do not communicate status through colour alone; add
 clear text or an icon with a label. Keep literal colours out of components.
+
+## Shapes
+
+Buttons, controls, menu items, the language menu and the header icon bar use
+`corner-shape: squircle` with a `border-radius` fallback. A squircle looks
+squarer than a circle at the same radius, so the radii grow when it is
+supported: `control-radius` is 12px, or 22px with squircles (a 44px control
+becomes a full squircle); `panel-radius` is 18px, or 32px. Browsers without
+`corner-shape` show ordinary rounded corners.
 
 ## Image overlays
 
@@ -115,15 +104,34 @@ Light, Dark, and System use the same semantic tokens through `light-dark()` and
 `color-scheme`. System follows the device preference even without JavaScript.
 Explicit choices are saved in the first-party `poetry-theme` cookie for one year,
 shared across locale routes and applied during server rendering to prevent a
-wrong-theme flash. Pickers use project-owned shadcn-svelte Popover / Bits UI.
+wrong-theme flash.
+
+The header has one theme button. It starts at System; a press switches to the
+opposite of what is currently shown, and later presses toggle Light and Dark.
+Right-click (also Android long-press, the menu key and Shift+F10), Delete or
+Backspace, and a 500 ms touch long-press (iOS fires no `contextmenu`) return to
+System. Its accessible name states the current choice; the description says what
+a press does and how to return to System. A tooltip shows the same on hover
+(pointer devices only, after 350 ms) and keyboard focus; Escape hides it. The
+icon morphs between a half-filled circle, sun and moon with CSS transitions only.
+
+The new theme grows as a circle from the button in a same-document view
+transition of type `theme`, lasting `motion-theme`. Before each switch the
+button writes its centre to `--theme-origin-x/y`, so the circle starts exactly
+at the button whether the header is expanded or compacted. During the reveal,
+colour transitions and other view-transition names are switched off. The
+browser sends pointer events to the root element while a view transition runs,
+so the button also catches presses inside its area during the reveal; quick
+repeated presses are not lost. Reduced motion uses a `motion-page` cross-fade
+and no icon spring. Browsers without typed view transitions switch instantly.
 
 The system requires support for relative OKLCH, `color-mix()`, and `light-dark()`.
 After changing an input or formula, rerun theme browser tests: generated colours
 do not automatically guarantee contrast. Tests sample composited sRGB pixels,
 verify text pairings at 4.5:1 and control/focus pairings at 3:1, check three nested alpha
-card layers, and verify shade propagation from a changed HEX input. German and
-Arabic checks cover saved preferences, system changes, keyboard opening/focus
-return, 320px layouts, no-JavaScript rendering, and light/dark axe scans.
+card layers, and verify that derived roles follow a changed HEX input. German and
+Arabic checks cover saved preferences, system changes, keyboard and touch input,
+320px layouts, no-JavaScript rendering, and light/dark axe scans.
 These checks cover the prototype, not a complete WCAG conformance audit.
 
 ## Fluid typography
@@ -156,7 +164,9 @@ Preserve unitless line heights and wrapping for translated and RTL content.
 ## Motion
 
 `motion-fast` is 160 ms for controls. `motion-page` is 200 ms for the event title
-and description movement. Both use `motion-ease`, `cubic-bezier(0.2, 0, 0, 1)`.
+and description movement. `motion-theme` is 400 ms (2 × `motion-page`) for the
+theme reveal. All three use `motion-ease`, `cubic-bezier(0.2, 0, 0, 1)`. The
+theme icon morphs with its own spring (520 ms, 13% overshoot).
 The remaining page content enters at 75% of the page duration (150 ms), using
 half the fast duration (80 ms) and a downward shift of `space-3xs`. The total
 sequence is 230 ms. These values are a design choice for this site's frequent

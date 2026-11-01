@@ -1,14 +1,4 @@
 @theme inline {
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
-  --color-brand-800: var(--brand-800);
-  --color-brand-900: var(--brand-900);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -31,18 +21,10 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
-  --color-success-subtle: var(--success-subtle);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-warning-subtle: var(--warning-subtle);
   --color-error: var(--error);
   --color-error-foreground: var(--error-foreground);
-  --color-error-subtle: var(--error-subtle);
   --color-destructive: var(--error);
   --color-destructive-foreground: var(--error-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-info-subtle: var(--info-subtle);
   /* Compatibility aliases for existing editorial layouts. */
   --color-paper: var(--background);
   --color-ink: var(--foreground);
@@ -86,6 +68,8 @@
   --motion-fast: 160ms;
   --motion-page: 200ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Circular theme reveal from the toggle: 2 × motion-page. */
+  --motion-theme: 400ms;
 
   /* Fluid type: 400–1280px, 16–19px base, 1.25–1.333 ratios; 1rem = 16px. */
   --font-size-sm: clamp(0.8rem, 0.17vw + 0.76rem, 0.89rem);
@@ -115,103 +99,49 @@
 
   --black: #101010;
   --white: #fdfdfc;
-  --gold: #f1a60a;
-  --pink: #ff033d;
-  --mint: #00fcc2;
-  --slate: #26465a;
-  --green: #176848;
-  --red: #b42318;
-  --blue: #215f93;
+  --pink: #ff3d5e;
+  --green: #00c853;
+  --red: #d70000;
+  --red-on-dark: #ff8a80;
 
-  --primary-base: oklch(from var(--pink) l c h);
-  --secondary-base: oklch(from var(--slate) l c h);
-  --success-base: oklch(from var(--green) l c h);
-  --error-base: oklch(from var(--red) l c h);
-  --info-base: oklch(from var(--blue) l c h);
-  --brand-50: color-mix(in oklch, var(--primary-base) 4%, var(--white));
-  --brand-100: color-mix(in oklch, var(--primary-base) 12%, var(--white));
-  --brand-200: color-mix(in oklch, var(--primary-base) 25%, var(--white));
-  --brand-300: color-mix(in oklch, var(--primary-base) 45%, var(--white));
-  --brand-400: color-mix(in oklch, var(--primary-base) 72%, var(--white));
-  --brand-500: var(--primary-base);
-  --brand-600: color-mix(in oklch, var(--primary-base) 82%, var(--black));
-  --brand-700: color-mix(in oklch, var(--primary-base) 65%, var(--black));
-  --brand-800: color-mix(in oklch, var(--primary-base) 48%, var(--black));
-  --brand-900: color-mix(in oklch, var(--primary-base) 30%, var(--black));
-  --slate-50: color-mix(in oklch, var(--secondary-base) 4%, var(--white));
-  --slate-100: color-mix(in oklch, var(--secondary-base) 12%, var(--white));
-  --slate-200: color-mix(in oklch, var(--secondary-base) 25%, var(--white));
-  --slate-300: color-mix(in oklch, var(--secondary-base) 45%, var(--white));
-  --slate-400: color-mix(in oklch, var(--secondary-base) 72%, var(--white));
-  --slate-500: var(--secondary-base);
-  --slate-600: color-mix(in oklch, var(--secondary-base) 82%, var(--black));
-  --slate-700: color-mix(in oklch, var(--secondary-base) 65%, var(--black));
-  --slate-800: color-mix(in oklch, var(--secondary-base) 48%, var(--black));
-  --slate-900: color-mix(in oklch, var(--secondary-base) 30%, var(--black));
-
-  /* Light surfaces use paper-like neutrals; colour stays in actions and accents. */
-  --neutral-light: color-mix(in oklch, var(--white) 99.8%, var(--mint));
-  --background-light: color-mix(
-    in oklch,
-    var(--neutral-light) 99.5%,
-    var(--black)
-  );
-  --background-dark: color-mix(in oklch, var(--black) 99%, var(--primary-base));
-  --surface-light: var(--neutral-light);
-  --surface-tint: color-mix(in oklch, var(--white) 99%, var(--primary-base));
-  /* Background alpha, never element opacity: nested cards accumulate light. */
-  --surface-overlay: oklch(from var(--surface-tint) l c h / 5%);
-  --surface-raised-overlay: oklch(from var(--surface-tint) l c h / 8%);
-  /* Portalled menus get an opaque composite so content behind cannot interfere. */
-  --surface-floating-dark: color-mix(
-    in srgb,
-    var(--background-dark) 88%,
-    var(--surface-tint)
-  );
-  --background: light-dark(var(--background-light), var(--background-dark));
-  --foreground: light-dark(
-    color-mix(in oklch, var(--black) 96%, var(--primary-base)),
-    color-mix(in oklch, var(--white) 96%, var(--primary-base))
-  );
-  --image-background: var(--black);
-  --image-foreground: var(--white);
-  --image-scrim: color-mix(in srgb, var(--black) 65%, transparent);
-  --card: light-dark(var(--surface-light), var(--surface-overlay));
+  /* Dark elevation: white at low alpha, so nested cards accumulate light. */
+  --surface-overlay: oklch(from var(--white) l c h / 5%);
+  --surface-raised-overlay: oklch(from var(--white) l c h / 8%);
+  /* Menus are opaque so content behind them cannot interfere. */
+  --surface-floating-dark: color-mix(in srgb, var(--black) 88%, var(--white));
+  --background: light-dark(var(--white), var(--black));
+  --foreground: light-dark(var(--black), var(--white));
+  --card: light-dark(var(--white), var(--surface-overlay));
   --card-foreground: var(--foreground);
-  --popover: light-dark(var(--surface-light), var(--surface-floating-dark));
+  --popover: light-dark(var(--white), var(--surface-floating-dark));
   --popover-foreground: var(--foreground);
-  /* Primary fills and text share the brand colour; button labels use ink. */
-  --primary: var(--primary-base);
+  /* Pink fills carry ink labels; small pink text uses the darker/lighter text role. */
+  --primary: var(--pink);
   --primary-foreground: var(--black);
-  --primary-hover: color-mix(in oklch, var(--primary-base) 92%, var(--white));
+  --primary-hover: color-mix(in oklch, var(--pink) 92%, var(--white));
   --primary-text: light-dark(
-    oklch(from var(--primary-base) min(l, 0.55) c h),
-    oklch(from var(--primary-base) max(l, 0.85) c h)
+    color-mix(in oklch, var(--pink) 70%, var(--black)),
+    color-mix(in oklch, var(--pink) 75%, var(--white))
   );
-  --secondary-text: light-dark(
-    var(--secondary-base),
-    oklch(from var(--secondary-base) 80% c h)
-  );
-  --secondary: light-dark(
-    color-mix(in oklch, var(--secondary-base) 12%, var(--surface-light)),
-    oklch(from var(--secondary-text) l c h / 12%)
-  );
-  --secondary-foreground: var(--secondary-text);
   --muted: light-dark(
-    color-mix(in oklch, var(--black) 5%, var(--surface-light)),
+    color-mix(in oklch, var(--black) 5%, var(--white)),
     var(--surface-raised-overlay)
   );
   --muted-foreground: light-dark(
-    color-mix(in oklch, var(--black) 67%, var(--background-light)),
-    color-mix(in oklch, var(--white) 78%, var(--background-dark))
+    color-mix(in oklch, var(--black) 67%, var(--white)),
+    color-mix(in oklch, var(--white) 78%, var(--black))
   );
+  /* Secondary is the quiet neutral control; accent is the soft pink hover/selection. */
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --secondary-text: var(--primary-text);
   --accent: light-dark(
-    color-mix(in oklch, var(--primary-base) 20%, var(--surface-light)),
-    oklch(from var(--primary-base) l c h / 12%)
+    color-mix(in oklch, var(--pink) 20%, var(--white)),
+    color-mix(in srgb, var(--pink) 16%, var(--black))
   );
   --accent-foreground: var(--foreground);
   --border: light-dark(
-    color-mix(in oklch, var(--black) 12%, var(--background-light)),
+    color-mix(in oklch, var(--black) 12%, var(--white)),
     oklch(from var(--white) l c h / 18%)
   );
   --input: light-dark(
@@ -219,52 +149,27 @@
     color-mix(in oklch, var(--white) 65%, var(--black))
   );
   --ring: var(--foreground);
-  --success: light-dark(
-    oklch(from var(--success-base) 42% min(c, 0.12) h),
-    oklch(from var(--success-base) 80% min(c, 0.12) h)
-  );
-  --success-foreground: light-dark(var(--white), var(--black));
-  --success-subtle: color-mix(in oklch, var(--success) 12%, var(--background));
-  --error: light-dark(
-    oklch(from var(--error-base) 42% min(c, 0.12) h),
-    oklch(from var(--error-base) 80% min(c, 0.12) h)
-  );
-  --error-foreground: light-dark(var(--white), var(--black));
-  --error-subtle: color-mix(in oklch, var(--error) 12%, var(--background));
-  --info: light-dark(
-    oklch(from var(--info-base) 42% min(c, 0.12) h),
-    oklch(from var(--info-base) 80% min(c, 0.12) h)
-  );
-  --info-foreground: light-dark(var(--white), var(--black));
-  --info-subtle: color-mix(in oklch, var(--info) 12%, var(--background));
-  --warning: light-dark(
-    oklch(from var(--gold) 42% min(c, 0.12) h),
-    oklch(from var(--gold) 80% min(c, 0.12) h)
-  );
-  --warning-foreground: light-dark(var(--white), var(--black));
-  --warning-subtle: color-mix(in oklch, var(--warning) 12%, var(--background));
+  --success: var(--green);
+  --success-foreground: var(--black);
+  /* Error red fills, borders and icons; error-text is the readable text role. */
+  --error: var(--red);
+  --error-foreground: var(--white);
+  --error-text: light-dark(var(--red), var(--red-on-dark));
 
   /* Opaque in both modes so scrolling content cannot show through. */
   --header-background: light-dark(
-    var(--surface-light),
-    color-mix(in srgb, var(--background-dark) 95%, var(--surface-tint))
+    var(--white),
+    color-mix(in srgb, var(--black) 95%, var(--white))
   );
   --header-foreground: var(--foreground);
   --header-border: var(--border);
-  --header-control-background: light-dark(
-    var(--surface-light),
-    var(--surface-overlay)
-  );
-  --header-control-hover: light-dark(
-    var(--accent),
-    var(--surface-raised-overlay)
-  );
-  --header-control-border: var(--input);
-  --brand-mark-color: light-dark(var(--black), var(--primary-base));
   --newsletter-background: var(--accent);
   --newsletter-foreground: var(--accent-foreground);
 
   --radius: 1rem;
+  /* Squircles look squarer than circles at the same radius, so they get larger values. */
+  --control-radius: 0.75rem;
+  --panel-radius: 1.125rem;
   --space-section: var(--space-xl-xxl);
   --space-gutter: var(--space-sm-md);
   --shadow-color: light-dark(oklch(from var(--black) l c h / 8%), transparent);
@@ -272,6 +177,12 @@
   --shadow-raised: 0 6px 20px var(--shadow-color);
   --shadow-floating: 0 12px 36px var(--shadow-color);
   color-scheme: light dark;
+}
+@supports (corner-shape: squircle) {
+  :root {
+    --control-radius: 1.375rem;
+    --panel-radius: 2rem;
+  }
 }
 :root[data-theme="light"] {
   color-scheme: light;
