@@ -92,10 +92,15 @@ try {
     },
   };
   // A buyer who changes the address starts a second payment for the same cart.
-  await post("/api/payments/stripe/initiate", start);
+  const first = await post("/api/payments/stripe/initiate", start);
   const { paymentIntentID, orderCode } = await post(
     "/api/payments/stripe/initiate",
     start,
+  );
+  assert.equal(
+    (await stripe.paymentIntents.retrieve(first.paymentIntentID)).status,
+    "canceled",
+    "earlier payment of the cart cancelled",
   );
   await stripe.paymentIntents.confirm(paymentIntentID, {
     payment_method: "pm_card_visa",

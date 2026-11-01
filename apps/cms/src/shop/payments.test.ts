@@ -20,6 +20,7 @@ const products = [
 
 function initiate({
   country = "DE",
+  lastName = "Ahmadi",
   shippingRate = 450 as number | null,
   cartItems = items as unknown[],
   docs = products as unknown[],
@@ -33,7 +34,7 @@ function initiate({
       cart: { id: 3, subtotal: 2400, items: cartItems },
       currency: "EUR",
       customerEmail: "reader@example.invalid",
-      shippingAddress: { country },
+      shippingAddress: { country, lastName },
     },
     req: { payload: { findGlobal, find } },
     transactionsSlug: "transactions",
@@ -73,6 +74,7 @@ const line = (quantity: number, product: unknown = 1) => [
 
 it.each([
   ["outside Germany", { country: "AT" }, "Germany"],
+  ["without a last name", { lastName: " " }, "name"],
   ["without a shipping rate", { shippingRate: null }, "shipping rate"],
   [
     "without a price",

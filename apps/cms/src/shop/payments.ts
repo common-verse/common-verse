@@ -1,6 +1,6 @@
 import type { PaymentAdapter } from "@payloadcms/plugin-ecommerce/types";
 import { randomBytes } from "node:crypto";
-import type { PayloadRequest } from "payload";
+import type { PayloadHandler, PayloadRequest } from "payload";
 import type { Stripe } from "stripe";
 
 /** Adds the editor-set Germany rate before the adapter creates the PaymentIntent. */
@@ -9,6 +9,9 @@ export const withFlatShipping = (adapter: PaymentAdapter): PaymentAdapter => ({
   initiatePayment: async (args) => {
     if (args.data.shippingAddress?.country !== "DE")
       throw new Error("Shipping is limited to Germany.");
+    // A single name (common in wallets) goes in lastName; firstName may stay empty.
+    if (!args.data.shippingAddress.lastName?.trim())
+      throw new Error("Payment refused: the recipient's name is missing.");
     const { shippingRate } = await args.req.payload.findGlobal({
       slug: "shop-settings",
       depth: 0,
@@ -64,6 +67,169 @@ export const withFlatShipping = (adapter: PaymentAdapter): PaymentAdapter => ({
   },
 });
 
+const cancellable: Stripe.PaymentIntent.Status[] = [
+  "requires_payment_method",
+  "requires_confirmation",
+  "requires_action",
+];
+const closedTransactions = ["cancelled", "expired", "refunded"];
+// A crashed payment start must not block its cart for long.
+const lockMilliseconds = 60_000;
+// A buyer may still be in 3-D Secure or a Wero redirect for this long.
+const actionSeconds = 600;
+
+type Refusal = "payment_in_progress" | "cart_completed";
+const refuse = (req: PayloadRequest, refusal: Refusal) => {
+  req.context.paymentRefusal = refusal;
+  return new Error(`Payment refused: ${refusal}.`);
+};
+
+/** The plugin answers every refused start with 500, so these get their own answer for the site. */
+export const answerRefusedStart =
+  (handler: PayloadHandler): PayloadHandler =>
+  async (req) => {
+    const response = await handler(req);
+    const refusal = req.context.paymentRefusal;
+    return refusal
+      ? Response.json({ error: refusal }, { status: 409 })
+      : response;
+  };
+
+/** Cancels a PaymentIntent unless the buyer paid it meanwhile. */
+async function cancelIntent(
+  stripe: Stripe,
+  intentID: string,
+  reason: "abandoned" | "duplicate",
+) {
+  const intent = await stripe.paymentIntents
+    .cancel(intentID, { cancellation_reason: reason })
+    .catch(async (error) => {
+      const current = await stripe.paymentIntents.retrieve(intentID);
+      if (cancellable.includes(current.status)) throw error;
+      return current;
+    });
+  return intent.status === "canceled";
+}
+
+const closeTransaction = (req: PayloadRequest, intentID: string) =>
+  req.payload.db.updateOne({
+    collection: "transactions",
+    where: {
+      and: [
+        { "stripe.paymentIntentID": { equals: intentID } },
+        { status: { not_in: closedTransactions } },
+        { order: { exists: false } },
+      ],
+    },
+    data: { status: "cancelled" },
+    options: { atomic: true },
+    req,
+  });
+
+async function cancelEarlierPayments(
+  req: PayloadRequest,
+  stripe: Stripe,
+  cartID: number | string,
+) {
+  const { docs } = await req.payload.find({
+    collection: "transactions",
+    where: {
+      and: [
+        { cart: { equals: cartID } },
+        { status: { not_in: closedTransactions } },
+      ],
+    },
+    select: { stripe: true, order: true },
+    depth: 0,
+    pagination: false,
+    req,
+  });
+  if (docs.some(({ order }) => order != null))
+    throw refuse(req, "cart_completed");
+  for (const { stripe: ids } of docs) {
+    const intentID = ids?.paymentIntentID;
+    if (!intentID) continue;
+    const intent = await stripe.paymentIntents.retrieve(intentID);
+    const recentAction =
+      intent.status === "requires_action" &&
+      Date.now() / 1000 - intent.created < actionSeconds;
+    const cancelled =
+      intent.status === "canceled" ||
+      (cancellable.includes(intent.status) &&
+        !recentAction &&
+        (await cancelIntent(stripe, intentID, "abandoned")));
+    if (!cancelled) throw refuse(req, "payment_in_progress");
+    await closeTransaction(req, intentID);
+  }
+}
+
+/**
+ * Keeps one payable PaymentIntent per cart. A changed address, or a wallet and the
+ * form at once, would otherwise leave an earlier one open to be paid as well.
+ */
+export const withOnePaymentPerCart = (
+  adapter: PaymentAdapter,
+  stripe: () => Stripe,
+): PaymentAdapter => ({
+  ...adapter,
+  initiatePayment: async (args) => {
+    const { req } = args;
+    const cartID = args.data.cart.id;
+    const startedAt = new Date().toISOString();
+    // The atomic claim on the cart lets only one payment start run at a time.
+    const claimed = await req.payload.db.updateOne({
+      collection: "carts",
+      where: {
+        and: [
+          { id: { equals: cartID } },
+          {
+            or: [
+              { paymentStartedAt: { exists: false } },
+              {
+                paymentStartedAt: {
+                  less_than: new Date(
+                    Date.now() - lockMilliseconds,
+                  ).toISOString(),
+                },
+              },
+            ],
+          },
+        ],
+      },
+      data: { paymentStartedAt: startedAt },
+      options: { atomic: true },
+      req,
+    });
+    if (!claimed) throw refuse(req, "payment_in_progress");
+    const client = stripe();
+    let result: Awaited<ReturnType<PaymentAdapter["initiatePayment"]>>;
+    let owned;
+    try {
+      await cancelEarlierPayments(req, client, cartID);
+      result = await adapter.initiatePayment(args);
+    } finally {
+      owned = await req.payload.db.updateOne({
+        collection: "carts",
+        where: {
+          and: [
+            { id: { equals: cartID } },
+            { paymentStartedAt: { equals: startedAt } },
+          ],
+        },
+        data: { paymentStartedAt: null },
+        options: { atomic: true },
+        req,
+      });
+    }
+    // A slow start lost its expired claim to a newer one, which may not have seen this payment.
+    if (!owned) {
+      await cancelIntent(client, result.paymentIntentID, "duplicate");
+      await closeTransaction(req, result.paymentIntentID);
+      throw refuse(req, "payment_in_progress");
+    }
+    return result;
+  },
+});
 /** Returns the public order code when payment starts and when the order is confirmed. */
 export const withOrderCode = (adapter: PaymentAdapter): PaymentAdapter => ({
   ...adapter,

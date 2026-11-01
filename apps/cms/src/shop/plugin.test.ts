@@ -78,3 +78,17 @@ it("rejects product slugs that collide with shop routes or are not URL-safe", as
     message("slug_format", "uk"),
   );
 });
+
+it("answers refused payment starts on the real initiate endpoint with 409", async () => {
+  const endpoint = (await configPromise).endpoints.find(
+    ({ path, method }) =>
+      path === "/payments/stripe/initiate" && method === "post",
+  );
+  // Without a customer email the plugin answers 400 before reading anything.
+  const response = await endpoint!.handler({
+    context: { paymentRefusal: "payment_in_progress" },
+    user: null,
+    headers: new Headers(),
+  } as never);
+  expect(response.status).toBe(409);
+});

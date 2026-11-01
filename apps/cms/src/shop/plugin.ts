@@ -1,7 +1,8 @@
 import { ecommercePlugin } from "@payloadcms/plugin-ecommerce";
 import { stripeAdapter } from "@payloadcms/plugin-ecommerce/payments/stripe";
 import { label } from "@poetry/cms-ui";
-import type { Access, CollectionConfig } from "payload";
+import type { Access, CollectionConfig, Plugin } from "payload";
+import { Stripe } from "stripe";
 import {
   administrator,
   authenticated,
@@ -11,9 +12,11 @@ import { currencies, products } from "../collections/Products";
 import { orderLookup } from "./lookup";
 import { codeField } from "./orderCode";
 import {
+  answerRefusedStart,
   confirmPaidOrder,
   syncPaymentStatus,
   withFlatShipping,
+  withOnePaymentPerCart,
   withOrderCode,
 } from "./payments";
 
@@ -39,7 +42,11 @@ const administratorsOnly: CollectionConfig["admin"] = {
   hidden: ({ user }) => user?.role !== "admin",
 };
 
-export const shop = ecommercePlugin({
+const secretKey = process.env.STRIPE_SECRET_KEY ?? "";
+// The adapter's defaults differ between initiate and confirm; pin the installed SDK's version.
+const apiVersion = "2025-08-27.basil";
+
+const ecommerce = ecommercePlugin({
   // Guest checkout only: users are a relationship target, never customers.
   customers: { slug: "users" },
   access: {
@@ -58,11 +65,20 @@ export const shop = ecommercePlugin({
     cartsCollectionOverride: ({ defaultCollection }) => ({
       ...inShop(defaultCollection, administratorsOnly),
       // shortcut: Stripe metadata values hold about 7 cart lines (GH #19017); lift when the plugin stores snapshots elsewhere.
-      fields: defaultCollection.fields.map((field) =>
-        "name" in field && field.name === "items" && field.type === "array"
-          ? { ...field, maxRows: 7 }
-          : field,
-      ),
+      fields: [
+        ...defaultCollection.fields.map((field) =>
+          "name" in field && field.name === "items" && field.type === "array"
+            ? { ...field, maxRows: 7 }
+            : field,
+        ),
+        {
+          name: "paymentStartedAt",
+          type: "date",
+          // Only the payment start sets it, through the database adapter.
+          access: { create: () => false, update: () => false },
+          admin: { hidden: true },
+        },
+      ],
     }),
   },
   orders: {
@@ -112,22 +128,37 @@ export const shop = ecommercePlugin({
     paymentMethods: [
       withOrderCode(
         withFlatShipping(
-          stripeAdapter({
-            // Without a key the CMS still boots; initiating a payment fails.
-            secretKey: process.env.STRIPE_SECRET_KEY ?? "",
-            // Required by the adapter's type but only used by browser clients.
-            publishableKey: "",
-            webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET,
-            // The adapter's defaults differ between initiate and confirm; pin the installed SDK's version.
-            apiVersion: "2025-08-27.basil",
-            webhooks: {
-              "payment_intent.processing": syncPaymentStatus,
-              "payment_intent.payment_failed": syncPaymentStatus,
-              "payment_intent.succeeded": confirmPaidOrder,
-            },
-          }),
+          withOnePaymentPerCart(
+            stripeAdapter({
+              // Without a key the CMS still boots; initiating a payment fails.
+              secretKey,
+              // Required by the adapter's type but only used by browser clients.
+              publishableKey: "",
+              webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET,
+              apiVersion,
+              webhooks: {
+                "payment_intent.processing": syncPaymentStatus,
+                "payment_intent.payment_failed": syncPaymentStatus,
+                "payment_intent.succeeded": confirmPaidOrder,
+              },
+            }),
+            // Created per use: the SDK refuses an empty key at construction.
+            () => new Stripe(secretKey, { apiVersion }),
+          ),
         ),
       ),
     ],
   },
 });
+
+export const shop: Plugin = async (config) => {
+  const result = await ecommerce(config);
+  return {
+    ...result,
+    endpoints: (result.endpoints || []).map((endpoint) =>
+      endpoint.path === "/payments/stripe/initiate"
+        ? { ...endpoint, handler: answerRefusedStart(endpoint.handler) }
+        : endpoint,
+    ),
+  };
+};
