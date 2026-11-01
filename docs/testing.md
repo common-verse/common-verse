@@ -46,10 +46,13 @@ payment changes against the real stack at least once:
 1. Start PostgreSQL and the CMS ([development](development.md)) with Stripe test
    keys in `.env`. The CMS loads server code at startup: restart it after
    changing `apps/cms/src`.
-2. Run `pnpm --filter @poetry/cms shop:purchase`. It buys one copy of a book in
-   stock: it creates a cart, starts payment twice as a buyer who changes the
-   address would, pays with Stripe's `pm_card_visa`, confirms the order, and
-   checks the amount and stock. It then deletes the cart, transactions, order,
+2. Run `pnpm --filter @poetry/cms shop:purchase` with `ORDER_LOOKUP_SECRET` set
+   for the CMS and the script. It buys one copy of a book in stock: it creates a
+   cart, starts payment twice as a buyer who changes the address would, pays with
+   Stripe's `pm_card_visa`, confirms the order, and checks the amount and stock.
+   It also checks that confirmation returns the 8-character order code from
+   payment start, that the order lookup finds the order by the typed code and
+   email, and that a wrong email gets 404. It then deletes the cart, transactions, order,
    and Stripe customer it created and restores the stock.
 3. For UI changes, also buy once in the browser in German and Arabic with a
    [Stripe test card](https://docs.stripe.com/testing).

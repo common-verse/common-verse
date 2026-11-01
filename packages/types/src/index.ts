@@ -182,3 +182,24 @@ export interface ShopSettings {
   shippingRate: number;
   priceNote?: string | null;
 }
+
+/** Buyer-facing order states; the website translates them. */
+export type OrderLookupStatus =
+  | "payment_processing"
+  | "paid"
+  | "shipped"
+  | "cancelled"
+  | "payment_failed";
+
+/** `POST /api/orders/lookup` response. Never contains name or address. */
+export interface OrderLookup {
+  /** 8 Crockford base32 characters without hyphen; display as `K7QD-93FA`. */
+  code: string;
+  status: OrderLookupStatus;
+  createdAt: string;
+  /** `title` is null when the book was deleted. */
+  items: { title: string | null; quantity: number }[];
+  /** Cents, including shipping. */
+  amount: number | null;
+  currency: string | null;
+}

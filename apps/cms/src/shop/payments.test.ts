@@ -1,6 +1,11 @@
 import type { PaymentAdapter } from "@payloadcms/plugin-ecommerce/types";
 import { afterEach, expect, it, vi } from "vitest";
-import { confirmPaidOrder, withFlatShipping } from "./payments";
+import {
+  confirmPaidOrder,
+  syncPaymentStatus,
+  withFlatShipping,
+  withOrderCode,
+} from "./payments";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -138,4 +143,104 @@ it("skips orders that already exist and lets Stripe retry failures", async () =>
   const failing = webhook(null);
   failing.fetch.mockResolvedValue(new Response("{}", { status: 500 }));
   await expect(failing.run()).rejects.toThrow("500");
+});
+
+it("returns the transaction's code when payment starts", async () => {
+  const find = vi.fn().mockResolvedValue({ docs: [{ code: "K7QD93FA" }] });
+  const adapter = withOrderCode({
+    initiatePayment: async () => ({ message: "ok", paymentIntentID: "pi_1" }),
+  } as never);
+  await expect(
+    adapter.initiatePayment({ req: { payload: { find } } } as never),
+  ).resolves.toEqual({
+    message: "ok",
+    paymentIntentID: "pi_1",
+    orderCode: "K7QD93FA",
+  });
+  expect(find).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { "stripe.paymentIntentID": { equals: "pi_1" } },
+    }),
+  );
+});
+
+it("reopens a processing or failed transaction and returns the order's code", async () => {
+  const calls: string[] = [];
+  const updateOne = vi.fn(async () => calls.push("reopen"));
+  const finalizeOrder = vi.fn(async () => {
+    calls.push("finalize");
+    return { id: 9, code: "K7QD93FA" };
+  });
+  const adapter = withOrderCode({
+    confirmOrder: async ({ finalizeOrder }: never) => {
+      await (finalizeOrder as (input: unknown) => Promise<unknown>)({
+        transactionID: 4,
+        orderData: {},
+      });
+      return { message: "ok", orderID: 9, transactionID: 4 };
+    },
+  } as never);
+  await expect(
+    adapter.confirmOrder({
+      finalizeOrder,
+      req: { payload: { db: { updateOne } } },
+    } as never),
+  ).resolves.toEqual({
+    message: "ok",
+    orderID: 9,
+    transactionID: 4,
+    orderCode: "K7QD93FA",
+  });
+  expect(calls).toEqual(["reopen", "finalize"]);
+  expect(updateOne).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: {
+        and: [
+          { id: { equals: 4 } },
+          { status: { in: ["processing", "failed"] } },
+          { order: { exists: false } },
+        ],
+      },
+      data: { status: "pending" },
+      options: { atomic: true },
+    }),
+  );
+});
+
+function sync(intentStatus: string) {
+  const updateOne = vi.fn();
+  const retrieve = vi
+    .fn()
+    .mockResolvedValue({ id: "pi_1", status: intentStatus });
+  const run = (type: string) =>
+    syncPaymentStatus({
+      event: { type, data: { object: { id: "pi_1" } } },
+      req: { payload: { db: { updateOne } } },
+      stripe: { paymentIntents: { retrieve } },
+    } as never);
+  const written = () => updateOne.mock.calls.map(([{ data }]) => data.status);
+  return { retrieve, run, written };
+}
+
+it.each([
+  ["requires_payment_method", "failed"],
+  ["canceled", "failed"],
+])("marks the transaction of a %s payment as %s", async (intent, status) => {
+  const { retrieve, run, written } = sync(intent);
+  await run("payment_intent.processing");
+  expect(retrieve).toHaveBeenCalledWith("pi_1");
+  expect(written()).toEqual([status]);
+});
+
+it("trusts the current payment over a late failure event", async () => {
+  // A declined card, then a SEPA retry: the old failure must not hide the running debit.
+  const { run, written } = sync("processing");
+  await run("payment_intent.payment_failed");
+  expect(written()).toEqual(["processing"]);
+});
+
+it("leaves succeeded payments to order confirmation", async () => {
+  const { run, written } = sync("succeeded");
+  await run("payment_intent.processing");
+  expect(written()).toEqual([]);
 });

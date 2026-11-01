@@ -34,7 +34,12 @@ test("fresh setup creates independent secrets and preserves the file on restart"
   const env = await ensureEnvironment(cwd, {});
   assert.match(env.PAYLOAD_SECRET, /^[a-f0-9]{64}$/);
   assert.match(env.PREVIEW_SECRET, /^[a-f0-9]{64}$/);
-  assert.notEqual(env.PAYLOAD_SECRET, env.PREVIEW_SECRET);
+  assert.match(env.ORDER_LOOKUP_SECRET, /^[a-f0-9]{64}$/);
+  const { PAYLOAD_SECRET, PREVIEW_SECRET, ORDER_LOOKUP_SECRET } = env;
+  assert.equal(
+    new Set([PAYLOAD_SECRET, PREVIEW_SECRET, ORDER_LOOKUP_SECRET]).size,
+    3,
+  );
   const first = await readFile(path.join(cwd, ".env"), "utf8");
   await ensureEnvironment(cwd, {});
   assert.equal(await readFile(path.join(cwd, ".env"), "utf8"), first);

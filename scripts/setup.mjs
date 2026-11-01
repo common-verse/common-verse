@@ -93,15 +93,9 @@ export async function ensureEnvironment(cwd = root, environment = process.env) {
   }
   if (!exists) {
     const template = await readFile(path.join(cwd, ".env.example"), "utf8");
-    const content = template
-      .replace(
-        "replace-with-a-long-random-secret",
-        randomBytes(32).toString("hex"),
-      )
-      .replace(
-        "replace-with-a-different-long-random-secret",
-        randomBytes(32).toString("hex"),
-      );
+    const content = template.replace(/replace-with-[\w-]+/g, () =>
+      randomBytes(32).toString("hex"),
+    );
     try {
       await writeFile(filename, content, { flag: "wx", mode: 0o600 });
       console.log("Created root .env with independent local secrets.");
@@ -112,7 +106,12 @@ export async function ensureEnvironment(cwd = root, environment = process.env) {
   const env = { ...parseEnv(await readFile(filename, "utf8")), ...environment };
   if (env.NODE_ENV === "production")
     throw new Error("Development setup cannot run in production.");
-  for (const key of ["DATABASE_URL", "PAYLOAD_SECRET", "PREVIEW_SECRET"]) {
+  for (const key of [
+    "DATABASE_URL",
+    "PAYLOAD_SECRET",
+    "PREVIEW_SECRET",
+    "ORDER_LOOKUP_SECRET",
+  ]) {
     if (!env[key] || env[key].startsWith("replace-with-"))
       throw new Error(
         `Set ${key} in the root .env; existing values are preserved.`,

@@ -178,5 +178,8 @@
   "shipping_rate_help": "Pauschale, die jeder Bestellung einmal hinzugefügt wird. Mit Dezimalpunkt eingeben, z. B. 4.50.",
   "price_note": "Hinweis zu den Preisen",
   "price_note_help": "Erscheint unter den Preisen und an der Kasse, z. B. ein Hinweis zur Umsatzsteuer.",
-  "slug_reserved": "Diese URL verwendet der Shop. Bitte eine andere wählen."
+  "slug_reserved": "Diese URL verwendet der Shop. Bitte eine andere wählen.",
+  "order_code": "Bestellnummer",
+  "shipped": "Versendet",
+  "paid": "Bezahlt"
 }

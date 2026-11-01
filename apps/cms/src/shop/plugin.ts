@@ -8,7 +8,14 @@ import {
   isAdministrator,
 } from "../collections/access";
 import { currencies, products } from "../collections/Products";
-import { confirmPaidOrder, withFlatShipping } from "./payments";
+import { orderLookup } from "./lookup";
+import { codeField } from "./orderCode";
+import {
+  confirmPaidOrder,
+  syncPaymentStatus,
+  withFlatShipping,
+  withOrderCode,
+} from "./payments";
 
 const nobody: Access = () => false;
 
@@ -19,6 +26,14 @@ const inShop = (
   ...collection,
   admin: { ...collection.admin, group: label("shop"), ...admin },
 });
+
+const orderStatuses: Record<
+  string,
+  { label: Record<string, string>; value: string }
+> = {
+  processing: { label: label("paid"), value: "processing" },
+  completed: { label: label("shipped"), value: "shipped" },
+};
 
 const administratorsOnly: CollectionConfig["admin"] = {
   hidden: ({ user }) => user?.role !== "admin",
@@ -53,32 +68,65 @@ export const shop = ecommercePlugin({
   orders: {
     ordersCollectionOverride: ({ defaultCollection }) => ({
       ...inShop(defaultCollection, {
-        defaultColumns: ["createdAt", "customerEmail", "amount", "status"],
+        useAsTitle: "code",
+        defaultColumns: [
+          "code",
+          "createdAt",
+          "customerEmail",
+          "amount",
+          "status",
+        ],
       }),
       access: {
         ...defaultCollection.access,
         read: authenticated,
         update: authenticated,
       },
+      // Orders exist only once paid, so the plugin's processing means paid; editors move them to shipped.
+      fields: [
+        ...defaultCollection.fields.map((field) =>
+          "name" in field && field.name === "status" && field.type === "select"
+            ? {
+                ...field,
+                options: field.options.map(
+                  (option) =>
+                    (typeof option === "object" &&
+                      orderStatuses[option.value]) ||
+                    option,
+                ),
+              }
+            : field,
+        ),
+        codeField("orders"),
+      ],
+      endpoints: [...(defaultCollection.endpoints || []), orderLookup],
     }),
   },
   transactions: {
-    transactionsCollectionOverride: ({ defaultCollection }) =>
-      inShop(defaultCollection, administratorsOnly),
+    transactionsCollectionOverride: ({ defaultCollection }) => ({
+      ...inShop(defaultCollection, administratorsOnly),
+      fields: [...defaultCollection.fields, codeField("transactions")],
+    }),
   },
   payments: {
     paymentMethods: [
-      withFlatShipping(
-        stripeAdapter({
-          // Without a key the CMS still boots; initiating a payment fails.
-          secretKey: process.env.STRIPE_SECRET_KEY ?? "",
-          // Required by the adapter's type but only used by browser clients.
-          publishableKey: "",
-          webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET,
-          // The adapter's defaults differ between initiate and confirm; pin the installed SDK's version.
-          apiVersion: "2025-08-27.basil",
-          webhooks: { "payment_intent.succeeded": confirmPaidOrder },
-        }),
+      withOrderCode(
+        withFlatShipping(
+          stripeAdapter({
+            // Without a key the CMS still boots; initiating a payment fails.
+            secretKey: process.env.STRIPE_SECRET_KEY ?? "",
+            // Required by the adapter's type but only used by browser clients.
+            publishableKey: "",
+            webhookSecret: process.env.STRIPE_WEBHOOKS_SIGNING_SECRET,
+            // The adapter's defaults differ between initiate and confirm; pin the installed SDK's version.
+            apiVersion: "2025-08-27.basil",
+            webhooks: {
+              "payment_intent.processing": syncPaymentStatus,
+              "payment_intent.payment_failed": syncPaymentStatus,
+              "payment_intent.succeeded": confirmPaidOrder,
+            },
+          }),
+        ),
       ),
     ],
   },

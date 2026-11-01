@@ -178,5 +178,8 @@
   "shipping_rate_help": "Flat rate added once to every order. Use a decimal point, e.g. 4.50.",
   "price_note": "Price note",
   "price_note_help": "Shown below prices and at checkout, e.g. a VAT notice.",
-  "slug_reserved": "The shop uses this URL. Choose another one."
+  "slug_reserved": "The shop uses this URL. Choose another one.",
+  "order_code": "Order code",
+  "shipped": "Shipped",
+  "paid": "Paid"
 }

@@ -20,6 +20,9 @@ if (
   )
 )
   throw new Error("Refusing to run: the CMS and database must be local.");
+const lookupSecret = process.env.ORDER_LOOKUP_SECRET;
+if (!lookupSecret)
+  throw new Error("Set ORDER_LOOKUP_SECRET for the CMS and this script.");
 
 const stripe = new Stripe(secretKey);
 const payload = await getPayload({ config });
@@ -35,6 +38,17 @@ const post = async (path: string, body: unknown) => {
     `${path} failed with ${response.status}: ${JSON.stringify(data)}`,
   );
   return data;
+};
+const lookup = async (code: string, email: string) => {
+  const response = await fetch(new URL("/api/orders/lookup", cmsURL), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-order-lookup-secret": lookupSecret,
+    },
+    body: JSON.stringify({ code, email }),
+  });
+  return { status: response.status, data: await response.json() };
 };
 
 const {
@@ -79,7 +93,7 @@ try {
   };
   // A buyer who changes the address starts a second payment for the same cart.
   await post("/api/payments/stripe/initiate", start);
-  const { paymentIntentID } = await post(
+  const { paymentIntentID, orderCode } = await post(
     "/api/payments/stripe/initiate",
     start,
   );
@@ -87,10 +101,25 @@ try {
     payment_method: "pm_card_visa",
     return_url: "http://localhost:4321/de/shop/checkout/complete",
   });
-  const { orderID } = await post("/api/payments/stripe/confirm-order", {
+  const confirmed = await post("/api/payments/stripe/confirm-order", {
     ...access,
     paymentIntentID,
   });
+  const { orderID } = confirmed;
+  assert.match(confirmed.orderCode, /^[0-9A-HJKMNP-TV-Z]{8}$/, "order code");
+  assert.equal(confirmed.orderCode, orderCode, "code from payment start");
+
+  // Buyers type the displayed form, e.g. "k7qd-93fa".
+  const typed = `${orderCode.slice(0, 4)}-${orderCode.slice(4)}`.toLowerCase();
+  const found = await lookup(typed, email.toUpperCase());
+  assert.equal(found.status, 200, "lookup by code and email");
+  assert.equal(found.data.status, "paid", "lookup status");
+  assert.equal(found.data.code, orderCode, "lookup code");
+  assert.equal(
+    (await lookup(orderCode, `other-${email}`)).status,
+    404,
+    "lookup with a wrong email",
+  );
 
   const order = await payload.findByID({
     collection: "orders",
@@ -105,7 +134,7 @@ try {
   });
   assert.equal(after.inventory, inventory! - 1, "stock after purchase");
   console.log(
-    `OK: order ${orderID} charged ${order.amount} cents; stock ${inventory} → ${after.inventory}.`,
+    `OK: order ${orderID} (${orderCode}) charged ${order.amount} cents; stock ${inventory} → ${after.inventory}.`,
   );
 } catch (error) {
   console.error(error);

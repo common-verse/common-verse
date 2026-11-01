@@ -1,7 +1,7 @@
 # Configuration and secrets
 
 When `.env` is absent, setup copies `.env.example` and replaces its secret
-placeholders with two independent 32-byte cryptographically random values. The
+placeholders with independent 32-byte cryptographically random values. The
 file is created with owner-only permissions where supported and excluded from Git.
 It is plain text, not encrypted. Restrict access to your development machine.
 
@@ -15,17 +15,18 @@ secret settings, and kept stable across deployments. Neither builds nor producti
 startup should generate them. Rotating Payload's secret can invalidate sessions;
 rotating the preview secret invalidates previously issued preview links.
 
-| Variable                         | Deployment owner and timing                                                                                              |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `PAYLOAD_SECRET`                 | CMS runtime; private and stable.                                                                                         |
-| `PREVIEW_SECRET`                 | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant. |
-| `DATABASE_URL`                   | CMS runtime; actual environment database credentials.                                                                    |
-| `PUBLIC_CMS_URL`                 | Astro build; the CMS origin reachable by the Astro server.                                                               |
-| `PUBLIC_SITE_URL`                | Astro build and CMS runtime; the public site origin for metadata and preview links.                                      |
-| `PAYLOAD_PUBLIC_SERVER_URL`      | CMS runtime; the public CMS origin.                                                                                      |
-| `STRIPE_SECRET_KEY`              | CMS runtime; private. Without it the site runs, but shop payments fail.                                                  |
-| `STRIPE_WEBHOOKS_SIGNING_SECRET` | CMS runtime; private. Without it webhooks are ignored, including the paid-order fallback.                                |
-| `PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Astro; publishable, not secret. Use test keys locally.                                                                   |
+| Variable                         | Deployment owner and timing                                                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `PAYLOAD_SECRET`                 | CMS runtime; private and stable.                                                                                             |
+| `PREVIEW_SECRET`                 | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant.     |
+| `DATABASE_URL`                   | CMS runtime; actual environment database credentials.                                                                        |
+| `PUBLIC_CMS_URL`                 | Astro build; the CMS origin reachable by the Astro server.                                                                   |
+| `PUBLIC_SITE_URL`                | Astro build and CMS runtime; the public site origin for metadata and preview links.                                          |
+| `PAYLOAD_PUBLIC_SERVER_URL`      | CMS runtime; the public CMS origin.                                                                                          |
+| `STRIPE_SECRET_KEY`              | CMS runtime; private. Without it the site runs, but shop payments fail.                                                      |
+| `STRIPE_WEBHOOKS_SIGNING_SECRET` | CMS runtime; private. Without it webhooks are ignored, including the paid-order fallback.                                    |
+| `PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Astro; publishable, not secret. Use test keys locally.                                                                       |
+| `ORDER_LOOKUP_SECRET`            | Same private value in CMS and Astro server runtimes. Setup generates it for a new `.env`; without it the lookup answers 401. |
 
 No secret should receive a `PUBLIC_` prefix. Preview links contain a bearer secret;
 share them only with intended reviewers. Development setup is not a deployment

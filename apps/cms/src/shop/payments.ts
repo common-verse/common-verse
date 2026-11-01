@@ -64,6 +64,92 @@ export const withFlatShipping = (adapter: PaymentAdapter): PaymentAdapter => ({
   },
 });
 
+/** Returns the public order code when payment starts and when the order is confirmed. */
+export const withOrderCode = (adapter: PaymentAdapter): PaymentAdapter => ({
+  ...adapter,
+  initiatePayment: async (args) => {
+    const result = await adapter.initiatePayment(args);
+    const {
+      docs: [transaction],
+    } = await args.req.payload.find({
+      collection: "transactions",
+      where: { "stripe.paymentIntentID": { equals: result.paymentIntentID } },
+      select: { code: true },
+      depth: 0,
+      limit: 1,
+      req: args.req,
+    });
+    return { ...result, orderCode: transaction?.code };
+  },
+  confirmOrder: async (args) => {
+    let order: Record<string, unknown> | undefined;
+    const result = await adapter.confirmOrder({
+      ...args,
+      finalizeOrder: async (input) => {
+        // Stripe just confirmed the payment, so a webhook's processing or failed mark (SEPA, a declined first card) must not block the plugin's claim on pending.
+        await args.req.payload.db.updateOne({
+          collection: "transactions",
+          where: {
+            and: [
+              { id: { equals: input.transactionID } },
+              { status: { in: ["processing", "failed"] } },
+              { order: { exists: false } },
+            ],
+          },
+          data: { status: "pending" },
+          options: { atomic: true },
+          req: args.req,
+        });
+        order = await args.finalizeOrder(input);
+        return order;
+      },
+    });
+    return { ...result, orderCode: order?.code };
+  },
+});
+
+const unsettledStatuses: Partial<
+  Record<Stripe.PaymentIntent.Status, "processing" | "failed">
+> = {
+  processing: "processing",
+  requires_payment_method: "failed",
+  canceled: "failed",
+};
+
+/**
+ * Mirrors a payment that is processing (SEPA takes days) or failed on its transaction
+ * until an order exists. Stripe may deliver events late or twice, so the current
+ * PaymentIntent decides, not the event; success is left to `confirmPaidOrder`.
+ */
+export async function syncPaymentStatus({
+  event,
+  req,
+  stripe,
+}: {
+  event: Stripe.Event;
+  req: PayloadRequest;
+  stripe: Stripe;
+}) {
+  const intent = await stripe.paymentIntents.retrieve(
+    (event.data.object as Stripe.PaymentIntent).id,
+  );
+  const status = unsettledStatuses[intent.status];
+  if (!status) return;
+  await req.payload.db.updateOne({
+    collection: "transactions",
+    where: {
+      and: [
+        { "stripe.paymentIntentID": { equals: intent.id } },
+        { status: { in: ["pending", "processing", "failed"] } },
+        { order: { exists: false } },
+      ],
+    },
+    data: { status },
+    options: { atomic: true },
+    req,
+  });
+}
+
 /** Creates the order when the buyer paid but never reached the return page. */
 export async function confirmPaidOrder({
   event,

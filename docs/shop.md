@@ -16,11 +16,25 @@ administrators only. See [accounts and permissions](accounts-and-permissions.md)
   stock. Enter prices with a decimal point (`12.50`); a comma is ignored. Stock `0`
   means sold out and empty means unlimited. New products start at `0`.
   Products are public when saved; there are no drafts.
-- **Orders**: Stripe confirms the payment before an order exists. Editors see the
-  date, email, amount and status, and set the status while packing and shipping.
-  Payload sends no emails; Stripe sends receipts.
+- **Orders**: Stripe confirms the payment before an order exists, so every order
+  is paid; ship nothing else. Editors see the order code, date, email, amount and
+  status. A new order starts as _Paid_; set _Shipped_ once it is posted, or
+  _Cancelled_ / _Refunded_. Payload sends no emails; Stripe sends receipts.
 - **Shop settings**: the flat shipping rate within Germany and a price note shown
   under prices and at checkout.
+
+## Payment methods
+
+Card, Apple Pay and Google Pay (wallets through Stripe's Express Checkout
+Element), Wero and SEPA Direct Debit. No PayPal, Klarna or prepayment. The CMS
+creates PaymentIntents with automatic payment methods, so the Stripe Dashboard
+switches decide what buyers see (see [configuration](#configuration)).
+
+SEPA Direct Debit is asynchronous: Stripe reports the payment as processing for
+about six business days and it can still fail. The order exists only after
+`payment_intent.succeeded`; until then the buyer's lookup shows "Zahlung läuft"
+and editors see nothing in Orders. The buyer's bank can still reverse a debit
+for eight weeks.
 
 ## Checkout flow
 
@@ -29,12 +43,47 @@ administrators only. See [accounts and permissions](accounts-and-permissions.md)
 2. The checkout form collects email and a German address. Astro calls
    `POST /api/payments/stripe/initiate`. The CMS rejects other countries, adds the
    shipping rate to the current book prices and creates a PaymentIntent and a pending
-   transaction. Without a saved shipping rate, payment is refused.
+   transaction with a new order code, returned as `orderCode`. Without a saved
+   shipping rate, payment is refused.
 3. The Payment Element confirms the payment in the browser and returns to the
    site, which calls `POST /api/payments/stripe/confirm-order`. The CMS checks the
-   PaymentIntent with Stripe, creates the order and lowers stock.
-4. If the buyer never returns, the `payment_intent.succeeded` webhook confirms the
-   same order. Confirmation is idempotent.
+   PaymentIntent with Stripe, creates the order with the transaction's code, lowers
+   stock and returns `{ orderID, transactionID, orderCode, … }`. While a SEPA
+   payment is processing, confirmation fails; show the code from step 2.
+4. Webhooks keep the transaction current. On `payment_intent.processing` and
+   `payment_intent.payment_failed` the CMS reads the PaymentIntent's current
+   status from Stripe, so late or repeated events cannot overwrite a newer state,
+   and marks the transaction processing or failed. `payment_intent.succeeded`
+   confirms the order if the buyer never returned.
+   Confirmation is idempotent and also accepts a transaction marked failed or
+   processing once Stripe reports success (a declined card retried, a SEPA debit
+   collected).
+
+## Order code and status lookup
+
+Every order has a public code: 8 characters of Crockford base32 (no I, L, O or
+U), stored without hyphen and displayed as `K7QD-93FA`. It is created with the
+transaction when payment starts, so buyers see it on the confirmation page even
+for SEPA, and copied to the order. Orders from before codes existed have none.
+
+`POST /api/orders/lookup` with `{ "code", "email" }` and the header
+`x-order-lookup-secret: $ORDER_LOOKUP_SECRET` returns the status buyers see:
+
+| `status`             | Shown as               | Source                      |
+| -------------------- | ---------------------- | --------------------------- |
+| `payment_processing` | Zahlung läuft          | transaction processing      |
+| `payment_failed`     | Zahlung fehlgeschlagen | transaction failed          |
+| `paid`               | Bezahlt, wird gepackt  | order Paid                  |
+| `shipped`            | Versendet              | order Shipped               |
+| `cancelled`          | Storniert              | order Cancelled or Refunded |
+
+The response holds `code`, `status`, `createdAt`, `items` (`title`, `quantity`),
+`amount` and `currency`, never name or address, and is not cached. The code is
+read case-insensitively without hyphens or spaces, with O, I and L read as 0, 1
+and 1; the email is trimmed and lowercased. A wrong code, wrong email, unpaid
+attempt or malformed request all get the same `404 { "error": "Not found" }`.
+The endpoint reads orders with access control bypassed, so only the Astro server
+may call it; it has no rate limit of its own.
 
 The CMS must be called from the Astro server without cookies or API keys: a signed-in
 user would become the order's customer.
@@ -80,8 +129,9 @@ a detail.
 
 ## Configuration
 
-Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOKS_SIGNING_SECRET` for the CMS and
-`PUBLIC_STRIPE_PUBLISHABLE_KEY` for Astro ([configuration](configuration.md)).
+Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOKS_SIGNING_SECRET` for the CMS,
+`PUBLIC_STRIPE_PUBLISHABLE_KEY` for Astro and `ORDER_LOOKUP_SECRET` for both
+([configuration](configuration.md)).
 Without the secret key the site works but payments fail; without the signing
 secret, webhooks are ignored.
 
@@ -89,9 +139,12 @@ In the Stripe Dashboard:
 
 1. Use test keys for development; the CMS pins API version `2025-08-27.basil`.
 2. Add a webhook endpoint `https://<cms>/api/payments/stripe/webhooks` for
-   `payment_intent.succeeded` and copy its signing secret.
-3. Disable delayed payment methods such as SEPA Direct Debit in the Payment
-   Element settings. They leave payments processing, so no order is created.
+   `payment_intent.succeeded`, `payment_intent.processing` and
+   `payment_intent.payment_failed`, and copy its signing secret.
+3. Under payment methods, enable Cards, Apple Pay, Google Pay, Wero and SEPA
+   Direct Debit, and disable everything else (PayPal, Klarna, bank transfer and
+   other methods). Register the site's domain under payment method domains, or
+   the wallet buttons stay hidden.
 4. Enable email receipts for successful payments.
 
 Locally, forward webhooks with
@@ -100,7 +153,7 @@ Locally, forward webhooks with
 ## Known limits
 
 - Stock is checked when payment starts, not when it completes. Two buyers can
-  oversell the last copy.
+  oversell the last copy; with SEPA the gap lasts days.
 - A cart holds at most 7 different books; Stripe metadata limits the item list.
   Each line allows 1 to 10 copies, and payment is refused when stock is short.
 - Price note and VAT: the seeded note (`Gemäß § 19 UStG wird keine Umsatzsteuer
@@ -115,9 +168,10 @@ berechnet.`) is a placeholder to confirm with the treasurer.
 
 ## Deployment
 
-- Rate-limit `/api/carts` and `/api/payments/*` at the proxy. Each payment start
-  creates a Stripe Customer, a PaymentIntent and a pending transaction, and the
-  CMS has no limit of its own.
+- Rate-limit `/api/carts`, `/api/payments/*` and the Astro route that calls
+  `/api/orders/lookup` at the proxy; codes and emails can otherwise be guessed
+  without limit. Each payment start creates a Stripe Customer, a PaymentIntent
+  and a pending transaction, and the CMS has no limit of its own.
 - Cart reads send the cart secret as `?secret=`, so it appears in CMS access logs.
   Restrict access to those logs or drop the query string from them.
 - The plugin is in beta; review its release notes before upgrading Payload.
