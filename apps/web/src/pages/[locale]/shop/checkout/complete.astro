@@ -1,60 +1,179 @@
 ---
+import { PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_API_URL } from 'astro:env/server'
+import { Button } from '$lib/components/ui/button'
 import { Heading } from '$lib/components/ui/heading'
-import { Link } from '$lib/components/ui/link'
 import { Text } from '$lib/components/ui/text'
 import { isLocale, localizedPath } from '@poetry/i18n'
+import type { ShopSettings } from '@poetry/types'
+import OrderCode from '../../../../components/OrderCode.svelte'
+import OrderLayout from '../../../../components/OrderLayout.astro'
+import OrderSteps from '../../../../components/OrderSteps.astro'
+import ShopTotals from '../../../../components/ShopTotals.svelte'
 import BaseLayout from '../../../../layouts/BaseLayout.astro'
-import { confirmOrder } from '../../../../lib/cms'
-import { cartCookie, cartCountCookie, checkoutCookie, cookieOptions, decodeCart, orderCookie, parseIdentifier } from '../../../../lib/shop'
-import { decodeCheckout } from '../../../../lib/checkout'
+import { cmsUrl, confirmOrder, getCart, getProductByID, getShopSettings } from '../../../../lib/cms'
+import { decodeCheckout, type CheckoutAccess } from '../../../../lib/checkout'
+import { decodeReceipt, formatCode, orderSteps, returnOutcome, type Receipt } from '../../../../lib/order'
+import { paymentLabel, retrievePayment, stripeApiUrl } from '../../../../lib/payment'
+import { cartCookie, cartCountCookie, checkoutCookie, cookieOptions, decodeCart, lineProduct, orderCookie, parseCheckoutKey, shippingRate, summaryLine, type SummaryLine } from '../../../../lib/shop'
 import * as m from '../../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
+const options = { locale }
 Astro.response.headers.set('Cache-Control', 'no-store')
 const completePath = localizedPath(locale, 'shop/checkout/complete')
 const paymentIntent = Astro.url.searchParams.get('payment_intent')
-let outcome: 'pending' | 'failed' | null = null
-if (paymentIntent) {
-  const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
-  const checkout = decodeCheckout(Astro.cookies.get(checkoutCookie)?.value)
-  if (Astro.url.searchParams.get('redirect_status') === 'failed') outcome = 'failed'
-  else if (access && checkout?.paymentIntentID === paymentIntent) {
-    const orderID = await confirmOrder(access, checkout).catch((error) => { console.error(error); return null })
-    for (const name of [cartCookie, cartCountCookie, checkoutCookie]) Astro.cookies.delete(name, { path: '/' })
-    if (orderID) {
-      Astro.cookies.set(orderCookie, orderID, cookieOptions(import.meta.env.PROD, 60 * 60))
-      // Redirect so a reload shows the order instead of confirming again.
-      return Astro.redirect(completePath, 303)
+const redirectStatus = Astro.url.searchParams.get('redirect_status')
+const access = decodeCart(Astro.cookies.get(cartCookie)?.value)
+
+// Stripe returns here with the PaymentIntent. A paid or processing payment is kept in the order
+// cookie (no name, address or email), so a reload of this URL shows it without confirming again.
+let outcome: 'failed' | 'pending' | null = null
+let receipt: Receipt | null = null
+// Shown only on this first response, from the checkout cookie that is cleared with it.
+let contact: Pick<CheckoutAccess, 'email' | 'address'> | null = null
+// Paid at Stripe while the CMS has not confirmed yet: the code from payment start is already valid.
+let pendingCode: string | null = null
+const checkout = decodeCheckout(Astro.cookies.get(checkoutCookie)?.value)
+const saved = decodeReceipt(Astro.cookies.get(orderCookie)?.value)
+if (paymentIntent && access && checkout?.paymentIntentID === paymentIntent) {
+  const [code, payment] = await Promise.all([
+    confirmOrder(access, checkout).catch((error) => { console.error(error); return null }),
+    PUBLIC_STRIPE_PUBLISHABLE_KEY
+      ? retrievePayment(stripeApiUrl(STRIPE_API_URL), PUBLIC_STRIPE_PUBLISHABLE_KEY, checkout.paymentIntentID, checkout.clientSecret)
+      : null,
+  ])
+  const result = returnOutcome(Boolean(code), payment?.status ?? null, redirectStatus)
+  const orderCode = code ?? checkout.orderCode
+  if ((result === 'paid' || result === 'payment_processing') && orderCode) {
+    receipt = {
+      code: orderCode,
+      status: result,
+      paymentIntentID: checkout.paymentIntentID,
+      at: new Date().toISOString(),
+      cart: checkout.cart,
+      ...(payment?.facts ? { payment: payment.facts } : {}),
     }
-    // A paid order is still settled by the CMS webhook; clearing the cart prevents paying twice.
-    outcome = 'pending'
-  } else outcome = 'pending'
+    contact = { email: checkout.email, address: checkout.address }
+    Astro.cookies.set(orderCookie, JSON.stringify(receipt), { ...cookieOptions(import.meta.env.PROD, 15 * 60), path: completePath })
+    for (const name of [cartCookie, cartCountCookie, checkoutCookie]) Astro.cookies.delete(name, { path: '/' })
+  } else {
+    // The cart stays: a failed payment can be tried again, and a reload asks the CMS again.
+    outcome = result === 'failed' ? 'failed' : 'pending'
+    if (outcome === 'pending' && payment?.status === 'succeeded') pendingCode = checkout.orderCode ?? null
+  }
+} else if (saved && (!paymentIntent || saved.paymentIntentID === paymentIntent)) receipt = saved
+else if (paymentIntent) outcome = redirectStatus === 'failed' ? 'failed' : 'pending'
+if (!outcome && !receipt) return Astro.redirect(localizedPath(locale, 'shop'), 303)
+
+// The summary shows what was paid (from the receipt) or, after a failed payment, the cart.
+const settings: Partial<ShopSettings> = await getShopSettings(locale).catch(() => ({}))
+let lines: SummaryLine[] = []
+let shipping: number | null = null
+if (receipt) {
+  const paid = parseCheckoutKey(receipt.cart)
+  const products = await Promise.all((paid?.lines ?? []).map(({ product }) => getProductByID(product, locale).catch(() => null)))
+  lines = (paid?.lines ?? []).map((line, index) => summaryLine(line.product, products[index] ?? null, line.quantity, line.unitPrice, locale, cmsUrl))
+  shipping = paid?.shipping ?? null
+} else if (access) {
+  const items = (await getCart(access, locale).catch(() => null))?.items ?? []
+  lines = items.map((item) => summaryLine(item.id, lineProduct(item), item.quantity, lineProduct(item)?.priceInEUR ?? 0, locale, cmsUrl))
+  shipping = shippingRate(settings)
 }
-const orderID = outcome ? null : parseIdentifier(Astro.cookies.get(orderCookie)?.value ?? null)
-if (!outcome && !orderID) return Astro.redirect(localizedPath(locale, 'shop'), 303)
-const title = outcome === 'failed' ? m.shop_failed_title({}, { locale }) : outcome === 'pending' ? m.shop_pending_title({}, { locale }) : m.shop_complete_title({}, { locale })
+const subtotal = lines.reduce((sum, line) => sum + (line.total ?? 0), 0)
+const total = subtotal + (shipping ?? 0)
+
+const title = outcome === 'failed'
+  ? m.shop_failed_title({}, options)
+  : outcome === 'pending'
+    ? m.shop_pending_title({}, options)
+    : m.shop_complete_title({}, options)
+const address = contact
+  ? [
+      [contact.address.firstName, contact.address.lastName].filter(Boolean).join(' '),
+      contact.address.company,
+      contact.address.addressLine1,
+      contact.address.addressLine2,
+      [contact.address.postalCode, contact.address.city].filter(Boolean).join(' '),
+    ].filter(Boolean)
+  : []
+const payment = receipt?.payment ? paymentLabel(receipt.payment, locale) : null
 ---
 
-<BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/checkout/complete" noIndex alternateLocales={[]}>
-  <section class="complete">
-    <Heading level={1}>{title}</Heading>
-    {outcome === 'failed' ? (
-      <>
-        <Text variant="lead">{m.shop_failed_text({}, { locale })}</Text>
-        <Link variant="standalone" href={localizedPath(locale, 'shop/checkout')}>{m.shop_retry({}, { locale })}</Link>
-      </>
-    ) : outcome === 'pending' ? (
-      <Text variant="lead" role="status">{m.shop_pending_text({}, { locale })}</Text>
-    ) : (
-      <Text variant="lead">{m.shop_complete_text({ order: orderID! }, { locale })}</Text>
-    )}
-    <Link variant="standalone" href={localizedPath(locale, 'shop')}>{m.shop_continue({}, { locale })}</Link>
-  </section>
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, options)}`} canonicalPath="shop/checkout/complete" noIndex alternateLocales={[]} mainClass={lines.length ? 'checkout-page' : undefined}>
+  {lines.length ? (
+    <OrderLayout {locale} {lines} {total}>
+      <ShopTotals slot="totals" {locale} {subtotal} {shipping} note={settings.priceNote} />
+      <div class="complete">
+        <Heading level={1}>{title}</Heading>
+        {receipt ? (
+          <>
+            <OrderCode client:load {locale} code={formatCode(receipt.code)} statusHref={localizedPath(locale, `order-status?code=${receipt.code}`)} />
+            {(contact || payment) && (
+              <dl class="order-facts">
+                {contact && <div><dt>{m.shop_confirm_to({}, options)}</dt><dd><bdi>{contact.email}</bdi></dd></div>}
+                {payment && <div><dt>{m.shop_payment({}, options)}</dt><dd><bdi>{payment.label}</bdi>{payment.detail && <bdi class="order-facts-detail">{payment.detail}</bdi>}</dd></div>}
+                {contact && <div><dt>{m.shop_ship_to({}, options)}</dt><dd>{address.map((part) => <bdi>{part}</bdi>)}</dd></div>}
+              </dl>
+            )}
+            <section class="next-steps" aria-labelledby="next-steps">
+              <Heading level={2} id="next-steps" class="next-steps-heading">{m.shop_next_steps({}, options)}</Heading>
+              <OrderSteps steps={orderSteps(receipt.status, receipt.at, locale)} status={receipt.status} />
+            </section>
+            <Button variant="outline" href={localizedPath(locale, 'shop')} class="justify-self-start">{m.shop_continue({}, options)}</Button>
+          </>
+        ) : outcome === 'failed' ? (
+          <>
+            <Text variant="lead">{m.shop_failed_text({}, options)}</Text>
+            <Button href={localizedPath(locale, 'shop/checkout')} class="justify-self-start">{m.shop_retry({}, options)}</Button>
+          </>
+        ) : (
+          <>
+            <Text variant="lead" role="status">{m.shop_pending_text({}, options)}</Text>
+            {pendingCode && <OrderCode client:load {locale} code={formatCode(pendingCode)} statusHref={localizedPath(locale, `order-status?code=${pendingCode}`)} />}
+            <Button variant="outline" href={localizedPath(locale, 'shop')} class="justify-self-start">{m.shop_continue({}, options)}</Button>
+          </>
+        )}
+      </div>
+    </OrderLayout>
+  ) : (
+    <section class="complete">
+      <Heading level={1}>{title}</Heading>
+      {outcome === 'failed' ? (
+        <>
+          <Text variant="lead">{m.shop_failed_text({}, options)}</Text>
+          <Button href={localizedPath(locale, 'shop/checkout')} class="justify-self-start">{m.shop_retry({}, options)}</Button>
+        </>
+      ) : (
+        <>
+          <Text variant="lead" role="status">{m.shop_pending_text({}, options)}</Text>
+          {pendingCode && <OrderCode client:load {locale} code={formatCode(pendingCode)} statusHref={localizedPath(locale, `order-status?code=${pendingCode}`)} />}
+        </>
+      )}
+      <Button variant="outline" href={localizedPath(locale, 'shop')} class="justify-self-start">{m.shop_continue({}, options)}</Button>
+    </section>
+  )}
+  <!-- A reload shows the receipt from its cookie, so Stripe's parameters (and the client secret) can leave the address bar. -->
+  {receipt && (
+    <script is:inline>if (location.search) history.replaceState(history.state, '', location.pathname)</script>
+  )}
 </BaseLayout>
 
 <style>
-  .complete { display: grid; gap: var(--space-md); justify-items: start; max-inline-size: 48rem; }
+  .complete { display: grid; gap: var(--space-md); max-inline-size: 36rem; }
   .complete :global(h1), .complete :global(.ui-text) { margin: 0; }
+  .order-facts {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); margin: 0; overflow: hidden;
+    border: 1px solid var(--border); border-radius: var(--panel-radius); corner-shape: squircle; background: var(--card);
+  }
+  .order-facts > div { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; column-gap: var(--space-md); padding: var(--space-xs) var(--space-sm); }
+  .order-facts > div + div { border-block-start: 1px solid var(--border); }
+  .order-facts dt { color: var(--muted-foreground); }
+  /* One grid row per line: address lines, or the payment and its IBAN. */
+  .order-facts dd { display: grid; justify-items: end; margin: 0; text-align: end; overflow-wrap: anywhere; }
+  .order-facts-detail { color: var(--muted-foreground); }
+  .next-steps { display: grid; gap: var(--space-sm); }
+  /* A small label in the design, but still the section's heading. */
+  .next-steps :global(.next-steps-heading) { margin: 0; font-family: var(--font-sans); font-size: 1.0625rem; font-weight: 700; }
 </style>

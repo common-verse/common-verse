@@ -75,6 +75,7 @@ export const routeSegments = {
   legal: { de: "impressum", international: "legal" },
   terms: { de: "agb", international: "terms" },
   shop: { de: "shop", international: "shop" },
+  "order-status": { de: "bestellstatus", international: "order-status" },
 } as const;
 
 /** Resolves a public pathname back to its stable page identity. */

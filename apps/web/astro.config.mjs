@@ -43,6 +43,17 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
+      ORDER_LOOKUP_SECRET: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
+      // Browser tests point it at the mock CMS, so they never call Stripe.
+      STRIPE_API_URL: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
     },
   },
   vite: {

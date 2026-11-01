@@ -73,6 +73,40 @@ export const titleAttributes = ({
     ? { lang: titleLanguage, dir: contentDirection(titleLanguage) }
     : { dir: "auto" };
 
+/** A book in the order summary of checkout, confirmation and status. */
+export interface SummaryLine {
+  id: string;
+  title: string | null;
+  titleLanguage: string | null;
+  quantity: number;
+  unitPrice?: number;
+  total?: number;
+  meta?: string;
+  cover?: string | null;
+}
+
+/** `product` is null when the book was deleted since. */
+export function summaryLine(
+  id: string,
+  product: Product | null,
+  quantity: number,
+  unitPrice: number,
+  locale: Locale,
+  cmsUrl: string,
+): SummaryLine {
+  const media = mediaObject(product?.image);
+  return {
+    id,
+    title: product?.title ?? null,
+    titleLanguage: product?.titleLanguage ?? null,
+    quantity,
+    unitPrice,
+    total: unitPrice * quantity,
+    meta: product ? bookMeta(product, locale) : undefined,
+    cover: media?.url ? new URL(media.url, cmsUrl).href : null,
+  };
+}
+
 /** Shop settings stay empty until an editor saves them; checkout needs a rate. */
 export const shippingRate = (settings: Partial<ShopSettings>) =>
   typeof settings.shippingRate === "number" ? settings.shippingRate : null;
@@ -197,6 +231,34 @@ export const checkoutKey = (lines: CartLine[], shipping: number | null) =>
         `${relationID(line.product)}x${line.quantity}@${lineProduct(line)?.priceInEUR ?? 0}`,
     )
     .join(",")}+${shipping ?? "none"}`;
+
+/**
+ * Reads a checkout key back: the books, quantities and prices that were paid, and the shipping.
+ * The key comes from a cookie, so it is split, not matched as a whole, and its size is capped.
+ */
+export function parseCheckoutKey(key: string) {
+  const plus = key.lastIndexOf("+");
+  const shipping = key.slice(plus + 1);
+  const parts = key.slice(0, Math.max(plus, 0)).split(",").filter(Boolean);
+  if (
+    key.length > 1000 ||
+    plus < 0 ||
+    parts.length > maxCartLines ||
+    !/^(\d{1,9}|none)$/.test(shipping)
+  )
+    return null;
+  const lines = [];
+  for (const part of parts) {
+    const match = /^([\w-]{1,64})x(\d{1,2})@(\d{1,9})$/.exec(part);
+    if (!match) return null;
+    lines.push({
+      product: match[1]!,
+      quantity: Number(match[2]),
+      unitPrice: Number(match[3]),
+    });
+  }
+  return { lines, shipping: shipping === "none" ? null : Number(shipping) };
+}
 
 export function cookieOptions(secure: boolean, maxAge = 60 * 60 * 24 * 14) {
   return {

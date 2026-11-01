@@ -1,17 +1,16 @@
 ---
-import { ChevronDown, ShoppingBag } from 'lucide-svelte'
 import { PUBLIC_STRIPE_PUBLISHABLE_KEY } from 'astro:env/server'
 import { Heading } from '$lib/components/ui/heading'
 import { Text } from '$lib/components/ui/text'
-import { getLocaleMetadata, isLocale, localizedPath } from '@poetry/i18n'
+import { isLocale, localizedPath } from '@poetry/i18n'
 import CheckoutForm from '../../../../components/CheckoutForm.svelte'
 import ShopFacts from '../../../../components/ShopFacts.svelte'
 import ShopTotals from '../../../../components/ShopTotals.svelte'
+import OrderLayout from '../../../../components/OrderLayout.astro'
 import BaseLayout from '../../../../layouts/BaseLayout.astro'
 import { cmsUrl, getCart, getShopSettings } from '../../../../lib/cms'
-import { mediaObject } from '../../../../lib/homepage'
 import type { Notice } from '../../../../lib/notifications'
-import { bookMeta, cartCookie, cartSubtotal, checkoutCookie, checkoutKey, decodeCart, formatNumber, formatPrice, isLineAvailable, lineProduct, shippingRate, titleAttributes } from '../../../../lib/shop'
+import { cartCookie, cartSubtotal, checkoutCookie, checkoutKey, decodeCart, isLineAvailable, lineProduct, shippingRate, summaryLine } from '../../../../lib/shop'
 import { decodeCheckout, parseCheckout, type CheckoutError, type CheckoutField, type CheckoutValues } from '../../../../lib/checkout'
 import * as m from '../../../../paraglide/messages.js'
 
@@ -58,135 +57,23 @@ const subtotal = cartSubtotal(items)
 const total = subtotal + (shipping ?? 0)
 const lines = items.map((item) => {
   const product = lineProduct(item)!
-  const media = mediaObject(product.image)
-  return {
-    id: item.id,
-    title: product.title,
-    titleLanguage: product.titleLanguage ?? null,
-    quantity: item.quantity,
-    unitPrice: product.priceInEUR ?? 0,
-    total: (product.priceInEUR ?? 0) * item.quantity,
-    meta: bookMeta(product, locale),
-    cover: media?.url ? new URL(media.url, cmsUrl).href : null,
-  }
+  return { ...summaryLine(item.id, product, item.quantity, product.priceInEUR ?? 0, locale, cmsUrl), title: product.title, total: (product.priceInEUR ?? 0) * item.quantity }
 })
 const title = t(m.shop_checkout_title)
-// The split stays physical in every language: summary left, inputs right. Only the text mirrors.
-const { direction } = getLocaleMetadata(locale)
 ---
 
 <BaseLayout {locale} title={`${title} · ${m.site_title({}, { locale })}`} canonicalPath="shop/checkout" noIndex alternateLocales={[]} {notice} noticeFocus={changed || tooLong} mainClass="checkout-page">
-  <div class="checkout" dir="ltr">
-    <aside class="checkout-summary" dir={direction} aria-labelledby="order-heading">
-      <details class="summary-details">
-        <summary class="summary-toggle">
-          <span class="summary-label">
-            <ShoppingBag size={18} aria-hidden="true" />
-            <span class="summary-show">{t(m.shop_details_show)}</span><span class="summary-hide">{t(m.shop_details_hide)}</span>
-            <ChevronDown size={16} aria-hidden="true" class="summary-chevron" />
-          </span>
-          <bdi class="summary-total">{formatPrice(total, locale)}</bdi>
-        </summary>
-        <div class="summary-body">
-          <Heading level={2} id="order-heading" class="summary-heading">{t(m.shop_order_summary)}</Heading>
-          <ul class="summary-lines">
-            {lines.map((line) => (
-              <li data-line={line.id}>
-                <div class="summary-cover">
-                  {line.cover && <img src={line.cover} alt="" width="56" height="56" loading="lazy" />}
-                  <span class="summary-quantity"><span class="sr-only">{t(m.shop_quantity)} </span>{formatNumber(line.quantity, locale)}</span>
-                </div>
-                <div class="summary-text">
-                  <span class="summary-title" {...titleAttributes(line)}>{line.title}</span>
-                  {line.meta && <span class="summary-meta">{line.meta}</span>}
-                  {line.quantity > 1 && <span class="summary-meta">{m.shop_each({ price: formatPrice(line.unitPrice, locale) }, { locale })}</span>}
-                </div>
-                <bdi class="price summary-price">{formatPrice(line.total, locale)}</bdi>
-              </li>
-            ))}
-          </ul>
-          <ShopTotals {locale} {subtotal} {shipping} note={settings.priceNote} />
-        </div>
-      </details>
-    </aside>
-    <div class="checkout-main" dir={direction}>
-      <Heading level={1}>{title}</Heading>
-      <ShopFacts {locale} />
-      {!publishableKey || shipping === null ? (
-        <Text tone="muted">{t(m.shop_payments_unavailable)}</Text>
-      ) : (
-        <CheckoutForm client:load action={checkoutPath} {locale} {values} {errors} cart={key}
-          payment={{ publishableKey, stripeLocale, returnUrl }}
-          order={{ lines: lines.map(({ id, title, titleLanguage, quantity, meta, total }) => ({ id, title, titleLanguage, quantity, meta, total })), shipping, total, note: settings.priceNote ?? null }}
-          links={{ terms: localizedPath(locale, 'terms'), privacy: localizedPath(locale, 'privacy') }} />
-      )}
-    </div>
-  </div>
+  <OrderLayout {locale} {lines} {total}>
+    <ShopTotals slot="totals" {locale} {subtotal} {shipping} note={settings.priceNote} />
+    <Heading level={1}>{title}</Heading>
+    <ShopFacts {locale} />
+    {!publishableKey || shipping === null ? (
+      <Text tone="muted">{t(m.shop_payments_unavailable)}</Text>
+    ) : (
+      <CheckoutForm client:load action={checkoutPath} {locale} {values} {errors} cart={key}
+        payment={{ publishableKey, stripeLocale, returnUrl }}
+        order={{ lines: lines.map(({ id, title, titleLanguage, quantity, meta, total }) => ({ id, title, titleLanguage, quantity, meta: meta ?? "", total })), shipping, total, note: settings.priceNote ?? null }}
+        links={{ terms: localizedPath(locale, 'terms'), privacy: localizedPath(locale, 'privacy') }} />
+    )}
+  </OrderLayout>
 </BaseLayout>
-
-<style>
-  :global(main.checkout-page) { max-width: none; padding: 0; }
-  .checkout { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; }
-  .checkout-summary { border-block-end: 1px solid var(--border); background: var(--muted); }
-  .checkout-main { position: relative; display: grid; gap: var(--space-sm); padding: var(--space-md) max(var(--space-gutter), var(--safe-right)) var(--space-lg) max(var(--space-gutter), var(--safe-left)); }
-  /* The prototype’s size: the heading must not push the form down. */
-  .checkout-main :global(h1) { margin: 0; font-size: var(--font-size-lg); }
-  .summary-toggle {
-    display: flex; align-items: center; justify-content: space-between; gap: var(--space-xs); min-block-size: 3.5rem;
-    padding-block: var(--space-2xs); padding-inline: max(var(--space-gutter), var(--safe-left)) max(var(--space-gutter), var(--safe-right));
-    cursor: pointer; list-style: none; touch-action: manipulation;
-  }
-  .summary-toggle::-webkit-details-marker { display: none; }
-  .summary-label { display: inline-flex; align-items: center; gap: var(--space-2xs); font-weight: 600; }
-  .summary-show, .summary-hide { text-decoration: underline; text-underline-offset: 0.2em; }
-  .summary-hide, [open] .summary-show { display: none; }
-  [open] .summary-hide { display: inline; }
-  .summary-label :global(.summary-chevron) { transition: rotate var(--motion-fast) var(--motion-ease); }
-  [open] .summary-label :global(.summary-chevron) { rotate: 180deg; }
-  .summary-total { font-family: var(--font-serif); font-size: var(--font-size-md); font-variant-numeric: tabular-nums; }
-  .summary-toggle:focus-visible { outline-offset: -3px; }
-  .summary-body { display: grid; gap: var(--space-sm); padding: var(--space-3xs) max(var(--space-gutter), var(--safe-right)) var(--space-md) max(var(--space-gutter), var(--safe-left)); }
-  .summary-body :global(.summary-heading) { display: none; margin: 0; font-size: var(--font-size-lg); }
-  .summary-lines { display: grid; gap: var(--space-sm); margin: 0; padding: 0; list-style: none; }
-  .summary-lines li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-xs); }
-  .summary-cover { position: relative; display: grid; place-items: center; aspect-ratio: 1; padding: var(--space-3xs); border-radius: 0.5rem; corner-shape: squircle; background: var(--background); }
-  .summary-cover img { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; }
-  .summary-quantity {
-    position: absolute; inset-block-start: -0.5rem; inset-inline-end: -0.5rem; min-inline-size: 1.375rem; block-size: 1.375rem; padding-inline: 0.375rem;
-    border-radius: 0.6875rem; background: var(--foreground); color: var(--background); font-size: 0.75rem; font-weight: 700; line-height: 1.375rem; text-align: center;
-  }
-  .summary-text { display: grid; gap: 1px; min-inline-size: 0; overflow-wrap: anywhere; }
-  .summary-title { font-family: var(--font-serif); line-height: 1.3; }
-  .summary-meta { font-size: var(--font-size-sm); color: var(--muted-foreground); }
-  .summary-price { font-weight: 600; }
-  /* On narrow screens the form repeats books, total and price note above the order button. */
-  .summary-body :global(.shop-note) { display: none; }
-
-  /* Folding animation; reduced motion opens instantly. */
-  .summary-details { interpolate-size: allow-keywords; }
-  .summary-details::details-content { block-size: 0; overflow-y: clip; }
-  .summary-details[open]::details-content { block-size: auto; }
-  @media (prefers-reduced-motion: no-preference) {
-    .summary-details::details-content { transition: block-size var(--motion-page) var(--motion-ease), content-visibility var(--motion-page) allow-discrete; }
-  }
-
-  @media (min-width: 60rem) {
-    .checkout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; min-block-size: calc(100dvh - 5rem); }
-    .checkout-summary { border-block-end: 0; border-right: 1px solid var(--border); }
-    /* Always open: the toggle is only for narrow screens. */
-    .summary-toggle { display: none; }
-    /* Full column height, so the summary can stick while the form scrolls. */
-    .summary-details, .summary-details::details-content { block-size: 100%; content-visibility: visible; overflow-y: visible; }
-    .summary-body {
-      position: sticky; inset-block-start: 5rem; max-inline-size: 34rem; margin-left: auto;
-      padding: var(--space-xl) var(--space-xl) var(--space-xl) max(var(--space-gutter), var(--safe-left));
-    }
-    .summary-body :global(.summary-heading) { display: block; }
-    .summary-body :global(.shop-note) { display: block; }
-    .checkout-main { align-content: start; max-inline-size: 36rem; margin-right: auto; padding: var(--space-xl) max(var(--space-gutter), var(--safe-right)) var(--space-xl) var(--space-xl); }
-  }
-  /* Without ::details-content the summary cannot be held open; keep its toggle. */
-  @supports not selector(::details-content) {
-    .summary-toggle { display: flex !important; }
-  }
-</style>

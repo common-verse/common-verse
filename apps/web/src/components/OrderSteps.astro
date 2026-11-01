@@ -1,0 +1,56 @@
+---
+// The order timeline: the one place with circles; everything else is a squircle.
+import type { OrderLookupStatus } from '@poetry/types'
+import { Check, Clock, Package, Truck, X } from 'lucide-svelte'
+import type { OrderStep } from '../lib/order'
+
+interface Props {
+  steps: OrderStep[]
+  status: OrderLookupStatus
+}
+
+const { steps, status } = Astro.props
+const icons = { check: Check, clock: Clock, package: Package, truck: Truck, x: X }
+// The current step takes the status colour: paid and shipped succeed, a failed payment is an error.
+const tone = status === 'paid' || status === 'shipped' ? 'success' : status === 'payment_failed' ? 'error' : 'neutral'
+---
+
+<ol class="order-steps" data-tone={tone}>
+  {steps.map((step) => {
+    const Icon = icons[step.icon]
+    return (
+      <li data-state={step.state} aria-current={step.state === 'now' ? 'step' : undefined}>
+        <span class="order-step-dot"><Icon size={15} strokeWidth={2.5} aria-hidden="true" /></span>
+        <span class="order-step-text">
+          <span class="order-step-title">{step.title}</span>
+          {step.detail && <span class="order-step-detail">{step.detail}</span>}
+        </span>
+      </li>
+    )
+  })}
+</ol>
+
+<style>
+  .order-steps { --step-tone: var(--foreground); display: grid; margin: 0; padding: 0; list-style: none; }
+  [data-tone='success'] { --step-tone: var(--success); }
+  [data-tone='error'] { --step-tone: var(--error-text); }
+  li { position: relative; display: flex; gap: var(--space-xs); padding-block-end: var(--space-sm); }
+  li:last-child { padding-block-end: 0; }
+  /* The line to the next circle; a border, so forced colours keep it. */
+  li:not(:last-child)::before {
+    content: ''; position: absolute; inset-block: calc(1.75rem + 2px) 2px; inset-inline-start: calc(0.875rem - 1px); border-inline-start: 2px solid var(--border);
+  }
+  .order-step-dot {
+    display: grid; flex: none; place-items: center; inline-size: 1.75rem; block-size: 1.75rem;
+    border: 2px solid var(--border); border-radius: 50%; background: var(--background); color: var(--muted-foreground);
+  }
+  [data-state='done'] .order-step-dot { border-color: var(--success); color: var(--success); }
+  [data-state='now'] .order-step-dot, [data-state='stop'] .order-step-dot { border-color: var(--step-tone); color: var(--step-tone); }
+  .order-step-text { display: grid; padding-block-start: 2px; }
+  .order-step-title { font-weight: 600; }
+  .order-step-detail { font-size: var(--font-size-sm); color: var(--muted-foreground); }
+  /* Forced colours drop the tones; the current step keeps a highlighted, thicker circle. */
+  @media (forced-colors: active) {
+    [data-state='now'] .order-step-dot, [data-state='stop'] .order-step-dot { border-width: 3px; border-color: Highlight; color: Highlight; }
+  }
+</style>

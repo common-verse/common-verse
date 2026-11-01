@@ -10,6 +10,7 @@ import {
   formatPrice,
   isLineAvailable,
   isPurchasable,
+  parseCheckoutKey,
   parseQuantity,
 } from "./shop";
 
@@ -154,6 +155,46 @@ describe("cart lines", () => {
       checkoutKey([{ ...lines[0]!, product: book(2100, null) }], 450),
     ).not.toBe(key);
     expect(checkoutKey(lines, 500)).not.toBe(key);
+  });
+
+  it("reads back from a checkout key what was paid", () => {
+    const key = checkoutKey(
+      [
+        { product: book(2000, null), quantity: 2 },
+        { product: 42, quantity: 1 },
+      ],
+      450,
+    );
+    expect(parseCheckoutKey(key)).toEqual({
+      lines: [
+        { product: "1", quantity: 2, unitPrice: 2000 },
+        { product: "42", quantity: 1, unitPrice: 0 },
+      ],
+      shipping: 450,
+    });
+    expect(parseCheckoutKey(checkoutKey([], null))).toEqual({
+      lines: [],
+      shipping: null,
+    });
+    expect(parseCheckoutKey("1x2@2000+450<script>")).toBeNull();
+    expect(parseCheckoutKey("1x2@2000,,2x1@500+none")?.lines).toHaveLength(2);
+  });
+
+  it.each([
+    ["more lines than a cart holds", `${"1x1@1,".repeat(8)}+0`],
+    ["a forged long key", `${"11x1@1".repeat(5000)}!`],
+    ["no shipping", "1x1@1"],
+    ["a key padded beyond any cart", `1x1@1${",".repeat(2000)}+0`],
+  ])("rejects %s quickly", (_case, key) => {
+    const start = performance.now();
+    expect(parseCheckoutKey(key)).toBeNull();
+    expect(performance.now() - start).toBeLessThan(50);
+  });
+
+  it("stays fast on a forged key within the length limit", () => {
+    const start = performance.now();
+    expect(parseCheckoutKey(`${"11x1@1".repeat(150)}!+0`)).toBeNull();
+    expect(performance.now() - start).toBeLessThan(50);
   });
 
   it("describes a book by language, pages and year in the UI language", () => {

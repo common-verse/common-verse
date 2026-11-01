@@ -32,7 +32,11 @@
     // the notice itself, or the first invalid field and its own error.
     const initial = shown.success
     if (initial && !initial.link) requestAnimationFrame(() => { if (shown[initial.tone]?.key === 0) shown[initial.tone]!.relay = true })
-    return listen((next) => { shown[next.tone] = { ...next, key: ++key } })
+    // Open notices overlay the top of the page; focused elements scroll clear of their real height.
+    const size = new ResizeObserver(() => document.documentElement.style.setProperty('--notice-block-size', `${area.offsetHeight}px`))
+    size.observe(area)
+    const stop = listen((next) => { shown[next.tone] = { ...next, key: ++key } })
+    return () => { size.disconnect(); stop() }
   })
 
   function close(tone: NoticeTone) {
@@ -106,6 +110,10 @@
 </div>
 
 <style>
+  /* While a notice is open, focus scrolls elements below it; before hydration an estimate. */
+  :global(html:has(.notices .notice)) {
+    scroll-padding-block-start: calc(8rem + var(--notice-block-size, 6rem));
+  }
   /* Overlays the content under the sticky header: nothing below moves. */
   .notices {
     position: absolute;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { photonSuggestions, rateLimiter } from "./address";
+import { clientKey, photonSuggestions, rateLimiter } from "./address";
 
 const feature = (properties: Record<string, string>) => ({ properties });
 
@@ -84,5 +84,37 @@ describe("rate limit", () => {
     ]);
     expect(allowed("b", 20)).toBe(true);
     expect(allowed("a", 1000)).toBe(true);
+  });
+
+  it("takes a call back with a negative cost", () => {
+    const allowed = rateLimiter(1, 1000);
+    expect(allowed("a", 0)).toBe(true);
+    allowed("a", 10, -1);
+    expect(allowed("a", 20)).toBe(true);
+    expect(allowed("a", 30)).toBe(false);
+    // Taking back a call that was never counted gives nothing extra.
+    allowed("b", 30, -1);
+    expect([allowed("b", 40), allowed("b", 50)]).toEqual([true, false]);
+  });
+});
+
+describe("rate limit client", () => {
+  it.each([
+    ["2001:db8:1:2:3:4:5:6", "2001:db8:1:2::/64"],
+    ["2001:0DB8:0001:0002::ffff", "2001:db8:1:2::/64"],
+    ["2001:db8::1", "2001:db8:0:0::/64"],
+    ["::1", "0:0:0:0::/64"],
+    ["fe80::1%en0", "fe80:0:0:0::/64"],
+    ["::ffff:192.0.2.1", "192.0.2.1"],
+    ["192.0.2.1", "192.0.2.1"],
+  ])("counts %o as %o", (address, key) => {
+    expect(clientKey(address)).toBe(key);
+  });
+
+  it("counts every address of one /64 against the same limit", () => {
+    const allowed = rateLimiter(1, 1000);
+    expect(allowed("2001:db8:1:2::a", 0)).toBe(true);
+    expect(allowed("2001:db8:1:2::b", 10)).toBe(false);
+    expect(allowed("2001:db8:1:3::a", 20)).toBe(true);
   });
 });

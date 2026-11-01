@@ -16,7 +16,7 @@ export const onRequest = defineMiddleware((context, next) => {
   const mainPage =
     identity === "/" ||
     fixedPageKeys.some((page) => identity === `/${page}`) ||
-    /^\/(events|poems|authors|articles|shop)$/.test(identity);
+    /^\/(events|poems|authors|articles|shop|order-status)$/.test(identity);
   const knownPage =
     mainPage ||
     /^\/(events|poems|authors|articles|shop)\/[^/]+\/?$/.test(identity) ||

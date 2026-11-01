@@ -15,6 +15,11 @@ html {
   scroll-behavior: smooth;
   scroll-padding-block-start: 8rem;
 }
+/* Keyboard focus scrolls instantly: a smooth scroll still running drops the next one,
+   leaving a quickly tabbed-to control below the bottom bar or outside the viewport. */
+html:has(:focus-visible) {
+  scroll-behavior: auto;
+}
 body {
   font-size: var(--font-size-base);
   margin: 0;

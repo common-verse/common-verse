@@ -74,7 +74,9 @@ also without JavaScript: the server renders the same field errors, focuses the
 first invalid field and shows one error notification.
 
 On narrow screens `scroll-padding-block-end` keeps focused fields clear of the
-bottom bar.
+bottom bar. Anchor links scroll smoothly, keyboard focus instantly: a smooth scroll
+still running would drop the next one and leave a quickly tabbed-to control
+below the bar.
 
 ## Notifications
 
@@ -85,7 +87,9 @@ error (assertive, stays until closed). Pages pass `notice` to `BaseLayout`,
 usually from a `?status=` redirect; islands call `notify()` from
 `$lib/notifications` (calls before the area has mounted are dropped).
 
-Server-rendered errors without a field to focus, including cart errors, take
+While a notice is open, the page's top scroll padding grows by its measured
+height (an estimate before hydration), so a focused element scrolls below it rather
+than under it. Server-rendered errors without a field to focus, including cart errors, take
 focus (`noticeFocus`) and are read that way; after a checkout field error the
 focused field reads its own error, so that notice is not announced. A
 server-rendered success is repeated once in a hidden live text after hydration,
@@ -168,6 +172,22 @@ picks, Escape closes only the list, Tab closes it; a pointer or tap picks withou
 moving focus. A polite status line announces the number of suggestions and the
 picked address. Browser autofill does not open suggestions. See
 [shop](shop.md#address-suggestions) for the data source.
+
+The confirmation and a found order status use the same split (`OrderLayout`), so
+the summary stays where it was. On the right: the heading without an icon, the
+order code (`OrderCode`: the code left-to-right in large type, a copy button that
+says „Kopiert“ for 2 s and is announced politely, hidden without JavaScript, and a
+link to the status page), an Apple-like fact list (Bestätigung an, Zahlung such as
+„Visa •••• 4242“ or „SEPA-Lastschrift“ with „IBAN •••• 3000“ on a muted second
+line, Lieferung an) and the timeline (`OrderSteps`: circles, done in success
+colour, the current step `aria-current="step"` in the status colour: success when
+paid or shipped, error when the payment failed, otherwise ink; in forced colours it
+keeps a thicker Highlight circle and the connector is a border). The right column
+is full width up to its maximum (about 480 px of content) on every split page. The
+summary's quantity badge is a squircle; circles are only in the timeline. The status form is a narrow column
+with two `Field`s; its one-line answers share a grid cell, so the longest sets the
+height and no answer moves the page. Server-rendered field errors focus the first
+field; an answer below the button takes focus.
 
 From the shop to checkout the new page slides in from the right while the header
 stays; on wide screens the cart lines move into the summary. Back slides the other

@@ -247,6 +247,64 @@ const cartResponse = (cart, depth) => ({
   })),
 });
 
+// Payment outcomes by buyer email (sepa@ or sepa+anything@, and so on): SEPA keeps processing,
+// a declined card needs another method.
+const emailIs = (email, name) =>
+  new RegExp(`^${name}(\\+[\\w-]+)?@`).test(email ?? "");
+const stripeStatus = (email) =>
+  emailIs(email, "sepa")
+    ? "processing"
+    : emailIs(email, "declined")
+      ? "requires_payment_method"
+      : "succeeded";
+
+const lookupSecret = process.env.MOCK_ORDER_LOOKUP_SECRET ?? "test-lookup";
+const normalizeCode = (value) => {
+  if (typeof value !== "string") return null;
+  const code = value
+    .toUpperCase()
+    .replace(/[\s-]/g, "")
+    .replace(/O/g, "0")
+    .replace(/[IL]/g, "1");
+  return /^[0-9A-HJKMNP-TV-Z]{8}$/.test(code) ? code : null;
+};
+// One order per status for reader@example.org, plus the orders paid or processing in tests.
+const lookupItems = [
+  { title: "Sei neben mir", quantity: 2 },
+  { title: "كلمات عابرة", quantity: 1 },
+];
+const fixedOrder = (code, status) => ({
+  code,
+  status,
+  email: "reader@example.org",
+  createdAt: "2026-10-30T10:00:00.000Z",
+  items: lookupItems,
+  amount: 5400,
+  currency: "eur",
+});
+const lookupOrders = () => [
+  fixedOrder("SEPA0001", "payment_processing"),
+  fixedOrder("PA1D0002", "paid"),
+  fixedOrder("SH1P0003", "shipped"),
+  fixedOrder("CANC0004", "cancelled"),
+  fixedOrder("FA170005", "payment_failed"),
+  ...shopLog.initiate
+    .filter(
+      (entry) =>
+        entry.confirmed ||
+        stripeStatus(entry.body.customerEmail) === "processing",
+    )
+    .map((entry) => ({
+      code: entry.orderCode,
+      status: entry.confirmed ? "paid" : "payment_processing",
+      email: entry.body.customerEmail,
+      createdAt: new Date().toISOString(),
+      items: [{ title: "Sei neben mir", quantity: 1 }],
+      amount: 2400,
+      currency: "eur",
+    })),
+];
+
 async function handleShop(request, response, url) {
   const send = (status, body) => {
     response.statusCode = status;
@@ -321,19 +379,65 @@ async function handleShop(request, response, url) {
   if (url.pathname === "/api/payments/stripe/confirm-order") {
     shopLog.confirm.push(body);
     const cart = carts.get(String(body.cartID));
+    // Stripe has not settled these payments (see stripeStatus), so the CMS refuses.
     if (
       !cart ||
       cart.secret !== body.secret ||
       cart.paymentIntentID !== body.paymentIntentID ||
-      body.customerEmail === "pending@example.org"
+      stripeStatus(body.customerEmail) !== "succeeded" ||
+      emailIs(body.customerEmail, "pending")
     )
       return send(500, { message: "Error confirming order." });
     cart.purchasedAt = new Date().toISOString();
+    const started = shopLog.initiate.find(
+      (entry) => entry.paymentIntentID === body.paymentIntentID,
+    );
+    started.confirmed = true;
     return send(200, {
       message: "Payment confirmed.",
       orderID: 1001,
       transactionID: 1,
+      orderCode: started.orderCode,
     });
+  }
+  // Stands in for Stripe's PaymentIntent retrieval with a publishable key and client secret.
+  const intentMatch = url.pathname.match(
+    /^\/stripe\/v1\/payment_intents\/(\w+)$/,
+  );
+  if (intentMatch) {
+    const started = shopLog.initiate.find(
+      (entry) => entry.paymentIntentID === intentMatch[1],
+    );
+    if (
+      !started ||
+      url.searchParams.get("client_secret") !==
+        `${started.paymentIntentID}_secret_test` ||
+      request.headers.authorization !== "Bearer pk_test_playwright" ||
+      url.searchParams.get("expand[]") !== "payment_method"
+    )
+      return send(404, { error: { code: "resource_missing" } });
+    const status = stripeStatus(started.body.customerEmail);
+    return send(200, {
+      id: started.paymentIntentID,
+      status,
+      payment_method:
+        status === "processing"
+          ? { type: "sepa_debit", sepa_debit: { last4: "3000" } }
+          : { type: "card", card: { brand: "visa", last4: "4242" } },
+    });
+  }
+  if (url.pathname === "/api/orders/lookup") {
+    response.setHeader("cache-control", "no-store");
+    if (request.headers["x-order-lookup-secret"] !== lookupSecret)
+      return send(401, { error: "Unauthorized" });
+    const code = normalizeCode(body.code);
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const order = code && lookupOrders().find((entry) => entry.code === code);
+    if (!order || order.email !== email)
+      return send(404, { error: "Not found" });
+    const { email: _email, ...visible } = order;
+    return send(200, visible);
   }
   return send(404, { error: "Not found" });
 }
@@ -398,7 +502,7 @@ const server = http.createServer((request, response) => {
     );
   }
   if (
-    /^\/api\/(carts|payments)\//.test(url.pathname) ||
+    /^\/(api\/(carts|payments|orders)|stripe)\//.test(url.pathname) ||
     url.pathname === "/api/carts"
   )
     return handleShop(request, response, url);

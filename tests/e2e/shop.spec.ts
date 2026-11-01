@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { expectFocusNeverObscured, expectFocusedVisible } from "./focus";
 
 const cmsURL = `http://127.0.0.1:${process.env.PLAYWRIGHT_CMS_PORT ?? "3001"}`;
 
@@ -68,6 +69,11 @@ const buyerAddress = () =>
 test.beforeEach(async ({ context }) => {
   await context.setExtraHTTPHeaders({ "x-forwarded-for": buyerAddress() });
 });
+
+// A fresh address per test run, so parallel or repeated runs never read each other's payments.
+let emailNumber = 0;
+const uniqueEmail = (name: string) =>
+  `${name}+${process.pid}-${++emailNumber}@example.org`;
 
 async function initiatedFor(email: string) {
   const { initiate } = await (await fetch(`${cmsURL}/shop-log`)).json();
@@ -1074,6 +1080,38 @@ test("success notifications close themselves; errors stay until closed", async (
   await expect(page.locator("#main")).toBeFocused();
 });
 
+test.describe("at 375px with an error notice open", () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test("a server-checked checkout focuses its first invalid field below the notice", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 375, height: 667 },
+      extraHTTPHeaders: { "x-forwarded-for": buyerAddress() },
+    });
+    const page = await context.newPage();
+    await addToCart(page, "/shop/beside-me", "1", { js: false });
+    await page.goto("/shop/checkout");
+    await fillCheckout(page, "reader@example");
+    await page.locator("#postalCode").press("Enter");
+    await expect(notice(page, "error")).toBeVisible();
+    await expect(page.locator("#email")).toBeFocused();
+    await expectFocusedVisible(page);
+    await context.close();
+  });
+
+  test("the cart keeps every focused control clear of the notice and the bottom bar", async ({
+    page,
+  }) => {
+    await addToCart(page, "/en/shop/beside-me");
+    await page.goto("/en/shop/cart?status=failed");
+    await expect(notice(page, "error")).toBeFocused();
+    await expectFocusNeverObscured(page, ".site-footer nav a >> nth=-1");
+  });
+});
+
 test("keyboard focus on the close link moves to the close button on hydration", async ({
   page,
 }) => {
@@ -1164,15 +1202,19 @@ test("Arabic checkout completes the order once and clears the cart", async ({
   await page.getByRole("button", { name: "اطلب مع الالتزام بالدفع" }).click();
   await expect(page).toHaveURL(/\/ar\/shop\/checkout\/complete$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "شكراً لطلبك",
+    "شكراً لطلبك!",
   );
-  await expect(page.getByText("1001")).toBeVisible();
+  const { paymentIntentID, orderCode } =
+    await initiatedFor("arabic@example.org");
+  const code = `${orderCode.slice(0, 4)}-${orderCode.slice(4)}`;
+  await expect(page.locator(".order-code-value")).toHaveText(code);
   expect((await context.cookies()).map(({ name }) => name)).toEqual([
     "poetry-order",
   ]);
   await page.reload();
-  await expect(page.getByText("1001")).toBeVisible();
-  const { paymentIntentID } = await initiatedFor("arabic@example.org");
+  await expect(page.locator(".order-code-value")).toHaveText(code);
+  // The summary keeps its side and the book; only the text mirrors.
+  await expect(page.locator(".summary-lines")).toContainText("كلمات عابرة");
   const { confirm } = await (await fetch(`${cmsURL}/shop-log`)).json();
   expect(
     confirm.filter(
@@ -1189,31 +1231,65 @@ test("Arabic checkout completes the order once and clears the cart", async ({
   expect(errors).toEqual([]);
 });
 
-test("unconfirmed and failed payments show calm messages", async ({
+test("a failed payment keeps the cart and leads back to checkout", async ({
   page,
   context,
 }) => {
+  const declinedEmail = uniqueEmail("declined");
   await stubStripe(page, "decline");
   await addToCart(page, "/en/shop/beside-me");
   await page.goto("/en/shop/checkout");
   await hydrated(page, ".checkout-form");
-  await fillCheckout(page, "pending@example.org");
+  await fillCheckout(page, declinedEmail);
   await page
     .getByRole("button", { name: "Order with obligation to pay" })
     .click();
   await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
-  const paymentIntent = (await initiatedFor("pending@example.org"))
-    .paymentIntentID;
+  const { paymentIntentID } = await initiatedFor(declinedEmail);
 
+  // Stripe's own redirect says succeeded; the PaymentIntent, asked again, decides.
   await page.goto(
-    `/en/shop/checkout/complete?payment_intent=${paymentIntent}&redirect_status=failed`,
+    `/en/shop/checkout/complete?payment_intent=${paymentIntentID}&redirect_status=succeeded`,
   );
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Payment not completed",
   );
-  expect(
-    (await context.cookies()).some(({ name }) => name === "poetry-cart"),
-  ).toBe(true);
+  // No notice: it would cover the heading and the summary toggle on a phone.
+  await expect(notice(page, "error")).toHaveCount(0);
+  await expect(page.locator(".complete .ui-text")).toHaveText(
+    "Your cart is still saved, so you can try again.",
+  );
+  await expect(page.locator(".summary-lines")).toContainText("Sei neben mir");
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expectFocusNeverObscured(page, ".site-footer nav a >> nth=-1");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  expect((await context.cookies()).map(({ name }) => name).sort()).toEqual([
+    "poetry-cart",
+    "poetry-cart-count",
+    "poetry-checkout",
+  ]);
+  await page.getByRole("link", { name: "Try again" }).click();
+  await expect(page).toHaveURL(/\/en\/shop\/checkout$/);
+  await expect(page.locator("#email")).toHaveValue(declinedEmail);
+});
+
+test("a payment the CMS cannot confirm yet, or a foreign return, keeps the cart", async ({
+  page,
+  context,
+}) => {
+  const pendingEmail = uniqueEmail("pending");
+  await stubStripe(page, "decline");
+  await addToCart(page, "/en/shop/beside-me");
+  await page.goto("/en/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  await fillCheckout(page, pendingEmail);
+  await page
+    .getByRole("button", { name: "Order with obligation to pay" })
+    .click();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
+  const { paymentIntentID } = await initiatedFor(pendingEmail);
+  const cookieNames = async () =>
+    (await context.cookies()).map(({ name }) => name).sort();
 
   await page.goto(
     "/en/shop/checkout/complete?payment_intent=pi_foreign&redirect_status=succeeded",
@@ -1221,26 +1297,177 @@ test("unconfirmed and failed payments show calm messages", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Your payment is being checked",
   );
-  expect(
-    (await context.cookies()).some(({ name }) => name === "poetry-cart"),
-  ).toBe(true);
+  expect(await cookieNames()).toContain("poetry-checkout");
 
-  await page.goto(
-    `/en/shop/checkout/complete?payment_intent=${paymentIntent}&redirect_status=succeeded`,
-  );
+  // Paid at Stripe, but the CMS has no order yet: the webhook settles it, a reload asks again.
+  const returnPath = `/en/shop/checkout/complete?payment_intent=${paymentIntentID}&redirect_status=succeeded`;
+  await page.goto(returnPath);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Your payment is being checked",
   );
-  await expect(page.getByRole("status")).toContainText(
-    "Please do not pay again.",
+  await expect(
+    page.getByRole("status").filter({ hasText: "Please do not pay again." }),
+  ).toBeVisible();
+  // Stripe has the money, so the code from payment start is shown already.
+  const { orderCode } = await initiatedFor(pendingEmail);
+  await expect(page.locator(".order-code-value")).toHaveText(
+    `${orderCode.slice(0, 4)}-${orderCode.slice(4)}`,
   );
+  expect(await cookieNames()).toEqual([
+    "poetry-cart",
+    "poetry-cart-count",
+    "poetry-checkout",
+  ]);
+  await page.reload();
+  const { confirm } = await (await fetch(`${cmsURL}/shop-log`)).json();
   expect(
-    (await context.cookies()).some(({ name }) => name.startsWith("poetry-c")),
-  ).toBe(false);
+    confirm.filter(
+      (entry: { paymentIntentID: string }) =>
+        entry.paymentIntentID === paymentIntentID,
+    ).length,
+  ).toBeGreaterThanOrEqual(2);
+});
+
+test("a paid order shows its code, payment, address and next steps, and links to its status", async ({
+  page,
+  context,
+}) => {
+  const paidEmail = uniqueEmail("paid");
+  const errors = collectErrors(page);
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await stubStripe(page, "redirect");
+  await addToCart(page, "/shop/beside-me", "2");
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  await fillCheckout(page, paidEmail);
+  await page
+    .getByRole("button", { name: "Zahlungspflichtig bestellen" })
+    .click();
+  await expect(page).toHaveURL(/\/shop\/checkout\/complete$/);
+  const { orderCode } = await initiatedFor(paidEmail);
+  const code = `${orderCode.slice(0, 4)}-${orderCode.slice(4)}`;
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Danke für deine Bestellung!",
+  );
+  await expect(page.locator(".order-code-value")).toHaveText(code);
+  const facts = page.locator(".order-facts");
+  await expect(facts).toContainText(`Bestätigung an${paidEmail}`);
+  await expect(facts).toContainText("ZahlungVisa •••• 4242");
+  await expect(facts).toContainText("Amira Haddad");
+  await expect(facts).toContainText("10999 Berlin");
+  await expect(page.locator(".order-steps li")).toHaveText([
+    /^Bezahlt am \d{1,2}\. \S+ \d{4}$/,
+    "Wir packen deine Bücher1–2 Werktage",
+    "Versand mit der PostLieferung in 2–4 Werktagen",
+  ]);
+  await expect(
+    page.locator('.order-steps [aria-current="step"]'),
+  ).toContainText("Wir packen");
+  await expect(page.locator(".summary-lines")).toContainText("Sei neben mir");
+  await expect(page.locator(".shop-totals")).toContainText("44,00");
+  // The order cookie holds no contact, lives 15 minutes and only on this page.
+  const receipt = (await context.cookies()).find(
+    ({ name }) => name === "poetry-order",
+  )!;
+  expect(receipt.path).toBe("/shop/checkout/complete");
+  expect(receipt.expires * 1000 - Date.now()).toBeLessThanOrEqual(
+    15 * 60 * 1000,
+  );
+  const stored = decodeURIComponent(receipt.value);
+  for (const personal of [paidEmail, "Haddad", "10999"])
+    expect(stored).not.toContain(personal);
+  // Stripe's parameters, with the client secret, have left the address bar.
+  expect(new URL(page.url()).search).toBe("");
+  await page.reload();
+  await expect(page.locator(".order-code-value")).toHaveText(code);
+  await expect(facts).toHaveText("ZahlungVisa •••• 4242");
+  await expect(page.locator(".order-steps li")).toHaveCount(3);
+
+  await hydrated(page, ".order-code");
+  await page.getByRole("button", { name: "Kopieren" }).click();
+  await expect(page.getByRole("button", { name: "Kopiert" })).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Bestellcode kopiert." }),
+  ).toHaveCount(1);
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+  await expectAccessible(page);
+  expect(errors).toEqual([]);
+
+  await page.getByRole("link", { name: "Status jederzeit abrufen" }).click();
+  await expect(page).toHaveURL(`/bestellstatus?code=${orderCode}`);
+  await expect(page.locator("#code")).toHaveValue(code);
+  await expect(page.getByText("Aus deinem Link übernommen.")).toBeVisible();
+  await page.locator("#email").fill(paidEmail);
+  await page.getByRole("button", { name: "Status anzeigen" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Bezahlt, wird gepackt",
+  );
+});
+
+test("a SEPA debit still processing shows its code and the debit, and clears the cart", async ({
+  page,
+  context,
+}) => {
+  const sepaEmail = uniqueEmail("sepa");
+  await stubStripe(page, "redirect");
+  await page.setViewportSize({ width: 375, height: 812 });
+  await addToCart(page, "/en/shop/beside-me");
+  await page.goto("/en/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  await fillCheckout(page, sepaEmail);
+  await page
+    .getByRole("button", { name: "Order with obligation to pay" })
+    .click();
+  await expect(page).toHaveURL(/\/en\/shop\/checkout\/complete$/);
+  const { orderCode } = await initiatedFor(sepaEmail);
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Thank you for your order!",
+  );
+  await expect(page.locator(".order-code-value")).toHaveText(
+    `${orderCode.slice(0, 4)}-${orderCode.slice(4)}`,
+  );
+  await expect(page.locator(".order-facts-detail")).toHaveText(
+    "IBAN •••• 3000",
+  );
+  await expect(page.locator(".order-facts")).toContainText("SEPA Direct Debit");
+  await expect(page.locator(".order-steps li")).toHaveText([
+    /^Order received on /,
+    "Direct debit in progressabout 6 working days",
+    "We pack your books1–2 working days",
+    "Sent by postDelivery in 2–4 working days",
+  ]);
+  expect((await context.cookies()).map(({ name }) => name)).toEqual([
+    "poetry-order",
+  ]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expectAccessible(page);
 
   await page.goto("/en/shop/checkout");
   await expect(page).toHaveURL(/\/en\/shop\/cart$/);
-  await expect(page.getByText("Your cart is empty.")).toBeVisible();
+});
+
+test("the confirmation without a return or an order goes to the shop", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/en/shop/checkout/complete");
+  await expect(page).toHaveURL(/\/en\/shop$/);
+  // An order cookie from before codes existed holds only the order ID.
+  await context.addCookies([
+    {
+      name: "poetry-order",
+      value: "1001",
+      url: new URL("/en/shop/checkout/complete", page.url()).href,
+    },
+  ]);
+  await page.goto("/en/shop/checkout/complete");
+  await expect(page).toHaveURL(/\/en\/shop$/);
 });
 
 test("out-of-stock responses from the CMS keep the address and point back to the cart", async ({

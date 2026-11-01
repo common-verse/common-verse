@@ -53,7 +53,7 @@ export type CheckoutResult =
       tooLong: boolean;
     };
 
-const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
+export const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
 const filled = type("string > 0");
 /** Crockford base32 without hyphen, as the CMS stores it. */
 const orderCode = type(/^[0-9A-HJKMNP-TV-Z]{8}$/);

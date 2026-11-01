@@ -68,19 +68,44 @@ export function photonSuggestions(
   });
 }
 
-/** Allows `limit` calls per key within `windowMs`; a small in-memory guard for one server. */
+/**
+ * One client for rate limits: an IPv6 address by its /64 prefix, since one connection usually
+ * holds a whole /64; IPv4 (also IPv4-mapped IPv6) and other keys stay as they are.
+ */
+export function clientKey(address: string) {
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address);
+  if (mapped) return mapped[1]!;
+  if (!address.includes(":")) return address;
+  const [head = "", tail] = address.toLowerCase().split("%")[0]!.split("::");
+  const front = head ? head.split(":") : [];
+  const back = tail ? tail.split(":") : [];
+  const groups =
+    tail === undefined
+      ? front
+      : [...front, ...Array(8 - front.length - back.length).fill("0"), ...back];
+  return `${groups
+    .slice(0, 4)
+    .map((group) => group.replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
+}
+
+/**
+ * Allows `limit` calls per key within `windowMs`; a small in-memory guard for one server.
+ * A negative `cost` takes a counted call back, so only failures count against the limit.
+ */
 export function rateLimiter(limit: number, windowMs: number) {
   const windows = new Map<string, { start: number; count: number }>();
-  return (key: string, now = Date.now()) => {
+  return (client: string, now = Date.now(), cost = 1) => {
+    const key = clientKey(client);
     const current = windows.get(key);
     if (!current || now - current.start >= windowMs) {
       // Forget expired windows so the map does not grow with every visitor.
       for (const [other, entry] of windows)
         if (now - entry.start >= windowMs) windows.delete(other);
-      windows.set(key, { start: now, count: 1 });
+      if (cost > 0) windows.set(key, { start: now, count: cost });
       return true;
     }
-    current.count++;
+    current.count += cost;
     return current.count <= limit;
   };
 }

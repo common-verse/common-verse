@@ -10,6 +10,7 @@ import type {
   Article,
   Event,
   EventsPage,
+  OrderLookup,
   Product,
   ShopSettings,
 } from "@poetry/types";
@@ -458,10 +459,10 @@ export async function initiatePayment(
   };
 }
 
-/** Returns the order ID, or null while the payment cannot be settled yet. */
+/** Returns the order's code, or null while the payment cannot be settled yet. */
 export async function confirmOrder(
   access: CartAccess,
-  checkout: Pick<CheckoutAccess, "email" | "paymentIntentID">,
+  checkout: Pick<CheckoutAccess, "email" | "paymentIntentID" | "orderCode">,
 ): Promise<string | null> {
   const response = await postJSON("/api/payments/stripe/confirm-order", {
     cartID: access.id,
@@ -470,6 +471,30 @@ export async function confirmOrder(
     paymentIntentID: checkout.paymentIntentID,
   });
   if (!response.ok) return null;
-  const data = (await response.json()) as { orderID?: number | string };
-  return data.orderID === undefined ? null : String(data.orderID);
+  const data = (await response.json()) as { orderCode?: string };
+  // Orders from before codes existed have none; the code from payment start is the same.
+  return typeof data.orderCode === "string"
+    ? data.orderCode
+    : (checkout.orderCode ?? null);
+}
+
+/** A buyer's order by code and email; null when nothing matches. Throws when the CMS fails. */
+export async function lookupOrder(
+  code: string,
+  email: string,
+  secret: string,
+): Promise<OrderLookup | null> {
+  const response = await fetch(new URL("/api/orders/lookup", cmsUrl), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-order-lookup-secret": secret,
+    },
+    body: JSON.stringify({ code, email }),
+    cache: "no-store",
+  });
+  if (response.status === 404) return null;
+  if (!response.ok)
+    throw new Error(`Order lookup failed with ${response.status}`);
+  return response.json();
 }

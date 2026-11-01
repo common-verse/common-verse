@@ -81,7 +81,30 @@ for eight weeks.
    `POST /api/payments/stripe/confirm-order`. The CMS checks the PaymentIntent
    with Stripe, creates the order with the transaction's code, lowers stock and
    returns `{ orderID, transactionID, orderCode, … }`. While a SEPA payment is
-   processing, confirmation fails; show the code from the cookie.
+   processing, confirmation fails. At the same time Astro reads the PaymentIntent
+   from Stripe with the publishable key and the client secret, as Stripe.js would
+   (`GET /v1/payment_intents/<id>?client_secret=…&expand[]=payment_method`), for
+   its status and the payment method's last four digits; when Stripe cannot be
+   reached, Stripe's `redirect_status` decides. Then:
+   - confirmed, or processing (SEPA): the page shows the code (copy button and a
+     link to the status page with `?code=`), email, payment, address and the next
+     steps; the books come from the checkout key with the prices paid. Astro clears
+     the cart and checkout cookies and keeps code, status, PaymentIntent ID, time,
+     checkout key and the payment method (brand or IBAN and last four digits only),
+     but no name, address or email, in the httpOnly `poetry-order` cookie for 15
+     minutes, limited to the confirmation path. A reload therefore shows code,
+     payment and next steps without confirming twice, but no longer the contact.
+     A small script then removes Stripe's parameters, including the client secret,
+     from the address bar.
+   - failed (declined, cancelled, abandoned 3-D Secure or Wero): the cart and
+     checkout cookies stay; below the heading a line says the cart is still saved,
+     and „Erneut versuchen“ leads back to the checkout. No notification: on phones
+     it would cover the heading and the summary toggle.
+   - paid at Stripe but not confirmed by the CMS yet: „Deine Zahlung wird geprüft“
+     with the code from payment start and the status link; the cookies stay, the
+     webhook creates the order, a reload asks again, and a second payment start is
+     refused by the CMS (`payment_in_progress`). A return without the matching
+     checkout cookie shows the same text without a code.
 5. Wallets (Apple Pay, Google Pay) ask for email and a German shipping address in
    their own sheet with the flat rate. On the element's `confirm` event the browser
    checks that contact with the same schema (the recipient name is split at its
@@ -125,8 +148,9 @@ The public service has fair-use limits and no availability guarantee.
 
 ## Rate limits and the client address
 
-`/api/checkout` and `/api/address` count requests per client IP in memory (one
-Node process; a restart forgets them). Astro takes the IP from the TCP
+`/api/checkout`, `/api/address` and the order status page count requests per client IP in memory (one
+Node process; a restart forgets them). An IPv6 address counts by its /64 prefix,
+which one connection usually holds as a whole. Astro takes the IP from the TCP
 connection. Behind a reverse proxy every buyer would then share the proxy's
 address: build with `TRUST_PROXY=true` and a correct `PUBLIC_SITE_URL`, and
 Astro reads `X-Forwarded-For` on requests for that host
@@ -163,6 +187,19 @@ may call it; it has no rate limit of its own.
 
 The CMS must be called from the Astro server without cookies or API keys: a signed-in
 user would become the order's customer.
+
+Buyers look up an order on the status page (`/bestellstatus`, `/en/order-status`;
+linked in the footer as „Bestellstatus“). It is a plain form that posts to the page,
+so it works without JavaScript: the Astro server checks code and email with the same
+reading as the CMS, then calls the lookup with `ORDER_LOOKUP_SECRET`. Each IP may
+fail 5 lookups in 15 minutes (in memory, see
+[rate limits](#rate-limits-and-the-client-address)); found orders and CMS errors do
+not count. „Keine Bestellung gefunden“, „Zu viele Versuche“ and „nicht abrufbar“
+appear as text in a reserved line below the button, so nothing moves. A found order
+shows its status, timeline, books with quantities, total and date beside it, in the
+checkout's split layout, never name or address. The page is `no-store`. A failed
+payment names the shop address `shop@thepoetryproject.de`, a placeholder until the
+association decides.
 
 ## Legal duties
 

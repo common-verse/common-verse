@@ -57,6 +57,11 @@ payment changes against the real stack at least once:
    and Stripe customer it created and restores the stock.
 3. For UI changes, also buy once in the browser in German and Arabic with a
    [Stripe test card](https://docs.stripe.com/testing).
+   Check there that the confirmation shows the payment row („Visa •••• 4242“):
+   the mock CMS assumes Stripe returns an expanded `payment_method` when the
+   PaymentIntent is read with the publishable key, the client secret and
+   `expand[]=payment_method`. If Stripe does not, the row is left out and
+   everything else still works.
 
 The script refuses live keys and a non-local CMS or database. Stripe test-mode
 PaymentIntents cannot be deleted; unpaid ones are cancelled.

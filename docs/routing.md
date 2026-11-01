@@ -41,7 +41,8 @@ Main-page redirects also cover collection indexes, such as `/de/articles` →
 The shop uses `shop` in every locale: `/shop` and `/ar/shop` list books,
 `/shop/<slug>` shows a book, and `/shop/cart`, `/shop/checkout`, and
 `/shop/checkout/complete` handle the order. Product slugs `cart` and `checkout`
-are therefore unavailable. Detail-page aliases and old collection names (`blog`, `posts`,
+are therefore unavailable. The order status page uses `/bestellstatus` in German
+and `/<locale>/order-status` elsewhere, a main-page route with the usual 301 aliases. Detail-page aliases and old collection names (`blog`, `posts`,
 `workshops`, `poets`) still return 404 without redirects.
 
 ## Implementation
