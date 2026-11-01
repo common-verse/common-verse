@@ -131,6 +131,50 @@ the drawer is open, and widens the page's bottom scroll padding so focused conte
 is never behind it. Book titles inside translated sentences are wrapped in Unicode
 isolates to keep their own direction.
 
+## Checkout
+
+The checkout is a split screen like Stripe's: a grey, read-only order summary
+(covers with quantity badge, title, language, pages and year, subtotal, shipping,
+total and price note) on the left and the inputs on the right. The split stays
+physical in every language; only the text mirrors. Below 60rem the summary folds
+into a bar at the top ("Details anzeigen" with the total), a native `<details>`
+that opens without JavaScript; from 60rem it is always open and sticks below the
+header. The right column starts with the delivery and payment-method lines, the
+wallet buttons and "oder", then contact, address and payment, the legal sentence
+with links to terms, withdrawal and privacy, and directly above „Zahlungspflichtig
+bestellen“ the order facts: on narrow screens every book with its features, the
+shipping, the total and the price note; on wide screens only the total line, as
+the books are beside it. The order button is at least 52 px tall with 17 px bold
+text at every width (§ 312j Abs. 3 BGB asks for easy reading). Company and address
+addition fold behind a link; opening it moves focus to the company field. Germany
+is a read-only row („Deutschland · einziges Lieferland“), not a select. Labels are
+small and inputs 16 px, so phones do not zoom into them.
+
+`CheckoutForm` mounts Stripe's Payment Element (accordion, wallets hidden) and
+Express Checkout Element with an appearance read from our tokens: colours are
+resolved to sRGB in the page and updated when the theme changes; the iframes
+cannot use squircles, so their radius is the plain control radius. Room is kept
+for the Payment Element while it loads. The wallet row is rendered out of the
+flow and appears only when Stripe reports a wallet before the buyer has pressed,
+typed or scrolled; otherwise it stays away, so nothing ever moves under the
+buyer.
+A press of the order button sends one payment start (a press while Stripe still
+loads says so); Stripe's own field errors
+stay inside the Payment Element, other failures use the page notification.
+
+The street field (`AddressField`) is an ARIA 1.2 combobox with a listbox popup
+that overlays the fields below. ↓/↑ move through the suggestions (wrapping), Enter
+picks, Escape closes only the list, Tab closes it; a pointer or tap picks without
+moving focus. A polite status line announces the number of suggestions and the
+picked address. Browser autofill does not open suggestions. See
+[shop](shop.md#address-suggestions) for the data source.
+
+From the shop to checkout the new page slides in from the right while the header
+stays; on wide screens the cart lines move into the summary. Back slides the other
+way. All shop pages opt into cross-document view transitions; a small head script
+skips every other navigation. Reduced motion and browsers without the Navigation
+API's activation info navigate without the transition.
+
 ## Header
 
 The header stays `dir="ltr"`; its links and labels carry the locale direction.

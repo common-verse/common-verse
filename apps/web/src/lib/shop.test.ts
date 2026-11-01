@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  cartSignature,
+  bookMeta,
+  checkoutKey,
   cartView,
   decodeCartCount,
   cartSubtotal,
@@ -144,11 +145,24 @@ describe("cart lines", () => {
     expect(decodeCartCount(value)).toBe(expected);
   });
 
-  it("changes the signature when a quantity changes", () => {
+  it("changes the checkout key when a quantity, a price or the shipping changes", () => {
     const lines = [{ product: book(2000, null), quantity: 1 }];
-    expect(cartSignature(lines)).not.toBe(
-      cartSignature([{ ...lines[0], quantity: 2 }]),
+    const key = checkoutKey(lines, 450);
+    expect(key).toBe(checkoutKey(lines, 450));
+    expect(checkoutKey([{ ...lines[0]!, quantity: 2 }], 450)).not.toBe(key);
+    expect(
+      checkoutKey([{ ...lines[0]!, product: book(2100, null) }], 450),
+    ).not.toBe(key);
+    expect(checkoutKey(lines, 500)).not.toBe(key);
+  });
+
+  it("describes a book by language, pages and year in the UI language", () => {
+    expect(bookMeta({ titleLanguage: "ar", pages: 64, year: 2019 }, "de")).toBe(
+      "Arabisch, 64 Seiten, 2019",
     );
+    expect(
+      bookMeta({ titleLanguage: null, pages: null, year: 2019 }, "ar"),
+    ).toBe("٢٠١٩");
   });
 });
 

@@ -12,8 +12,10 @@ export interface CheckoutAccess {
   clientSecret: string;
   email: string;
   address: ShippingAddress;
-  /** Cart contents the payment was started for; see cartSignature. */
+  /** Cart contents, prices and shipping the payment was started for; see checkoutKey. */
   cart: string;
+  /** Public order code from payment start, shown after payment (also while SEPA is processing). */
+  orderCode?: string;
 }
 
 export const addressFields = [
@@ -25,7 +27,12 @@ export const addressFields = [
   "postalCode",
   "city",
 ] as const;
-export const optionalFields = new Set<string>(["company", "addressLine2"]);
+/** A single name (common in wallets) goes in lastName, so firstName may stay empty. */
+export const optionalFields = new Set<string>([
+  "firstName",
+  "company",
+  "addressLine2",
+]);
 /** Form order; the browser focuses the first invalid field. */
 export const checkoutFields = ["email", ...addressFields, "country"] as const;
 
@@ -48,6 +55,8 @@ export type CheckoutResult =
 
 const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
 const filled = type("string > 0");
+/** Crockford base32 without hyphen, as the CMS stores it. */
+const orderCode = type(/^[0-9A-HJKMNP-TV-Z]{8}$/);
 
 const shippingAddress = (values: CheckoutValues): ShippingAddress => {
   const address: ShippingAddress = { country: "DE" };
@@ -59,7 +68,7 @@ const shippingAddress = (values: CheckoutValues): ShippingAddress => {
 /** Shared by the server and the browser; shipping is limited to Germany. */
 export const checkoutSchema = type({
   email,
-  firstName: filled,
+  firstName: "string",
   lastName: filled,
   company: "string",
   addressLine1: filled,
@@ -115,7 +124,10 @@ export function fieldMessages(field: CheckoutField, locale: Locale) {
   return messages;
 }
 
-export function parseCheckout(form: FormData): CheckoutResult {
+/** Reads a form post or a JSON body (as a Map). */
+export function parseCheckout(form: {
+  get(name: string): unknown;
+}): CheckoutResult {
   const values = checkoutValues((name) => form.get(name));
   const { errors, tooLong } = checkoutProblems(values);
   if (Object.keys(errors).length || tooLong)
@@ -140,9 +152,51 @@ export function decodeCheckout(
           email: data.email,
           address: data.address,
           cart: data.cart,
+          ...(orderCode.allows(data.orderCode)
+            ? { orderCode: data.orderCode }
+            : {}),
         }
       : null;
   } catch {
     return null;
   }
+}
+
+/** What a wallet returns, as the Express Checkout Element's confirm event gives it. */
+export interface WalletContact {
+  billingDetails?: { email?: string | null } | null;
+  shippingAddress?: {
+    name?: string | null;
+    address?: {
+      line1?: string | null;
+      line2?: string | null;
+      city?: string | null;
+      postal_code?: string | null;
+      country?: string | null;
+    } | null;
+  } | null;
+}
+
+/**
+ * Maps a wallet's contact to the checkout fields, so it is checked like the form.
+ * The recipient name is split at its last space; a single word becomes the last name.
+ */
+export function walletValues({
+  billingDetails,
+  shippingAddress,
+}: WalletContact): Record<CheckoutField, string> {
+  const name = shippingAddress?.name?.trim() ?? "";
+  const split = name.lastIndexOf(" ");
+  const address = shippingAddress?.address;
+  return {
+    email: billingDetails?.email ?? "",
+    firstName: split > 0 ? name.slice(0, split) : "",
+    lastName: split > 0 ? name.slice(split + 1) : name,
+    company: "",
+    addressLine1: address?.line1 ?? "",
+    addressLine2: address?.line2 ?? "",
+    postalCode: address?.postal_code ?? "",
+    city: address?.city ?? "",
+    country: address?.country ?? "",
+  };
 }

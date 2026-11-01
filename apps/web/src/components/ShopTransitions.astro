@@ -1,0 +1,67 @@
+<!--
+  Shop pages opt into cross-document view transitions, but run one only for the way into checkout and back:
+  checkout slides in from the right while the header stays, and on wide screens the cart lines
+  travel into the order summary. Every other navigation skips the transition.
+-->
+<script is:inline>
+  {
+    const isCheckout = (url) => /\/shop\/checkout\/?$/.test(new URL(url).pathname)
+    // Every shop page opts in, so no navigation between them aborts a transition; most skip it.
+    const isConfirmation = (url) => /\/shop\/checkout\/./.test(new URL(url).pathname)
+    // Names cart lines (or clears them without `value`); only rendered lines, so names stay unique.
+    const name = (selector, value) => {
+      for (const element of document.querySelectorAll(selector))
+        element.style.viewTransitionName = value && element.checkVisibility() ? value(element) : ''
+    }
+    const wide = () => matchMedia('(min-width: 60rem)').matches
+    // Skipped transitions reject `ready`.
+    const quiet = (transition) => transition?.ready.catch(() => {})
+    addEventListener('pageswap', (event) => {
+      quiet(event.viewTransition)
+      const target = event.activation?.entry?.url
+      if (event.viewTransition && target && isCheckout(target) && !isCheckout(location.href) && wide())
+        name('.cart-line[id]', (line) => line.id)
+    })
+    addEventListener('pagereveal', (event) => {
+      // A page restored from the back/forward cache still carries the names it left with.
+      name('.cart-line[id]')
+      const transition = event.viewTransition
+      if (!transition) return
+      quiet(transition)
+      const from = window.navigation?.activation?.from?.url
+      const here = isCheckout(location.href)
+      if (!from || isCheckout(from) === here || isConfirmation(from) || isConfirmation(location.href))
+        return transition.skipTransition()
+      if (!here) return transition.types.add('checkout-out')
+      transition.types.add('checkout-in')
+      if (!wide()) return
+      name('.summary-lines li[data-line]', (line) => `line-${line.dataset.line}`)
+      transition.finished.finally(() => name('.summary-lines li[data-line]'))
+    })
+  }
+</script>
+
+<style is:inline>
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+
+    :root:active-view-transition-type(checkout-in, checkout-out) {
+      &::view-transition-group(*) { animation-duration: var(--motion-theme); animation-timing-function: var(--motion-ease); }
+      &::view-transition-group(site-header),
+      &::view-transition-new(site-header) { animation: none; }
+      &::view-transition-old(site-header) { animation: none; opacity: 0; }
+    }
+    :root:active-view-transition-type(checkout-in) {
+      &::view-transition-old(root) { animation: var(--motion-theme) var(--motion-ease) both shop-out-left; }
+      &::view-transition-new(root) { animation: var(--motion-theme) var(--motion-ease) both shop-in-right; }
+    }
+    :root:active-view-transition-type(checkout-out) {
+      &::view-transition-old(root) { z-index: 1; animation: var(--motion-theme) var(--motion-ease) both shop-out-right; }
+      &::view-transition-new(root) { animation: var(--motion-theme) var(--motion-ease) both shop-in-left; }
+    }
+    @keyframes shop-in-right { from { translate: 100% 0; } }
+    @keyframes shop-out-right { to { translate: 100% 0; } }
+    @keyframes shop-out-left { to { translate: -25% 0; opacity: 0; } }
+    @keyframes shop-in-left { from { translate: -25% 0; opacity: 0; } }
+  }
+</style>

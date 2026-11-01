@@ -423,8 +423,11 @@ export async function changeCart(
 }
 
 export type PaymentStart =
-  | { clientSecret: string; paymentIntentID: string }
-  | { error: "OutOfStock" | "failed" };
+  | { clientSecret: string; paymentIntentID: string; orderCode?: string }
+  | {
+      /** in_progress: an earlier payment of this cart is processing, paid, mid-redirect or starting. */
+      error: "OutOfStock" | "in_progress" | "completed" | "failed";
+    };
 
 export async function initiatePayment(
   access: CartAccess,
@@ -442,7 +445,14 @@ export async function initiatePayment(
     return {
       clientSecret: data.clientSecret,
       paymentIntentID: data.paymentIntentID,
+      ...(typeof data.orderCode === "string"
+        ? { orderCode: data.orderCode }
+        : {}),
     };
+  if (response.status === 409 && data?.error === "payment_in_progress")
+    return { error: "in_progress" };
+  if (response.status === 409 && data?.error === "cart_completed")
+    return { error: "completed" };
   return {
     error: data?.cause?.code === "OutOfStock" ? "OutOfStock" : "failed",
   };

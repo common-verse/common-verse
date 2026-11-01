@@ -32,10 +32,15 @@ export const cartStatuses = [
   "limit",
   "invalid",
   "failed",
+  // Not a change: checkout found an order for this cart and emptied it.
+  "completed",
 ] as const;
 export type CartStatus = (typeof cartStatuses)[number];
 export const isSuccess = (status: CartStatus) =>
-  status === "added" || status === "updated" || status === "removed";
+  status === "added" ||
+  status === "updated" ||
+  status === "removed" ||
+  status === "completed";
 
 export interface CartChange {
   action?: unknown;
@@ -147,6 +152,7 @@ export function statusMessage(status: CartStatus, locale: Locale) {
       { locale },
     ),
     failed: m.shop_status_failed({}, { locale }),
+    completed: m.shop_status_completed({}, { locale }),
   }[status];
 }
 

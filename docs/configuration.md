@@ -15,18 +15,19 @@ secret settings, and kept stable across deployments. Neither builds nor producti
 startup should generate them. Rotating Payload's secret can invalidate sessions;
 rotating the preview secret invalidates previously issued preview links.
 
-| Variable                         | Deployment owner and timing                                                                                                  |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `PAYLOAD_SECRET`                 | CMS runtime; private and stable.                                                                                             |
-| `PREVIEW_SECRET`                 | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant.     |
-| `DATABASE_URL`                   | CMS runtime; actual environment database credentials.                                                                        |
-| `PUBLIC_CMS_URL`                 | Astro build; the CMS origin reachable by the Astro server.                                                                   |
-| `PUBLIC_SITE_URL`                | Astro build and CMS runtime; the public site origin for metadata and preview links.                                          |
-| `PAYLOAD_PUBLIC_SERVER_URL`      | CMS runtime; the public CMS origin.                                                                                          |
-| `STRIPE_SECRET_KEY`              | CMS runtime; private. Without it the site runs, but shop payments fail.                                                      |
-| `STRIPE_WEBHOOKS_SIGNING_SECRET` | CMS runtime; private. Without it webhooks are ignored, including the paid-order fallback.                                    |
-| `PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Astro; publishable, not secret. Use test keys locally.                                                                       |
-| `ORDER_LOOKUP_SECRET`            | Same private value in CMS and Astro server runtimes. Setup generates it for a new `.env`; without it the lookup answers 401. |
+| Variable                         | Deployment owner and timing                                                                                                                                                |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PAYLOAD_SECRET`                 | CMS runtime; private and stable.                                                                                                                                           |
+| `PREVIEW_SECRET`                 | Same private value in CMS and Astro runtimes. Astro reads it through `astro:env/server`, not an embedded build constant.                                                   |
+| `DATABASE_URL`                   | CMS runtime; actual environment database credentials.                                                                                                                      |
+| `PUBLIC_CMS_URL`                 | Astro build; the CMS origin reachable by the Astro server.                                                                                                                 |
+| `PUBLIC_SITE_URL`                | Astro build and CMS runtime; the public site origin for metadata and preview links.                                                                                        |
+| `PAYLOAD_PUBLIC_SERVER_URL`      | CMS runtime; the public CMS origin.                                                                                                                                        |
+| `STRIPE_SECRET_KEY`              | CMS runtime; private. Without it the site runs, but shop payments fail.                                                                                                    |
+| `STRIPE_WEBHOOKS_SIGNING_SECRET` | CMS runtime; private. Without it webhooks are ignored, including the paid-order fallback.                                                                                  |
+| `PUBLIC_STRIPE_PUBLISHABLE_KEY`  | Astro; publishable, not secret. Use test keys locally.                                                                                                                     |
+| `ORDER_LOOKUP_SECRET`            | Same private value in CMS and Astro server runtimes. Setup generates it for a new `.env`; without it the lookup answers 401.                                               |
+| `TRUST_PROXY`                    | Astro build; `true` only behind a reverse proxy that overwrites `X-Forwarded-For`, so rate limits see the buyer's IP ([shop](shop.md#rate-limits-and-the-client-address)). |
 
 No secret should receive a `PUBLIC_` prefix. Preview links contain a bearer secret;
 share them only with intended reviewers. Development setup is not a deployment
@@ -53,7 +54,8 @@ to resolve an address while retaining the selected coordinates. Coordinate selec
 search fails.
 
 `PLACE_SEARCH_URL` optionally selects another Photon server (base URL, including a
-trailing slash). The default is `https://photon.komoot.io/`. Its public service has
+trailing slash) for the CMS and for the website's checkout address suggestions,
+read at runtime. The default is `https://photon.komoot.io/`. Its public service has
 fair-use throttling and no availability guarantee; use a dedicated Photon service
 if editorial traffic exceeds its allowance. Standard OSM tiles also have a
 [usage policy](https://operations.osmfoundation.org/policies/tiles/).

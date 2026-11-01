@@ -10,7 +10,7 @@ import EditorialImage from '../../../components/EditorialImage.astro'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
 import { loadCart } from '../../../lib/cart-actions'
 import { getProducts } from '../../../lib/cms'
-import { cartCookie, formatNumber, formatPrice, isPurchasable, isSoldOut, titleAttributes } from '../../../lib/shop'
+import { bookMeta, cartCookie, formatPrice, isPurchasable, isSoldOut, titleAttributes } from '../../../lib/shop'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
@@ -31,13 +31,6 @@ const [products, cart] = await Promise.all([
 if (cart) Astro.response.headers.set('Cache-Control', 'no-store')
 const inCart = new Set(cart?.view.lines.map((line) => line.product))
 const cartPath = localizedPath(locale, 'shop/cart')
-const languageNames = new Intl.DisplayNames([locale], { type: 'language' })
-const meta = (product: (typeof products)[number]) =>
-  [
-    product.titleLanguage && languageNames.of(product.titleLanguage),
-    product.pages && m.shop_book_pages({ count: formatNumber(product.pages, locale) }, o),
-    product.year && formatNumber(product.year, locale),
-  ].filter(Boolean).join(m.shop_list_separator({}, o))
 const title = m.shop_title({}, o)
 const description = m.shop_intro({}, o)
 ---
@@ -55,7 +48,7 @@ const description = m.shop_intro({}, o)
             <article class="book-card" style={`--card-transition: card-${product.id}`} aria-labelledby={`book-${product.id}`}>
               <div class="book-cover"><EditorialImage image={product.image} {locale} context="cover" /></div>
               <Heading level={2} class="book-title" id={`book-${product.id}`}><Link variant="heading" href={localizedPath(locale, `shop/${product.slug}`)} {...titleAttributes(product)}>{product.title}</Link></Heading>
-              <p class="book-meta">{meta(product)}</p>
+              <p class="book-meta">{bookMeta(product, locale)}</p>
               <p class="book-price">{product.priceInEUR ? <bdi class="price">{formatPrice(product.priceInEUR, locale)}</bdi> : null}</p>
               <div class="book-action" data-cart-product={String(product.id)} data-in-cart={inCart.has(String(product.id)) ? '' : undefined}>
                 {isPurchasable(product) ? (

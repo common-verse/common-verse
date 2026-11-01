@@ -6,6 +6,7 @@ import {
   decodeCheckout,
   fieldMessages,
   parseCheckout,
+  walletValues,
 } from "./checkout";
 
 const form = (entries: Record<string, string>) => {
@@ -35,6 +36,13 @@ describe("checkout", () => {
     };
     expect(decodeCheckout(JSON.stringify(value))).toEqual(value);
     expect(
+      decodeCheckout(JSON.stringify({ ...value, orderCode: "K7QD93FA" })),
+    ).toEqual({ ...value, orderCode: "K7QD93FA" });
+    // A code that is not one the CMS creates is dropped, the payment kept.
+    expect(
+      decodeCheckout(JSON.stringify({ ...value, orderCode: "K7QD-93FA" })),
+    ).toEqual(value);
+    expect(
       decodeCheckout(JSON.stringify({ ...value, paymentIntentID: "x" })),
     ).toBeNull();
     expect(
@@ -56,6 +64,70 @@ describe("checkout", () => {
         country: "DE",
       },
     });
+  });
+
+  it("reads a JSON body like a form", () => {
+    expect(parseCheckout(new Map(Object.entries(address)))).toEqual(
+      parseCheckout(form(address)),
+    );
+  });
+
+  it("checks a wallet's contact like the form, splitting the name at its last space", () => {
+    const wallet = {
+      billingDetails: { email: "reader@example.org" },
+      shippingAddress: {
+        name: "Amira Al Haddad",
+        address: {
+          line1: "Oranienstraße 1",
+          line2: null,
+          city: "Berlin",
+          postal_code: "10999",
+          country: "DE",
+        },
+      },
+    };
+    expect(
+      parseCheckout(new Map(Object.entries(walletValues(wallet)))),
+    ).toEqual({
+      ok: true,
+      email: "reader@example.org",
+      address: {
+        country: "DE",
+        firstName: "Amira Al",
+        lastName: "Haddad",
+        addressLine1: "Oranienstraße 1",
+        postalCode: "10999",
+        city: "Berlin",
+      },
+    });
+    const single = walletValues({
+      ...wallet,
+      shippingAddress: { ...wallet.shippingAddress, name: "Amira" },
+    });
+    // A single name is a last name; the first name is optional.
+    expect(single).toMatchObject({ firstName: "", lastName: "Amira" });
+    expect(parseCheckout(new Map(Object.entries(single)))).toMatchObject({
+      ok: true,
+      address: { lastName: "Amira" },
+    });
+    expect(
+      parseCheckout(new Map(Object.entries({ ...single, lastName: " " }))),
+    ).toMatchObject({ ok: false, errors: { lastName: "required" } });
+    expect(
+      parseCheckout(
+        new Map(
+          Object.entries(
+            walletValues({
+              ...wallet,
+              shippingAddress: {
+                ...wallet.shippingAddress,
+                address: { ...wallet.shippingAddress.address, country: "AT" },
+              },
+            }),
+          ),
+        ),
+      ).ok,
+    ).toBe(false);
   });
 
   it("reports missing and invalid fields and keeps entered values", () => {

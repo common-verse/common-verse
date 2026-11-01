@@ -37,6 +37,9 @@ export default defineConfig({
             PUBLIC_CMS_URL: `http://127.0.0.1:${cmsPort}`,
             PUBLIC_SITE_URL: `http://127.0.0.1:${webPort}`,
             PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_playwright",
+            PLACE_SEARCH_URL: `http://127.0.0.1:${cmsPort}/photon/`,
+            // Tests send their own X-Forwarded-For, so rate limits do not count all workers as one buyer.
+            TRUST_PROXY: "true",
             HOST: "127.0.0.1",
             PORT: webPort,
           },

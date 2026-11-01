@@ -229,7 +229,7 @@ const localizedProduct = (entry, locale) =>
       };
 
 const carts = new Map();
-const shopLog = { initiate: [], confirm: [] };
+const shopLog = { initiate: [], confirm: [], photon: [] };
 const readJSON = (request) =>
   new Promise((resolve) => {
     let body = "";
@@ -298,12 +298,24 @@ async function handleShop(request, response, url) {
       return send(404, { message: "Cart not found" });
     if (body.customerEmail === "stock@example.org")
       return send(400, { message: {}, cause: { code: "OutOfStock" } });
+    // The CMS refuses a second start while a payment of the cart runs, and a cart with an order.
+    if (body.customerEmail === "busy@example.org")
+      return send(409, { error: "payment_in_progress" });
+    if (cart.purchasedAt || body.customerEmail === "ordered@example.org")
+      return send(409, { error: "cart_completed" });
+    // A single name goes in lastName; firstName may be empty.
+    if (!body.shippingAddress?.lastName?.trim())
+      return send(400, { message: "A last name is required." });
     const paymentIntentID = `pi_test${shopLog.initiate.length}`;
     cart.paymentIntentID = entry.paymentIntentID = paymentIntentID;
+    // Crockford base32 without hyphen, as the CMS stores it.
+    const orderCode = `K7QD${String(shopLog.initiate.length).padStart(4, "0")}`;
+    entry.orderCode = orderCode;
     return send(200, {
       message: "Payment initiated successfully",
       clientSecret: `${paymentIntentID}_secret_test`,
       paymentIntentID,
+      orderCode,
     });
   }
   if (url.pathname === "/api/payments/stripe/confirm-order") {
@@ -342,6 +354,49 @@ const server = http.createServer((request, response) => {
     return response.end(JSON.stringify({ ok: true }));
   if (url.pathname === "/shop-log")
     return response.end(JSON.stringify(shopLog));
+  // Stands in for Photon (PLACE_SEARCH_URL), so tests never send addresses to komoot.
+  if (url.pathname === "/photon/api") {
+    shopLog.photon.push({
+      query: Object.fromEntries(
+        [...url.searchParams.keys()].map((key) => [
+          key,
+          url.searchParams.getAll(key).join(","),
+        ]),
+      ),
+      userAgent: request.headers["user-agent"] ?? null,
+    });
+    if (url.searchParams.get("q")?.startsWith("Fehler")) {
+      response.statusCode = 503;
+      return response.end("{}");
+    }
+    return response.end(
+      JSON.stringify({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              type: "house",
+              street: "Hermannstraße",
+              housenumber: "12",
+              postcode: "12049",
+              city: "Berlin",
+              district: "Neukölln",
+            },
+          },
+          {
+            type: "Feature",
+            properties: {
+              type: "street",
+              name: "Hermannstraße",
+              postcode: "20095",
+              city: "Hamburg",
+            },
+          },
+        ],
+      }),
+    );
+  }
   if (
     /^\/api\/(carts|payments)\//.test(url.pathname) ||
     url.pathname === "/api/carts"

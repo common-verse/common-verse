@@ -3,21 +3,42 @@ import { expect, test, type Page } from "@playwright/test";
 
 const cmsURL = `http://127.0.0.1:${process.env.PLAYWRIGHT_CMS_PORT ?? "3001"}`;
 
-// A stand-in for Stripe.js: the Payment Element iframe is Stripe's to test.
+// A stand-in for Stripe.js: the Payment and Express Checkout Elements are Stripe's to test.
+// It records what the page passes in `window.stripeStub`; `click` and `confirm` play the wallet sheet.
+// Set `window.stubWallets` to "none" or "late" (after 1.5 s) before load; `stripeStub.incomplete` fails `elements.submit()`.
 function stubStripe(page: Page, outcome: "redirect" | "decline") {
   return page.route("https://js.stripe.com/**", (route) =>
     route.fulfill({
       contentType: "text/javascript",
       body: `window.Stripe = Object.assign(function () {
-        let secret = ''
+        const stub = window.stripeStub = { handlers: {}, created: {}, confirmed: [], failed: [] }
+        stub.confirm = (wallet) => stub.handlers['expressCheckout:confirm']({ ...wallet, expressPaymentType: 'apple_pay', paymentFailed: (payload) => stub.failed.push(payload ?? {}) })
+        stub.click = () => new Promise((settle) => stub.handlers['expressCheckout:click']({ expressPaymentType: 'apple_pay', resolve: () => settle('resolved'), reject: () => settle('rejected') }))
         return {
           elements(options) {
-            secret = options.clientSecret
-            return { create: () => ({ on(event, callback) { if (event === 'ready') setTimeout(callback) }, mount(element) { element.textContent = 'Payment element' } }) }
+            stub.options = options
+            return {
+              create(type, createOptions) {
+                stub.created[type] = createOptions
+                return {
+                  on(event, callback) {
+                    stub.handlers[type + ':' + event] = callback
+                    if (event !== 'ready') return
+                    if (type !== 'expressCheckout') return setTimeout(() => callback({}))
+                    const wallets = window.stubWallets
+                    setTimeout(() => callback({ availablePaymentMethods: wallets === 'none' ? undefined : { applePay: true } }), wallets === 'late' ? 1500 : 0)
+                  },
+                  mount(element) { element.textContent = type === 'payment' ? 'Payment element' : 'Wallet buttons' },
+                }
+              },
+              async submit() { return stub.incomplete ? { error: { type: 'validation_error', message: 'Incomplete' } } : {} },
+              update() {},
+            }
           },
-          async confirmPayment({ confirmParams }) {
+          async confirmPayment({ clientSecret, confirmParams }) {
+            stub.confirmed.push({ clientSecret, confirmParams })
             if (${JSON.stringify(outcome)} === 'decline') return { error: { type: 'card_error', message: 'Your card was declined.' } }
-            location.href = confirmParams.return_url + '?payment_intent=' + secret.split('_secret')[0] + '&redirect_status=succeeded'
+            location.href = confirmParams.return_url + '?payment_intent=' + clientSecret.split('_secret')[0] + '&redirect_status=succeeded'
             return new Promise(() => {})
           },
         }
@@ -25,6 +46,28 @@ function stubStripe(page: Page, outcome: "redirect" | "decline") {
     }),
   );
 }
+
+type StripeStub = {
+  options: Record<string, unknown>;
+  created: Record<string, Record<string, unknown>>;
+  confirmed: { clientSecret: string; confirmParams: Record<string, unknown> }[];
+  failed: Record<string, unknown>[];
+};
+const stripeStub = (page: Page) =>
+  page.evaluate(() => {
+    const { options, created, confirmed, failed } = (
+      window as unknown as { stripeStub: StripeStub }
+    ).stripeStub;
+    return { options, created, confirmed, failed };
+  });
+
+// Each test is its own buyer for the rate limits (the test build trusts X-Forwarded-For).
+let buyerNumber = 0;
+const buyerAddress = () =>
+  `10.${process.pid % 250}.${Math.floor(++buyerNumber / 250)}.${buyerNumber % 250}`;
+test.beforeEach(async ({ context }) => {
+  await context.setExtraHTTPHeaders({ "x-forwarded-for": buyerAddress() });
+});
 
 async function initiatedFor(email: string) {
   const { initiate } = await (await fetch(`${cmsURL}/shop-log`)).json();
@@ -459,7 +502,7 @@ test("a step pressed right before checkout reaches the checkout", async ({
     .click();
   await page.getByRole("link", { name: "Zur Kasse" }).click();
   await expect(page).toHaveURL(/\/shop\/checkout$/);
-  await expect(page.locator(".order-lines")).toContainText("× 2");
+  await expect(page.locator(".order-facts")).toContainText("× 2");
 });
 
 test("the cart API refuses form posts, malformed bodies and bad IDs", async ({
@@ -687,6 +730,8 @@ test("checkout validates fields in the browser and starts payment without forwar
   page,
 }) => {
   const errors = collectErrors(page);
+  // Unique per run, so parallel or repeated runs do not share payment starts in the mock CMS.
+  const buyer = `reader-${Date.now()}@example.org`;
   await stubStripe(page, "decline");
   await addToCart(page, "/shop/beside-me");
   await page.getByRole("link", { name: "Zur Kasse" }).click();
@@ -729,7 +774,7 @@ test("checkout validates fields in the browser and starts payment without forwar
   // Once fixed, the error waits for the next blur instead of flashing while typing.
   await email.fill("reader@");
   await expect(email).not.toHaveAttribute("aria-invalid");
-  await email.fill("reader@example.org");
+  await email.fill(buyer);
 
   const postalField = page.locator(".field", {
     has: page.locator("#postalCode"),
@@ -748,45 +793,66 @@ test("checkout validates fields in the browser and starts payment without forwar
   await page.locator("#city").fill("");
   await expect(page.locator("#city")).not.toHaveAttribute("aria-invalid");
 
-  await page.getByRole("button", { name: "Weiter zur Zahlung" }).click();
-  await expect(page.locator("#firstName")).toBeFocused();
-  await expect(page.locator("#firstName")).toHaveAttribute(
+  await page
+    .getByRole("button", { name: "Zahlungspflichtig bestellen" })
+    .click();
+  // The first name is optional (wallets often give one name); the last name is not.
+  await expect(page.locator("#lastName")).toBeFocused();
+  await expect(page.locator("#lastName")).toHaveAttribute(
     "aria-invalid",
     "true",
   );
+  await expect(page.locator("#firstName")).not.toHaveAttribute("aria-invalid");
   await expect(page.locator("#lastName-error")).toHaveText(
     "Bitte fülle dieses Feld aus.",
   );
   await expect(page.locator("#company")).not.toHaveAttribute("aria-invalid");
   await expect(notice(page, "error")).toHaveCount(0);
-  expect(await initiatedFor("reader@example.org")).toBeUndefined();
+  expect(await initiatedFor(buyer)).toBeUndefined();
   // Contrast is checked once the 160 ms fade has ended.
   await expect(page.locator("#city-error")).toHaveCSS("opacity", "1");
   await expectAccessible(page);
 
-  await fillCheckout(page);
-  await page.getByRole("button", { name: "Weiter zur Zahlung" }).click();
-  await expect(page.getByRole("heading", { name: "Zahlung" })).toBeVisible();
-  await expect(page).toHaveURL(/\/shop\/checkout$/);
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Zahlung" })).toBeVisible();
-  const { initiate } = await (await fetch(`${cmsURL}/shop-log`)).json();
-  expect(
-    initiate.filter(
-      (entry: { body: { customerEmail: string } }) =>
-        entry.body.customerEmail === "reader@example.org",
-    ),
-  ).toHaveLength(1);
-  // Totals come from current prices, not the stale stored subtotal.
-  await expect(page.locator(".shop-totals")).toContainText("24,00 €");
-  await expect(page.locator(".ship-to")).toContainText("10999 Berlin");
+  await fillCheckout(page, buyer);
   const pay = page.getByRole("button", { name: "Zahlungspflichtig bestellen" });
-  await expect(pay).toBeEnabled();
-  const started = await initiatedFor("reader@example.org");
+  await pay.click();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
+  await expect(notice(page, "error").locator("..")).toHaveAttribute(
+    "aria-live",
+    "assertive",
+  );
+  await expect(pay).toBeFocused();
+  await expect(page).toHaveURL(/\/shop\/checkout$/);
+  // Deferred intent: Elements load with the current total, which includes shipping.
+  const stub = await stripeStub(page);
+  expect(stub.options).toMatchObject({
+    mode: "payment",
+    amount: 2400,
+    currency: "eur",
+    locale: "de",
+  });
+  expect(stub.created.payment).toMatchObject({
+    layout: { type: "accordion" },
+    wallets: { applePay: "never", googlePay: "never" },
+    // Our form already asks for email and country.
+    fields: {
+      billingDetails: { email: "never", address: { country: "never" } },
+    },
+  });
+  const started = await initiatedFor(buyer);
+  expect(stub.confirmed[0]).toMatchObject({
+    clientSecret: `${started.paymentIntentID}_secret_test`,
+    confirmParams: {
+      return_url: expect.stringMatching(/\/shop\/checkout\/complete$/),
+      payment_method_data: {
+        billing_details: { email: buyer, address: { country: "DE" } },
+      },
+    },
+  });
   expect(started).toMatchObject({
     cookie: null,
     body: {
-      customerEmail: "reader@example.org",
+      customerEmail: buyer,
       shippingAddress: {
         country: "DE",
         postalCode: "10999",
@@ -796,15 +862,32 @@ test("checkout validates fields in the browser and starts payment without forwar
   });
   expect(started.body.secret).toMatch(/^secret/);
   expect(await page.content()).not.toContain(started.body.secret);
-  await expectAccessible(page);
+  // The order code from payment start waits in the httpOnly checkout cookie for the confirmation page.
+  const checkoutCookie = (await page.context().cookies()).find(
+    ({ name }) => name === "poetry-checkout",
+  )!;
+  expect(checkoutCookie.httpOnly).toBe(true);
+  expect(JSON.parse(decodeURIComponent(checkoutCookie.value))).toMatchObject({
+    orderCode: started.orderCode,
+    paymentIntentID: started.paymentIntentID,
+  });
 
+  // A retry with the same cart and contact confirms the same PaymentIntent.
   await pay.click();
-  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
-  await expect(notice(page, "error").locator("..")).toHaveAttribute(
-    "aria-live",
-    "assertive",
+  await expect
+    .poll(async () => (await stripeStub(page)).confirmed.length)
+    .toBe(2);
+  expect((await stripeStub(page)).confirmed[1]!.clientSecret).toBe(
+    stub.confirmed[0]!.clientSecret,
   );
-  await expect(pay).toBeFocused();
+  const { initiate } = await (await fetch(`${cmsURL}/shop-log`)).json();
+  expect(
+    initiate.filter(
+      (entry: { body: { customerEmail: string } }) =>
+        entry.body.customerEmail === buyer,
+    ),
+  ).toHaveLength(1);
+  await expectAccessible(page);
   expect(errors).toEqual([]);
 });
 
@@ -829,34 +912,39 @@ test("checkout keeps what was typed before the form hydrated", async ({
   await expect(page.locator("#email")).toHaveAttribute("aria-invalid", "true");
 });
 
-test("one press of the checkout button sends the form once", async ({
-  page,
-}) => {
+test("one press of the order button starts one payment", async ({ page }) => {
+  await stubStripe(page, "decline");
   await addToCart(page, "/shop/beside-me");
   await page.goto("/shop/checkout");
   await hydrated(page, ".checkout-form");
   await fillCheckout(page, "twice@example.org");
-  // Count submissions the form lets through, without leaving the page.
-  await page.evaluate(() => {
-    const counted = window as unknown as { sent: number };
-    counted.sent = 0;
-    addEventListener("submit", (event) => {
-      if (!event.defaultPrevented) counted.sent++;
-      event.preventDefault();
-    });
+  let release = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  let requests = 0;
+  await page.route("**/api/checkout?**", async (route) => {
+    requests++;
+    await held;
+    await route.continue();
   });
-  const submit = page.getByRole("button", { name: "Weiter zur Zahlung" });
+  const submit = page.getByRole("button", {
+    name: "Zahlungspflichtig bestellen",
+  });
   await submit.click();
-  await expect(submit).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Zahlung wird verarbeitet …" }),
+  ).toBeDisabled();
   await expect(page.locator(".checkout-form")).toHaveAttribute(
     "aria-busy",
     "true",
   );
-  await submit.click({ force: true });
+  await page
+    .getByRole("button", { name: "Zahlung wird verarbeitet …" })
+    .click({ force: true });
   await page.locator("#city").press("Enter");
-  expect(
-    await page.evaluate(() => (window as unknown as { sent: number }).sent),
-  ).toBe(1);
+  release();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
+  expect(requests).toBe(1);
+  expect((await stripeStub(page)).confirmed).toHaveLength(1);
 });
 
 test.describe("without JavaScript", () => {
@@ -902,6 +990,19 @@ test.describe("without JavaScript", () => {
     await close.press("Enter");
     await expect(notice(page, "error")).toBeHidden();
     await expect(page.locator("#postalCode")).toHaveValue("1099");
+
+    // A valid form keeps its values; paying needs JavaScript, which a quiet note says.
+    await fillCheckout(page, "nojs@example.org");
+    await page.locator("#postalCode").press("Enter");
+    await expect(page.locator("#city")).toHaveValue("Berlin");
+    await expect(
+      page.getByText("Für die Zahlung wird JavaScript benötigt.", {
+        exact: false,
+      }),
+    ).toBeVisible();
+    await expect(page.locator(".express")).toBeHidden();
+    await expect(notice(page, "error")).toHaveCount(0);
+    expect(await initiatedFor("nojs@example.org")).toBeUndefined();
   });
 
   test("cart status closes with a link to the page without status", async ({
@@ -1026,9 +1127,8 @@ test("the bottom bar never covers a focused checkout field", async ({
   for (const id of [
     "#firstName",
     "#lastName",
-    "#company",
     "#addressLine1",
-    "#addressLine2",
+    ".more summary",
     "#postalCode",
     "#city",
   ]) {
@@ -1059,8 +1159,8 @@ test("Arabic checkout completes the order once and clears the cart", async ({
   await expect(page.locator(".shop-totals")).toContainText("٢٤٫٠٠");
   await expectAccessible(page);
   await page.goto("/ar/shop/checkout");
+  await hydrated(page, ".checkout-form");
   await fillCheckout(page, "arabic@example.org");
-  await page.getByRole("button", { name: "المتابعة إلى الدفع" }).click();
   await page.getByRole("button", { name: "اطلب مع الالتزام بالدفع" }).click();
   await expect(page).toHaveURL(/\/ar\/shop\/checkout\/complete$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -1093,11 +1193,15 @@ test("unconfirmed and failed payments show calm messages", async ({
   page,
   context,
 }) => {
+  await stubStripe(page, "decline");
   await addToCart(page, "/en/shop/beside-me");
   await page.goto("/en/shop/checkout");
+  await hydrated(page, ".checkout-form");
   await fillCheckout(page, "pending@example.org");
-  await page.getByRole("button", { name: "Continue to payment" }).click();
-  await expect(page.getByRole("heading", { name: "Payment" })).toBeVisible();
+  await page
+    .getByRole("button", { name: "Order with obligation to pay" })
+    .click();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
   const paymentIntent = (await initiatedFor("pending@example.org"))
     .paymentIntentID;
 
@@ -1142,14 +1246,18 @@ test("unconfirmed and failed payments show calm messages", async ({
 test("out-of-stock responses from the CMS keep the address and point back to the cart", async ({
   page,
 }) => {
+  await stubStripe(page, "decline");
   await addToCart(page, "/en/shop/german-only");
   await page.goto("/en/shop/checkout");
+  await hydrated(page, ".checkout-form");
   await fillCheckout(page, "stock@example.org");
-  await page.getByRole("button", { name: "Continue to payment" }).click();
+  await page
+    .getByRole("button", { name: "Order with obligation to pay" })
+    .click();
   await expect(notice(page, "error")).toContainText(
     "no longer available in this quantity",
   );
-  await expect(notice(page, "error")).toBeFocused();
+  expect((await stripeStub(page)).confirmed).toHaveLength(0);
   await expect(page.locator("#city")).toHaveValue("Berlin");
   await expect(
     notice(page, "error").getByRole("link", { name: "Edit cart" }),
@@ -1235,4 +1343,592 @@ test("unsaved shop settings keep the shop visible but disable checkout", async (
     page.getByText("Онлайн-оплата зараз недоступна.", { exact: false }),
   ).toBeVisible();
   await expect(page.locator("form.checkout-form")).toHaveCount(0);
+});
+
+const noSideScroll = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
+
+test("checkout splits summary and form, with the legal facts where the law wants them", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  await addToCart(page, "/shop/beside-me");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  const summary = page.locator(".checkout-summary");
+  const main = page.locator(".checkout-main");
+  // Wide: the grey summary sits left and stays open; the button has the total right above it.
+  expect((await summary.boundingBox())!.x).toBeLessThan(
+    (await main.boundingBox())!.x,
+  );
+  await expect(
+    page.getByRole("heading", { name: "Deine Bestellung" }),
+  ).toBeVisible();
+  await expect(page.locator(".summary-toggle")).toBeHidden();
+  await expect(summary).toContainText("Sei neben mir");
+  await expect(summary.locator(".shop-totals")).toContainText("24,00 €");
+  await expect(summary).toContainText("§ 19 UStG");
+  const facts = page.locator(".order-facts");
+  await expect(facts.locator(".order-book")).toBeHidden();
+  await expect(facts.locator(".order-total")).toHaveText(
+    /Gesamtsumme\s*24,00\s€/,
+  );
+  const button = page.getByRole("button", {
+    name: "Zahlungspflichtig bestellen",
+  });
+  const total = (await facts.locator(".order-total").boundingBox())!;
+  const buttonBox = (await button.boundingBox())!;
+  expect(buttonBox.y - (total.y + total.height)).toBeLessThan(40);
+  await expect(button).toHaveText("Zahlungspflichtig bestellen");
+  // Easy to read: at least 17 px bold and 52 px tall, at every width.
+  const readable = async () => {
+    const style = await button.evaluate((element) => {
+      const { fontSize, fontWeight } = getComputedStyle(element);
+      return {
+        size: parseFloat(fontSize),
+        weight: Number(fontWeight),
+        height: element.getBoundingClientRect().height,
+      };
+    });
+    expect(style.size).toBeGreaterThanOrEqual(17);
+    expect(style.weight).toBeGreaterThanOrEqual(700);
+    expect(style.height).toBeGreaterThanOrEqual(52);
+  };
+  await readable();
+  // Germany is shown as the only delivery country, not offered as a choice.
+  await expect(page.locator(".country")).toContainText("Deutschland");
+  await expect(page.locator(".country")).toContainText("einziges Lieferland");
+  await expect(page.locator("select")).toHaveCount(0);
+  await expect(page.locator(".legal")).toContainText("innerhalb von 14 Tagen");
+  // Delivery area and payment methods open the checkout; terms, withdrawal and privacy sit by the button.
+  await expect(main.locator(".shop-facts")).toContainText(
+    "Lieferung nur innerhalb Deutschlands",
+  );
+  await expect(main.locator(".shop-facts")).toContainText(
+    "Zahlungsarten: Karte, Apple Pay, Google Pay, Wero, SEPA-Lastschrift",
+  );
+  const legal = page.locator(".legal");
+  await expect(legal.getByRole("link", { name: "AGB" })).toHaveAttribute(
+    "href",
+    "/agb",
+  );
+  await expect(
+    legal.getByRole("link", {
+      name: "Widerrufsbelehrung und Muster-Widerrufsformular",
+    }),
+  ).toHaveAttribute("href", "/agb");
+  await expect(
+    legal.getByRole("link", { name: "Datenschutz" }),
+  ).toHaveAttribute("href", /datenschutz/);
+  await expect(
+    page.getByRole("link", { name: /Warenkorb (ändern|bearbeiten)/ }),
+  ).toHaveCount(0);
+  // The wallet buttons lead, then "oder" and the form.
+  await expect(page.locator(".express-buttons")).toHaveText("Wallet buttons");
+  await expect(page.locator(".express-or")).toHaveText("oder");
+  const { created } = await stripeStub(page);
+  expect(created.expressCheckout).toMatchObject({
+    buttonType: { applePay: "plain" },
+    emailRequired: true,
+    shippingAddressRequired: true,
+    allowedShippingCountries: ["DE"],
+    shippingRates: [{ amount: 400 }],
+  });
+  expect(await noSideScroll(page)).toBe(true);
+  await expectAccessible(page);
+
+  // Narrow: a bar with the total opens the full summary; the books stand above the button.
+  await page.setViewportSize({ width: 375, height: 800 });
+  const toggle = page.locator(".summary-toggle");
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toContainText("Details anzeigen");
+  await expect(toggle).toContainText("24,00 €");
+  await expect(
+    page.getByRole("heading", { name: "Deine Bestellung" }),
+  ).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toContainText("Details ausblenden");
+  await expect(summary.locator(".summary-lines")).toContainText(
+    "Sei neben mir",
+  );
+  await expect(facts.locator(".order-book")).toContainText("Sei neben mir");
+  await expect(facts.locator(".order-book")).toContainText("× 1");
+  await expect(facts.locator(".order-shipping")).toContainText(
+    "Versand (Deutschland)",
+  );
+  await expect(facts.locator(".order-note")).toContainText("§ 19 UStG");
+  // The price note appears once per screen.
+  await expect(summary.locator(".shop-note")).toBeHidden();
+  await readable();
+  expect(await noSideScroll(page)).toBe(true);
+  await expectAccessible(page);
+});
+
+test("Arabic checkout mirrors its text but keeps the summary on the left", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  await addToCart(page, "/ar/shop/beside-me");
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/ar/shop/checkout");
+    await hydrated(page, ".checkout-form");
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    await expect(page.locator(".checkout-main")).toHaveAttribute("dir", "rtl");
+    await expect(page.locator(".legal")).toContainText("١٤");
+    if (width === 1280)
+      expect(
+        (await page.locator(".checkout-summary").boundingBox())!.x,
+      ).toBeLessThan((await page.locator(".checkout-main").boundingBox())!.x);
+    expect(await noSideScroll(page)).toBe(true);
+  }
+  await expectAccessible(page);
+});
+
+async function stubAddresses(page: Page) {
+  await page.route("**/api/address?**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        suggestions: [
+          {
+            line1: "Hermannstraße 12",
+            postalCode: "12049",
+            city: "Berlin",
+            area: "Neukölln",
+          },
+          {
+            line1: "Hermannstraße 12",
+            postalCode: "20095",
+            city: "Hamburg",
+            area: null,
+          },
+        ],
+      }),
+    }),
+  );
+}
+
+test("the street field suggests addresses: keyboard picks, Escape closes only the list", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  await stubAddresses(page);
+  await addToCart(page, "/shop/beside-me");
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  const street = page.getByRole("combobox", { name: "Straße und Hausnummer" });
+  const gap = async () =>
+    (await page.locator("#postalCode").boundingBox())!.y -
+    (await street.boundingBox())!.y;
+  const closedGap = await gap();
+  await street.pressSequentially("He");
+  await expect(street).toHaveAttribute("aria-expanded", "false");
+  await street.pressSequentially("rmannstr 12");
+  const list = page.getByRole("listbox", { name: "Adressvorschläge" });
+  await expect(list.getByRole("option")).toHaveCount(2);
+  await expect(street).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByText("© OpenStreetMap-Mitwirkende")).toBeVisible();
+  // The list overlays the form instead of pushing it down.
+  expect(await gap()).toBe(closedGap);
+  await street.press("ArrowDown");
+  await street.press("ArrowDown");
+  await street.press("ArrowDown");
+  const first = list.getByRole("option").first();
+  await expect(first).toHaveAttribute("aria-selected", "true");
+  await expect(street).toHaveAttribute(
+    "aria-activedescendant",
+    (await first.getAttribute("id"))!,
+  );
+  await street.press("Escape");
+  await expect(list).toBeHidden();
+  await expect(street).toBeFocused();
+  await expect(street).toHaveValue("Hermannstr 12");
+  await street.press("ArrowDown");
+  await street.press("Enter");
+  await expect(street).toHaveValue("Hermannstraße 12");
+  await expect(page.locator("#postalCode")).toHaveValue("12049");
+  await expect(page.locator("#city")).toHaveValue("Berlin");
+  await expect(list).toBeHidden();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Übernommen" }),
+  ).toHaveText("Übernommen: Hermannstraße 12, 12049 Berlin.");
+});
+
+test.describe("on a touch screen", () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 375, height: 800 },
+  });
+
+  test("a tap picks an address suggestion", async ({ page }) => {
+    await stubStripe(page, "decline");
+    await stubAddresses(page);
+    await page.goto("/shop");
+    await page.evaluate(() =>
+      fetch("/shop/cart", {
+        method: "POST",
+        body: new URLSearchParams({
+          action: "add",
+          product: "101",
+          quantity: "1",
+        }),
+      }),
+    );
+    await page.goto("/shop/checkout");
+    await hydrated(page, ".checkout-form");
+    const street = page.locator("#addressLine1");
+    await street.tap();
+    await street.pressSequentially("Hermann");
+    await page.getByRole("option", { name: /20095 Hamburg/ }).tap();
+    await expect(page.locator("#postalCode")).toHaveValue("20095");
+    await expect(page.locator("#city")).toHaveValue("Hamburg");
+    await expect(street).toBeFocused();
+    expect(await noSideScroll(page)).toBe(true);
+  });
+});
+
+test("the address route asks Photon for German houses and streets and stays quiet when it fails", async ({
+  request,
+}) => {
+  // Its own client address, so other workers' address searches do not count against it.
+  const headers = {
+    "sec-fetch-site": "same-origin",
+    "x-forwarded-for": buyerAddress(),
+  };
+  const ask = (q: string) =>
+    request.get(`/api/address?q=${encodeURIComponent(q)}`, { headers });
+  // Only our own pages may ask: a cross-site or header-less request gets nothing.
+  for (const site of ["cross-site", undefined]) {
+    const refused = await request.get("/api/address?q=Hermannstr", {
+      headers: site
+        ? { ...headers, "sec-fetch-site": site }
+        : { "x-forwarded-for": headers["x-forwarded-for"] },
+    });
+    expect(refused.status()).toBe(403);
+  }
+  expect(await (await ask("He")).json()).toEqual({ suggestions: [] });
+  // A fresh house number per run, so the route's cache does not answer for Photon.
+  const number = String(Date.now() % 100000);
+  const response = await ask(`Hermannstr ${number}`);
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toEqual({
+    suggestions: [
+      {
+        line1: "Hermannstraße 12",
+        postalCode: "12049",
+        city: "Berlin",
+        area: "Neukölln",
+      },
+      {
+        line1: `Hermannstraße ${number}`,
+        postalCode: "20095",
+        city: "Hamburg",
+        area: null,
+      },
+    ],
+  });
+  const { photon } = await (await fetch(`${cmsURL}/shop-log`)).json();
+  expect(photon.at(-1)).toMatchObject({
+    query: {
+      q: `Hermannstr ${number}`,
+      countrycode: "DE",
+      layer: "house,street",
+      lang: "de",
+      limit: "5",
+    },
+    userAgent: expect.stringContaining("PoetryProject"),
+  });
+  // Cached: the same question does not reach Photon again.
+  await ask(`hermannstr ${number}`);
+  expect(
+    (await (await fetch(`${cmsURL}/shop-log`)).json()).photon,
+  ).toHaveLength(photon.length);
+  const failed = await ask("Fehlerweg 1");
+  expect(failed.status()).toBe(502);
+  expect(await failed.json()).toEqual({ suggestions: [] });
+});
+
+test("the wallet buttons start the same payment with the wallet's contact", async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await stubStripe(page, "redirect");
+  await addToCart(page, "/shop/beside-me");
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  await expect(page.locator(".express-buttons")).toHaveText("Wallet buttons");
+  const wallet = {
+    billingDetails: { email: "wallet@example.org", name: "Card Holder" },
+    shippingAddress: {
+      name: "Amira Haddad",
+      address: {
+        line1: "Oranienstraße 1",
+        line2: "",
+        city: "Berlin",
+        postal_code: "10999",
+        country: "DE",
+      },
+    },
+  };
+  const confirmWallet = (contact: unknown) =>
+    // Confirming may navigate away, so the call is not awaited inside the page.
+    page.evaluate((value) => {
+      setTimeout(() =>
+        (
+          window as unknown as { stripeStub: { confirm: (c: unknown) => void } }
+        ).stripeStub.confirm(value),
+      );
+    }, contact);
+  // An address without postcode is refused in the wallet sheet.
+  await confirmWallet({
+    ...wallet,
+    shippingAddress: {
+      ...wallet.shippingAddress,
+      address: { ...wallet.shippingAddress.address, postal_code: "" },
+    },
+  });
+  await expect
+    .poll(async () => (await stripeStub(page)).failed)
+    .toEqual([expect.objectContaining({ reason: "invalid_shipping_address" })]);
+  // A single name is the last name.
+  await confirmWallet({
+    ...wallet,
+    shippingAddress: { ...wallet.shippingAddress, name: "Amira" },
+  });
+  await expect(page).toHaveURL(/\/shop\/checkout\/complete$/);
+  const started = await initiatedFor("wallet@example.org");
+  expect(started).toMatchObject({
+    body: {
+      shippingAddress: {
+        lastName: "Amira",
+        addressLine1: "Oranienstraße 1",
+        postalCode: "10999",
+        city: "Berlin",
+        country: "DE",
+      },
+    },
+  });
+  expect(started.body.shippingAddress.firstName).toBeUndefined();
+  expect(errors).toEqual([]);
+});
+
+async function openCheckout(page: Page, path = "/shop/checkout") {
+  await addToCart(page, "/shop/beside-me");
+  await page.goto(path);
+  await hydrated(page, ".checkout-form");
+}
+
+/**
+ * Layout shifts inside the page content since load, as CLS sums them. The header is left out:
+ * its controls widen once on hydration on every page, which is not the checkout's doing.
+ */
+const layoutShift = (page: Page) =>
+  page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        type Shift = PerformanceEntry & {
+          value: number;
+          hadRecentInput: boolean;
+          sources: { node?: Node | null }[];
+        };
+        const main = document.getElementById("main")!;
+        let total = 0;
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries() as Shift[])
+            if (
+              !entry.hadRecentInput &&
+              entry.sources.some(({ node }) => node && main.contains(node))
+            )
+              total += entry.value;
+        }).observe({ type: "layout-shift", buffered: true });
+        setTimeout(() => resolve(total), 300);
+      }),
+  );
+
+test("the wallet row never moves the form: without a wallet, or one reported after the buyer started", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  await page.addInitScript(() => {
+    (window as unknown as { stubWallets: string }).stubWallets = "none";
+  });
+  await openCheckout(page);
+  await expect(page.locator(".payment-slot")).toHaveAttribute(
+    "data-state",
+    "ready",
+  );
+  await expect(page.locator(".express")).toBeHidden();
+  expect(await layoutShift(page)).toBe(0);
+
+  await page.addInitScript(() => {
+    (window as unknown as { stubWallets: string }).stubWallets = "late";
+  });
+  await page.reload();
+  await hydrated(page, ".checkout-form");
+  await page.locator("#email").click();
+  await page.waitForTimeout(1800);
+  await expect(page.locator(".express")).toBeHidden();
+  expect(await layoutShift(page)).toBe(0);
+});
+
+test("an incomplete Payment Element or a press while Stripe loads starts no payment", async ({
+  page,
+}) => {
+  let started = 0;
+  await page.route("**/api/checkout?**", (route) => {
+    started++;
+    return route.continue();
+  });
+  await stubStripe(page, "decline");
+  // Stripe.js arrives only when released, so the first press happens while it loads.
+  // (Registered after the stub, so it runs first and then hands over.)
+  let release = () => {};
+  const loading = new Promise<void>((resolve) => (release = resolve));
+  await page.route("https://js.stripe.com/**", async (route) => {
+    await loading;
+    await route.fallback();
+  });
+  await openCheckout(page);
+  await fillCheckout(page, "incomplete@example.org");
+  const pay = page.getByRole("button", { name: "Zahlungspflichtig bestellen" });
+  await pay.click();
+  await expect(noticeText(page, "error")).toHaveText(
+    "Zahlungsformular wird geladen …",
+  );
+  release();
+  await expect(page.locator(".payment-slot")).toHaveAttribute(
+    "data-state",
+    "ready",
+  );
+  await page.evaluate(() => {
+    (
+      window as unknown as { stripeStub: { incomplete: boolean } }
+    ).stripeStub.incomplete = true;
+  });
+  await pay.click();
+  await expect(pay).toBeEnabled();
+  expect(started).toBe(0);
+  expect((await stripeStub(page)).confirmed).toHaveLength(0);
+});
+
+test("a cart changed after the page loaded is shown again before anyone pays", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  await openCheckout(page);
+  await fillCheckout(page, "changed@example.org");
+  await page.locator("#firstName").fill("");
+  // Another tab adds a book.
+  await page.evaluate(() =>
+    fetch("/shop/cart", {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "add",
+        product: "102",
+        quantity: "1",
+      }),
+    }),
+  );
+  await page
+    .getByRole("button", { name: "Zahlungspflichtig bestellen" })
+    .click();
+  await expect(noticeText(page, "error")).toHaveText(
+    "Dein Warenkorb hat sich geändert. Bitte prüfe die Bestellung und bestelle dann erneut.",
+  );
+  await expect(notice(page, "error")).toBeFocused();
+  await expect(page.locator(".summary-lines li")).toHaveCount(2);
+  await expect(page.locator("#city")).toHaveValue("Berlin");
+  await expect(page.locator("#email")).toHaveValue("changed@example.org");
+  // The page was sent again, so nothing reached Stripe or the CMS.
+  expect(await initiatedFor("changed@example.org")).toBeUndefined();
+});
+
+test("form and wallet never start two payments at once", async ({ page }) => {
+  await stubStripe(page, "decline");
+  await openCheckout(page);
+  await fillCheckout(page, "together@example.org");
+  let release = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/checkout?**", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Zahlungspflichtig bestellen" })
+    .click();
+  await expect(page.locator(".checkout-form")).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+  const click = await page.evaluate(() =>
+    (
+      window as unknown as { stripeStub: { click: () => Promise<string> } }
+    ).stripeStub.click(),
+  );
+  expect(click).toBe("rejected");
+  await page.evaluate(() =>
+    (
+      window as unknown as { stripeStub: { confirm: (c: unknown) => void } }
+    ).stripeStub.confirm({
+      billingDetails: { email: "wallet-too@example.org" },
+      shippingAddress: {
+        name: "Amira Haddad",
+        address: {
+          line1: "Oranienstraße 1",
+          city: "Berlin",
+          postal_code: "10999",
+          country: "DE",
+        },
+      },
+    }),
+  );
+  await expect
+    .poll(async () => (await stripeStub(page)).failed)
+    .toHaveLength(1);
+  release();
+  await expect(noticeText(page, "error")).toHaveText("Your card was declined.");
+  expect(await initiatedFor("wallet-too@example.org")).toBeUndefined();
+  // Idle again, a wallet press opens the sheet.
+  expect(
+    await page.evaluate(() =>
+      (
+        window as unknown as { stripeStub: { click: () => Promise<string> } }
+      ).stripeStub.click(),
+    ),
+  ).toBe("resolved");
+});
+
+test("refusals from the CMS: a payment in progress, or a cart that already has an order", async ({
+  page,
+  context,
+}) => {
+  await stubStripe(page, "decline");
+  await openCheckout(page);
+  await fillCheckout(page, "busy@example.org");
+  const pay = page.getByRole("button", { name: "Zahlungspflichtig bestellen" });
+  await pay.click();
+  await expect(noticeText(page, "error")).toHaveText(
+    "Zahlung läuft bereits. Bitte bezahle nicht noch einmal.",
+  );
+  expect((await stripeStub(page)).confirmed).toHaveLength(0);
+
+  await page.locator("#email").fill("ordered@example.org");
+  await pay.click();
+  await expect(page).toHaveURL(/\/shop\/cart\?status=completed$/);
+  await expect(noticeText(page, "success")).toHaveText(
+    "Dieser Warenkorb ist abgeschlossen. Falls du schon bezahlt hast, ist deine Bestellung eingegangen.",
+  );
+  expect(
+    (await context.cookies()).some(({ name }) => name.startsWith("poetry-c")),
+  ).toBe(false);
+});
+
+test("opening the company fields moves focus into them", async ({ page }) => {
+  await stubStripe(page, "decline");
+  await openCheckout(page);
+  await page.getByText("Firma oder Adresszusatz hinzufügen").click();
+  await expect(page.locator("#company")).toBeFocused();
 });

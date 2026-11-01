@@ -72,6 +72,12 @@
     border-color: var(--error);
     box-shadow: 0 0 0 1px var(--error);
   }
+  /* Forced colours drop the red and the shadow; a dashed border still marks the field. */
+  @media (forced-colors: active) {
+    .field :global([aria-invalid='true']) {
+      border-style: dashed;
+    }
+  }
   /* Hint and errors share one cell: its height is the longest text in every state. */
   .field-message {
     display: grid;

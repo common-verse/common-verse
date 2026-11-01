@@ -2,6 +2,7 @@ import type { Locale } from "@poetry/i18n";
 import type { Product, ShopSettings } from "@poetry/types";
 import { eventFormatLocale } from "./event-date";
 import { contentDirection, mediaObject } from "./homepage";
+import * as m from "../paraglide/messages.js";
 
 export const maxQuantity = 10;
 /** Stripe metadata values hold at most 500 characters; the cart snapshot fits seven lines. */
@@ -38,6 +39,28 @@ export function formatPrice(cents: number, locale: Locale): string {
 
 /** Keeps a title's own direction inside a translated sentence, where markup like <bdi> cannot go. */
 export const isolate = (text: string) => `\u2068${text}\u2069`;
+
+/** Language, pages and year, for the shop list and the order summary. */
+export function bookMeta(
+  product: Pick<Product, "titleLanguage" | "pages" | "year">,
+  locale: Locale,
+) {
+  const options = { locale };
+  return [
+    product.titleLanguage &&
+      new Intl.DisplayNames([locale], { type: "language" }).of(
+        product.titleLanguage,
+      ),
+    product.pages &&
+      m.shop_book_pages(
+        { count: formatNumber(product.pages, locale) },
+        options,
+      ),
+    product.year && formatNumber(product.year, locale),
+  ]
+    .filter(Boolean)
+    .join(m.shop_list_separator({}, options));
+}
 
 /** Book titles are not translated; declare the edition's own language. */
 export const titleAttributes = ({
@@ -163,8 +186,17 @@ export function cartView(
   };
 }
 
-export const cartSignature = (lines: CartLine[]) =>
-  lines.map((line) => `${relationID(line.product)}x${line.quantity}`).join(",");
+/**
+ * Books, quantities, current prices and shipping of a checkout. The page sends the key it
+ * showed; a different key at payment start means the buyer would pay another amount.
+ */
+export const checkoutKey = (lines: CartLine[], shipping: number | null) =>
+  `${lines
+    .map(
+      (line) =>
+        `${relationID(line.product)}x${line.quantity}@${lineProduct(line)?.priceInEUR ?? 0}`,
+    )
+    .join(",")}+${shipping ?? "none"}`;
 
 export function cookieOptions(secure: boolean, maxAge = 60 * 60 * 24 * 14) {
   return {

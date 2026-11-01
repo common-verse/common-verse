@@ -3,6 +3,7 @@ import { getLocaleMetadata, locales, localizedPath, type Locale } from '@poetry/
 import { editorLocale, message } from '@poetry/cms-ui'
 import Header from '../components/Header.astro'
 import EventTransitions from '../components/EventTransitions.astro'
+import ShopTransitions from '../components/ShopTransitions.astro'
 import BrandLogo from '../components/BrandLogo.astro'
 import * as m from '../paraglide/messages.js'
 import '../styles/global.css'
@@ -84,6 +85,7 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
     {structuredData && <script type="application/ld+json" set:html={JSON.stringify(structuredData).replaceAll('<', '\\u003c')} />}
     <title>{title}</title>
     {!preview && (canonicalPath === 'events' || canonicalPath.startsWith('events/')) && <EventTransitions />}
+    {(canonicalPath === 'shop' || canonicalPath.startsWith('shop/')) && <ShopTransitions />}
   </head>
   <body>
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>

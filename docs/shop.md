@@ -28,7 +28,11 @@ administrators only. See [accounts and permissions](accounts-and-permissions.md)
 Card, Apple Pay and Google Pay (wallets through Stripe's Express Checkout
 Element), Wero and SEPA Direct Debit. No PayPal, Klarna or prepayment. The CMS
 creates PaymentIntents with automatic payment methods, so the Stripe Dashboard
-switches decide what buyers see (see [configuration](#configuration)).
+switches decide what the Payment Element shows (see [configuration](#configuration)).
+The checkout's payment-methods line (`shop_payment_methods`, required at the
+start of checkout by § 312j Abs. 1 BGB) is fixed text: change it together with
+the Dashboard. The wallet row is limited in code to Apple Pay and Google Pay, so
+Link, Amazon Pay, PayPal or Klarna never appear there even if switched on.
 
 SEPA Direct Debit is asynchronous: Stripe reports the payment as processing for
 about six business days and it can still fail. The order exists only after
@@ -40,17 +44,51 @@ for eight weeks.
 
 1. Astro creates a guest cart (`POST /api/carts`) and keeps its ID and secret in
    httpOnly cookies. Every cart request carries that secret.
-2. The checkout form collects email and a German address. Astro calls
+2. The checkout is one page. The Payment Element and the Express Checkout Element
+   load at once with the cart total and `eur` (Stripe's deferred intent, `mode:
+'payment'`); no PaymentIntent exists yet. The form collects email and a German
+   address (last name required, first name optional); the Payment Element
+   collects the payment details, not the email or the country, which the form
+   passes on. The page also carries its checkout key: books, quantities, current
+   prices and shipping.
+3. On „Zahlungspflichtig bestellen“ the browser checks the form with the shared
+   schema, calls `elements.submit()` and posts the contact and the checkout key
+   as JSON to the Astro route `/api/checkout` (10 starts per IP a minute). It
+   checks the contact again and compares the key with the current cart: on a
+   difference (another tab, a new price or shipping rate) it answers
+   `409 cart_changed`, and the browser sends the form to the page, which shows the
+   current cart with what was typed and a notice. Then it calls
    `POST /api/payments/stripe/initiate`. The CMS rejects other countries, adds the
-   shipping rate to the current book prices and creates a PaymentIntent and a pending
-   transaction with a new order code, returned as `orderCode`. Without a saved
-   shipping rate, payment is refused.
-3. The Payment Element confirms the payment in the browser and returns to the
-   site, which calls `POST /api/payments/stripe/confirm-order`. The CMS checks the
-   PaymentIntent with Stripe, creates the order with the transaction's code, lowers
-   stock and returns `{ orderID, transactionID, orderCode, … }`. While a SEPA
-   payment is processing, confirmation fails; show the code from step 2.
-4. Webhooks keep the transaction current. On `payment_intent.processing` and
+   shipping rate to the current book prices and creates a PaymentIntent and a
+   pending transaction with a new order code, returned as `orderCode`. Without a
+   saved shipping rate, payment is refused. Astro keeps the PaymentIntent, the
+   contact, the cart contents with prices and the order code in the httpOnly
+   `poetry-checkout` cookie for a day and returns only the client secret. A retry
+   with the same checkout key and contact (a declined card) reuses that
+   PaymentIntent.
+   Otherwise the CMS first cancels the cart's earlier PaymentIntents that are not
+   paid yet (reason `abandoned`) and marks their transactions cancelled, so only
+   the newest one can be paid. It refuses with `409 { "error": "payment_in_progress" }`
+   and creates nothing when an earlier one is processing or paid, when one waits
+   for the buyer (3-D Secure, a Wero redirect) and is younger than 10 minutes, or
+   when another payment start for the cart is running; the site shows „Zahlung
+   läuft bereits“ and keeps its cookie and code. A cart that already has its order
+   gets `409 { "error": "cart_completed" }`; Astro then clears the cart and
+   checkout cookies and sends the buyer to the cart with a neutral notice, as it
+   does when the cart no longer exists.
+4. The browser confirms with `stripe.confirmPayment` and the client secret; Stripe
+   returns to `/shop/checkout/complete`, which calls
+   `POST /api/payments/stripe/confirm-order`. The CMS checks the PaymentIntent
+   with Stripe, creates the order with the transaction's code, lowers stock and
+   returns `{ orderID, transactionID, orderCode, … }`. While a SEPA payment is
+   processing, confirmation fails; show the code from the cookie.
+5. Wallets (Apple Pay, Google Pay) ask for email and a German shipping address in
+   their own sheet with the flat rate. On the element's `confirm` event the browser
+   checks that contact with the same schema (the recipient name is split at its
+   last space; a single name is the last name) and continues with step 3. While
+   the form starts a payment, a press on a wallet button is refused, and the form's
+   button stays disabled while a wallet payment runs.
+6. Webhooks keep the transaction current. On `payment_intent.processing` and
    `payment_intent.payment_failed` the CMS reads the PaymentIntent's current
    status from Stripe, so late or repeated events cannot overwrite a newer state,
    and marks the transaction processing or failed. `payment_intent.succeeded`
@@ -59,12 +97,50 @@ for eight weeks.
    processing once Stripe reports success (a declined card retried, a SEPA debit
    collected).
 
+Without JavaScript the form still posts to the page, which reports field errors;
+paying needs Stripe.js, so a quiet note says so and no payment starts.
+
+## Address suggestions
+
+The street field suggests German addresses from [Photon](https://photon.komoot.io/)
+(OpenStreetMap data, © OpenStreetMap contributors, ODbL; the list shows the
+attribution). The browser asks the Astro route `/api/address?q=`, never komoot
+directly. From 3 characters, after 180 ms without typing, the route asks Photon
+for houses and streets in Germany (`countrycode=DE`, `layer=house`,
+`layer=street`, `lang=de`, `limit=5`) with a 2.5 s timeout and a descriptive
+User-Agent. Answers are cached in memory for a day (500 queries); each IP may
+send 30 uncached queries a minute, and all buyers together 300. The route answers
+only requests with `Sec-Fetch-Site: same-origin`, which browsers send from our
+own pages; other sites and scripts get `403`. When Photon fails or the limit is reached the
+field is a plain text field, without a message. Choosing a suggestion fills
+street and house number (the typed number when Photon only knows the street),
+postcode and city. `PLACE_SEARCH_URL` selects another Photon server, as for the
+CMS place search ([configuration](configuration.md)).
+
+Privacy: what the buyer types into the street field (partial addresses) is sent
+from our server to komoot's public Photon service; the buyer's IP
+address and cookies are not. The privacy policy should name komoot as recipient
+of address searches during checkout, or a self-hosted Photon should replace it.
+The public service has fair-use limits and no availability guarantee.
+
+## Rate limits and the client address
+
+`/api/checkout` and `/api/address` count requests per client IP in memory (one
+Node process; a restart forgets them). Astro takes the IP from the TCP
+connection. Behind a reverse proxy every buyer would then share the proxy's
+address: build with `TRUST_PROXY=true` and a correct `PUBLIC_SITE_URL`, and
+Astro reads `X-Forwarded-For` on requests for that host
+([`security.allowedDomains`](https://docs.astro.build/en/reference/configuration-reference/#securityalloweddomains)).
+The proxy must overwrite, not append to, `X-Forwarded-For`, and the Node server
+must not be reachable around it; otherwise anyone can choose their IP. The
+proxy's own limits (see [deployment](#deployment)) stay the main protection.
+
 ## Order code and status lookup
 
 Every order has a public code: 8 characters of Crockford base32 (no I, L, O or
 U), stored without hyphen and displayed as `K7QD-93FA`. It is created with the
 transaction when payment starts, so buyers see it on the confirmation page even
-for SEPA, and copied to the order. Orders from before codes existed have none.
+for SEPA (the website keeps it in the checkout cookie), and copied to the order. Orders from before codes existed have none.
 
 `POST /api/orders/lookup` with `{ "code", "email" }` and the header
 `x-order-lookup-secret: $ORDER_LOOKUP_SECRET` returns the status buyers see:
@@ -162,8 +238,11 @@ berechnet.`) is a placeholder to confirm with the treasurer.
   before launch.
 - There is no withdrawal function as § 356a BGB requires; it must exist before
   launch.
-- A buyer who pays the same cart in two tabs is charged twice, and the webhook
-  confirms both orders. Refund the duplicate in the Stripe Dashboard.
+- Only the newest PaymentIntent of a cart can be paid. A payment start holds its
+  cart for at most a minute; a slower one that lost the cart to a newer start
+  cancels its own PaymentIntent (reason `duplicate`) and answers
+  `payment_in_progress`. A buyer who pays two different carts (two devices) gets
+  two orders; refund a duplicate in the Stripe Dashboard.
 - Abandoned carts and pending transactions remain in the database.
 
 ## Deployment
