@@ -516,33 +516,23 @@ test.describe("the code field", () => {
     }
   });
 
-  test("cells keep 48 × 56 px when there is room and shrink only as far as 320 px needs", async ({
+  test("the code field is as wide as the email field, with equal cells of at least 2rem", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await open(page);
-    const sizes = await cells(page).evaluateAll((all) =>
-      all.map((cell) => {
-        const { width, height } = cell.getBoundingClientRect();
-        return [Math.round(width), height];
-      }),
-    );
-    expect(sizes).toEqual(Array(8).fill([49, 56]));
-    const field = (await page.locator("#email").boundingBox())!;
-    const input = (await code(page).boundingBox())!;
-    expect(input.width).toBeLessThan(field.width);
-    expect(input.x).toBe(field.x);
-
-    await page.setViewportSize({ width: 320, height: 700 });
-    expect(await noSideScroll(page)).toBe(true);
-    const narrow = (await cells(page).first().boundingBox())!;
-    expect(narrow.width).toBeGreaterThanOrEqual(30);
-    expect(narrow.height).toBe(48);
-    const narrowField = (await page.locator("#email").boundingBox())!;
-    const narrowInput = (await code(page).boundingBox())!;
-    expect(narrowInput.x + narrowInput.width).toBeLessThanOrEqual(
-      narrowField.x + narrowField.width + 0.5,
-    );
+    for (const width of [1280, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page);
+      expect(await noSideScroll(page)).toBe(true);
+      const sizes = await cells(page).evaluateAll((all) =>
+        all.map((cell) => Math.round(cell.getBoundingClientRect().width)),
+      );
+      expect(sizes).toEqual(Array(8).fill(sizes[0]));
+      expect(sizes[0]).toBeGreaterThanOrEqual(32);
+      const field = (await page.locator("#email").boundingBox())!;
+      const input = (await code(page).boundingBox())!;
+      expect(input.x).toBeCloseTo(field.x, 0);
+      expect(input.width).toBeCloseTo(field.width, 0);
+    }
   });
 
   test("Arabic keeps the code left-to-right, the field at the start of the line", async ({
