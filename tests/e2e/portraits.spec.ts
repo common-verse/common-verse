@@ -20,7 +20,8 @@ for (const locale of ["en", "ar"]) {
     const source = await card.locator("img").getAttribute("src");
     expect(source).toMatch(/^data:image\/svg\+xml/);
     await expect(card.locator("img")).toHaveAttribute("alt", "");
-    await page
+    // The featured section links the same author; follow the card's link.
+    await card
       .getByRole("link", { name: "Prototype Collective", exact: true })
       .click();
     await expect(page.locator('main img[data-slot="avatar"]')).toHaveAttribute(

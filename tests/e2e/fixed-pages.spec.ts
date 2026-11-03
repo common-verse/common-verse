@@ -65,14 +65,17 @@ test("missing fixed-page translations use English with its own language and dire
   ).toHaveCount(0);
 });
 
-test("fixed routes reject legacy German paths and preserve language switching", async ({
+test("fixed routes redirect German aliases and preserve language switching", async ({
   page,
   request,
 }) => {
   const response = await request.get("/de/contact?ref=test", {
     maxRedirects: 0,
   });
-  expect(response.status()).toBe(404);
+  expect(response.status()).toBe(301);
+  expect(new URL(response.headers().location, "http://x").pathname).toBe(
+    "/kontakt",
+  );
   await page.goto("/kontakt?ref=test#main");
   await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
   await page.getByRole("link", { name: /^العربية/ }).click();
