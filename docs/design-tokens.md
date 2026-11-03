@@ -106,14 +106,19 @@ Explicit choices are saved in the first-party `poetry-theme` cookie for one year
 shared across locale routes and applied during server rendering to prevent a
 wrong-theme flash.
 
-The header has one theme button. It starts at System; a press switches to the
-opposite of what is currently shown, and later presses toggle Light and Dark.
-Right-click (also Android long-press, the menu key and Shift+F10), Delete or
-Backspace, and a 500 ms touch long-press (iOS fires no `contextmenu`) return to
-System. Its accessible name states the current choice; the description says what
-a press does and how to return to System. A tooltip shows the same on hover
-(pointer devices only, after 350 ms) and keyboard focus; Escape hides it. The
-icon morphs between a half-filled circle, sun and moon with CSS transitions only.
+The header has one theme button. It starts at System, labelled "Automatisch"
+(the stored value stays `system`); a press switches to the opposite of what is
+currently shown, and later presses toggle Light and Dark. Holding the button
+for 500 ms returns to System, the same way for mouse, finger, pen, Enter and
+Space; there is no other shortcut. While it is held after a manual choice, a
+primary-coloured ring fills along its squircle outline, and Android vibrates briefly on the
+switch. Presses act on release, so a hold never toggles first. Its accessible
+name states the current choice; the description says what a press does and how
+to return to System. The tooltip only shows the way back, so it appears only
+after a manual choice: a small squircle drawn like the hold ring, with the
+System label, on hover (pointer devices only, after 350 ms) and keyboard focus; Escape
+hides it. Touch gets no tooltip; the ring explains itself. The icon morphs
+between a half-filled circle, sun and moon with CSS transitions only.
 
 The new theme grows as a circle from the button in a same-document view
 transition of type `theme`, lasting `motion-theme`. Before each switch the

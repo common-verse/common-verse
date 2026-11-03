@@ -11,15 +11,25 @@ for (const locale of ["de", "ar"] as const) {
     const name = locale === "de" ? "Darstellung" : "المظهر";
     const dark = locale === "de" ? "Dunkel" : "داكن";
     const light = locale === "de" ? "Hell" : "فاتح";
-    const system = locale === "de" ? "System" : "النظام";
+    const system = locale === "de" ? "Automatisch" : "تلقائي";
+    const tip = page.locator(".theme-toggle .tip");
     const html = page.locator("html");
     const trigger = page.getByRole("button", { name: new RegExp(`^${name}:`) });
     await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
     await expect(trigger).toBeEnabled();
+    // The tooltip only explains the way back, so System shows none.
+    // A key without an action makes the focus keyboard focus; modifiers alone do not.
+    await trigger.press("x");
+    await expect(trigger).toHaveCSS("outline-width", "3px");
+    // A tooltip fading in still reports hidden at its first frame; wait out the 160 ms fade.
+    await page.waitForTimeout(300);
+    await expect(tip).toBeHidden();
     // From System, the first press shows the opposite of what is visible.
     await trigger.press("Enter");
     await expect(trigger).toHaveAccessibleName(`${name}: ${dark}`);
     await expect(trigger).toBeFocused();
+    await expect(tip).toBeVisible();
+    await expect(tip).toHaveText(system);
     await expect(html).toHaveAttribute("data-theme", "dark");
     const background = await page
       .locator("body")
@@ -53,8 +63,12 @@ for (const locale of ["de", "ar"] as const) {
           .analyze()
       ).violations,
     ).toEqual([]);
-    // Right-click and Delete return to System.
-    await trigger.click({ button: "right" });
+    // Holding the button returns to System, and its release does not toggle again.
+    await trigger.hover();
+    await page.mouse.down();
+    await expect(page.locator(".theme-toggle")).toHaveAttribute("data-holding");
+    await page.waitForTimeout(700);
+    await page.mouse.up();
     await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
     await page.emulateMedia({ colorScheme: "dark" });
     await expect(page.locator("body")).toHaveCSS(
@@ -68,16 +82,19 @@ for (const locale of ["de", "ar"] as const) {
     );
     await trigger.press("Enter");
     await expect(html).toHaveAttribute("data-theme", "dark");
-    await trigger.press("Delete");
+    await page.keyboard.down("Enter");
+    await page.waitForTimeout(700);
+    await page.keyboard.up("Enter");
     await expect(html).toHaveAttribute("data-theme", "system");
+    await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
     await page.goto("/en/events/test");
     await expect(
-      page.getByRole("button", { name: "Appearance: System" }),
+      page.getByRole("button", { name: "Appearance: Automatic" }),
     ).toBeVisible();
   });
 }
 
-test("a touch long-press on the theme toggle returns to System", async ({
+test("holding a finger on the theme toggle returns to System", async ({
   browser,
   baseURL,
 }) => {
@@ -105,6 +122,7 @@ test("a touch long-press on the theme toggle returns to System", async ({
     type: "touchStart",
     touchPoints: [point],
   });
+  await expect(page.locator(".theme-toggle")).toHaveAttribute("data-holding");
   await page.waitForTimeout(700);
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
@@ -128,8 +146,7 @@ test("presses during the theme reveal are not lost", async ({ page }) => {
   await page.mouse.click(x, y);
   await expect(html).toHaveAttribute("data-theme", "light");
   await page.mouse.click(x, y);
-  await page.mouse.click(x, y, { button: "right" });
-  await expect(html).toHaveAttribute("data-theme", "system");
+  await expect(html).toHaveAttribute("data-theme", "dark");
 });
 
 test.describe("server-rendered themes", () => {
