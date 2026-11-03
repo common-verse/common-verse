@@ -7,6 +7,18 @@
       "skillPath": "SKILL.md",
       "computedHash": "bd7ec2979b70d5e4ca6a86e2ad95dc5bc336986ce6b03e0d84dfabbe43611296"
     },
+    "connect-recommend": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/connect-recommend/SKILL.md",
+      "computedHash": "ea56f413bad1817dbfb1e48501676a71e61ddc88e33923e494439eb466cb6d4e"
+    },
+    "connect-required-verification-information": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/connect-required-verification-information/SKILL.md",
+      "computedHash": "e3270fd22bdcf4eced5c8f4893b88af0548af2ad28ffaade4a8524b185a65088"
+    },
     "conventional-git": {
       "source": "samber/cc-skills",
       "sourceType": "github",
@@ -18,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
+    },
+    "metronome": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/metronome/SKILL.md",
+      "computedHash": "b7b614bdbce2a81dd8c54e32472b2947679b1b51c94abe83955b1f3af4f3baf8"
     },
     "payload": {
       "source": "payloadcms/skills",
@@ -61,11 +79,41 @@
       "skillPath": "skills/shadcn-svelte/SKILL.md",
       "computedHash": "5f1ba8c333ac739aa6046c963c282fea41cd130d875f10724a25d36db6b20c21"
     },
+    "stripe-apps": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-apps/SKILL.md",
+      "computedHash": "3c93395fbfacdd7b0365a747d425953a507c9c29c09f90abdf70bec9a5059e90"
+    },
     "stripe-best-practices": {
       "source": "stripe/ai",
       "sourceType": "github",
       "skillPath": "skills/stripe-best-practices/SKILL.md",
       "computedHash": "7e1641c9d20740942259db6e0dfc69ad288bc57bca281f78125449e42ec287b1"
+    },
+    "stripe-directory": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-directory/SKILL.md",
+      "computedHash": "135e17ba02412ce6afc92feefa9b4d70e1e5ecab9cba6d9cb1378be5c8f9cbee"
+    },
+    "stripe-docs": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-docs/SKILL.md",
+      "computedHash": "ee4a51d34f11386fe6c9f991d5b2d32da69c851124a78a01403412bcf87e73d7"
+    },
+    "stripe-pay": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-pay/SKILL.md",
+      "computedHash": "716111154a2f568cd6834cba7660b00be2c10f243bbc44b2e76cd97960d20d4e"
+    },
+    "stripe-projects": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-projects/SKILL.md",
+      "computedHash": "1a4c53864ab1be5d07eac0b0eb9fc2bc367cc39472ae7b805c30f12161951f45"
     },
     "svelte-code-writer": {
       "source": "sveltejs/ai-tools",
@@ -78,6 +126,12 @@
       "sourceType": "github",
       "skillPath": "pm-execution/skills/test-scenarios/SKILL.md",
       "computedHash": "a65c9547fb66a7383323ba6986b18f682a3fa010d6b0b030abc4e68ccb56a54e"
+    },
+    "upgrade-stripe": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/upgrade-stripe/SKILL.md",
+      "computedHash": "6e89fd2a45b9d1fb38909d3ea36e1b92890f95562d71e5d8dc0f76d0861d2391"
     },
     "user-stories": {
       "source": "phuryn/pm-skills",
