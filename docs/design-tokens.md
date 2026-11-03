@@ -119,10 +119,7 @@ manual choice a visually hidden "reset to System" button follows the toggle;
 `tabindex="-1"` keeps it out of the Tab order while the screen reader's own
 cursor reaches it, and focus returns to the toggle after use. Its accessible
 name states the current choice; the description says what a press does and how
-to return to System. The tooltip only shows the way back, so it appears only
-after a manual choice: a small squircle drawn like the hold ring, with the
-System label, on hover (pointer devices only, after 350 ms) and keyboard focus;
-Escape hides it. Touch gets no tooltip; the ring explains itself. The icon
+to return to System. There is no tooltip; the ring explains the hold. The icon
 morphs between a half-filled circle, sun and moon with CSS transitions only.
 
 The new theme grows as a circle from the button in a same-document view

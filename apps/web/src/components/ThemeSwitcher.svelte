@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte'
-  import { getLocaleMetadata, type Locale } from '@poetry/i18n'
+  import type { Locale } from '@poetry/i18n'
   import type { ThemePreference } from '$lib/theme'
   import * as m from '../paraglide/messages.js'
 
@@ -8,7 +8,6 @@
   let theme = $state(untrack(() => preference))
   let prefersDark = $state(false)
   let hydrated = $state(false)
-  let tipOff = $state(false)
   let holding = $state(false)
   const options = $derived({ locale })
   const names = $derived({ light: m.theme_light({}, options), dark: m.theme_dark({}, options), system: m.theme_system({}, options) })
@@ -112,7 +111,6 @@
   // Enter clicks on press and Space on release; both wait for the release here, so a held key can count.
   const isPress = (event: KeyboardEvent) => event.key === 'Enter' || event.key === ' '
   function onkeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') tipOff = true
     if (!isPress(event)) return
     event.preventDefault()
     if (event.repeat) return
@@ -128,7 +126,7 @@
   }
 </script>
 
-<div class="theme-toggle" data-manual={theme !== 'system' || undefined} data-holding={holding || undefined} data-tip-off={tipOff || undefined}>
+<div class="theme-toggle" data-holding={holding || undefined}>
   <button
     bind:this={button}
     class="theme-button"
@@ -144,8 +142,6 @@
     onpointerup={endPointerHold}
     onpointercancel={endPointerHold}
     onpointerleave={endPointerHold}
-    onblur={() => (tipOff = false)}
-    onmouseleave={() => (tipOff = false)}
   >
     <!-- Lucide's squircle, starting at the top centre and running clockwise. -->
     <svg class="hold" viewBox="2.4 2.4 19.2 19.2" aria-hidden="true" focusable="false"><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" pathLength="100" /></svg>
@@ -160,11 +156,6 @@
       <path class="rays" d="M19.4 12L21.9 12M17.23 17.23L19 19M12 19.4L12 21.9M6.77 17.23L5 19M4.6 12L2.1 12M6.77 6.77L5 5M12 4.6L12 2.1M17.23 6.77L19 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
     </svg>
   </button>
-  <!-- Only the way back to System, drawn like the ring a hold fills; the press itself needs no explanation. -->
-  <span class="tip" dir={getLocaleMetadata(locale).direction} aria-hidden="true">
-    <svg class="tip-ring" viewBox="0 0 24 24" focusable="false"><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" /><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" pathLength="100" /></svg>
-    {names.system}
-  </span>
   {#if theme !== 'system'}
     <!-- Reached by the screen reader's own cursor; tabindex -1 keeps it out of the Tab order. -->
     <button type="button" class="sr-only" tabindex="-1" onclick={resetForScreenReader}>{m.theme_reset({ theme: names.system }, options)}</button>
@@ -198,72 +189,6 @@
   .theme-button:hover {
     background: var(--accent);
   }
-  /* Tooltip: hover where hover exists, and keyboard focus; Escape hides it. Physical side: the header is LTR. */
-  .tip {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.625rem;
-    border-radius: 0.625rem;
-    corner-shape: squircle;
-    background: var(--foreground);
-    color: var(--background);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    translate: 0 -2px;
-    pointer-events: none;
-    transition:
-      opacity var(--motion-fast) var(--motion-ease),
-      translate var(--motion-fast) var(--motion-ease),
-      visibility var(--motion-fast);
-  }
-  /* Bridges the gap so the pointer can move onto the tooltip. */
-  .tip::before {
-    content: '';
-    position: absolute;
-    inset: -0.625rem 0 100% 0;
-  }
-  @media (hover: hover) {
-    [data-manual]:hover .tip {
-      opacity: 1;
-      visibility: visible;
-      translate: 0 0;
-      pointer-events: auto;
-      transition-delay: 350ms;
-    }
-  }
-  [data-manual]:has(:focus-visible) .tip {
-    opacity: 1;
-    visibility: visible;
-    translate: 0 0;
-  }
-  .theme-toggle[data-tip-off] .tip {
-    opacity: 0;
-    visibility: hidden;
-    transition-delay: 0s;
-  }
-  .tip-ring {
-    inline-size: 1rem;
-    block-size: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-  }
-  .tip-ring path:first-child {
-    opacity: 0.35;
-  }
-  .tip-ring path:last-child {
-    stroke-dasharray: 30 100;
-    stroke-linecap: round;
-  }
-
   /* A held button fills this ring in 500 ms, then the theme returns to System. */
   .hold {
     position: absolute;

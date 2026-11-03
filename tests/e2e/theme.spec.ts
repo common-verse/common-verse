@@ -12,24 +12,14 @@ for (const locale of ["de", "ar"] as const) {
     const dark = locale === "de" ? "Dunkel" : "داكن";
     const light = locale === "de" ? "Hell" : "فاتح";
     const system = locale === "de" ? "Automatisch" : "تلقائي";
-    const tip = page.locator(".theme-toggle .tip");
     const html = page.locator("html");
     const trigger = page.getByRole("button", { name: new RegExp(`^${name}:`) });
     await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
     await expect(trigger).toBeEnabled();
-    // The tooltip only explains the way back, so System shows none.
-    // A key without an action makes the focus keyboard focus; modifiers alone do not.
-    await trigger.press("x");
-    await expect(trigger).toHaveCSS("outline-width", "3px");
-    // A tooltip fading in still reports hidden at its first frame; wait out the 160 ms fade.
-    await page.waitForTimeout(300);
-    await expect(tip).toBeHidden();
     // From System, the first press shows the opposite of what is visible.
     await trigger.press("Enter");
     await expect(trigger).toHaveAccessibleName(`${name}: ${dark}`);
     await expect(trigger).toBeFocused();
-    await expect(tip).toBeVisible();
-    await expect(tip).toHaveText(system);
     await expect(html).toHaveAttribute("data-theme", "dark");
     const background = await page
       .locator("body")
