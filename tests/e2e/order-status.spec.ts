@@ -516,7 +516,7 @@ test.describe("the code field", () => {
     }
   });
 
-  test("the code field is as wide as the email field, with equal cells of at least 2rem", async ({
+  test("the code field is as wide as the email field, with equal cells, and the form keeps its minimum width", async ({
     page,
   }) => {
     for (const width of [1280, 320]) {
@@ -532,6 +532,7 @@ test.describe("the code field", () => {
       const input = (await code(page).boundingBox())!;
       expect(input.x).toBeCloseTo(field.x, 0);
       expect(input.width).toBeCloseTo(field.width, 0);
+      expect(field.width).toBeGreaterThanOrEqual(288);
     }
   });
 

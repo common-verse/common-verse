@@ -87,7 +87,8 @@
 </form>
 
 <style>
-  form { display: grid; gap: var(--space-2xs); }
+  /* Never narrower than on the smallest supported phone: 320px minus the 1rem gutters. */
+  form { display: grid; gap: var(--space-2xs); min-inline-size: 18rem; }
   .status-problem { display: grid; margin-block-start: var(--space-2xs); font-size: var(--font-size-sm); line-height: 1.5; }
   .status-problem p { grid-area: 1 / 1; margin: 0; color: var(--error-text); font-weight: 600; }
   .status-problem p:not([data-active]) { visibility: hidden; }

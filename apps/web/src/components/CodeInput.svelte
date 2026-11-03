@@ -168,14 +168,13 @@
   .code-box {
     container-type: inline-size;
   }
-  /* As wide as the other fields; cells share the width but never get narrower than 2rem. */
+  /* As wide as the other fields; the form's minimum width keeps the cells usable. */
   .code-input {
     --code-gap: 1.5rem;
-    --cell-inline: max(2rem, (100cqi - var(--code-gap)) / 8);
+    --cell-inline: calc((100cqi - var(--code-gap)) / 8);
     position: relative;
     display: grid;
     inline-size: 100%;
-    min-inline-size: calc(8 * 2rem + var(--code-gap));
     block-size: clamp(3rem, var(--cell-inline) * 7 / 6, 3.5rem);
     /* Monospace with a slashed or dotted zero, so 0 never reads as O. */
     font-family: ui-monospace, Menlo, Monaco, Consolas, 'Cascadia Mono', 'Roboto Mono', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
