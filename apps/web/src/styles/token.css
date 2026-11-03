@@ -102,7 +102,6 @@
   --pink: #ff3d5e;
   --green: #00c853;
   --red: #d70000;
-  --red-on-dark: #ff8a80;
 
   /* Dark elevation: white at low alpha, so nested cards accumulate light. */
   --surface-overlay: oklch(from var(--white) l c h / 5%);
@@ -154,7 +153,10 @@
   /* Error red fills, borders and icons; error-text is the readable text role. */
   --error: var(--red);
   --error-foreground: var(--white);
-  --error-text: light-dark(var(--red), var(--red-on-dark));
+  --error-text: light-dark(
+    var(--red),
+    color-mix(in oklch, var(--red) 65%, var(--white))
+  );
 
   /* Opaque in both modes so scrolling content cannot show through. */
   --header-background: light-dark(

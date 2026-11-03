@@ -9,14 +9,13 @@ typography, geometry tokens, shadows, and `color-scheme` selection.
 
 Only these HEX inputs define the palette:
 
-| Input         | Value   | Purpose                                 |
-| ------------- | ------- | --------------------------------------- |
-| `black`       | #101010 | Ink, dark page                          |
-| `white`       | #FDFDFC | Paper, light page                       |
-| `pink`        | #FF3D5E | Primary brand colour                    |
-| `green`       | #00C853 | Success                                 |
-| `red`         | #D70000 | Error fills, field borders, error icons |
-| `red-on-dark` | #FF8A80 | Readable error text in dark mode        |
+| Input   | Value   | Purpose                                 |
+| ------- | ------- | --------------------------------------- |
+| `black` | #101010 | Ink, dark page                          |
+| `white` | #FDFDFC | Paper, light page                       |
+| `pink`  | #FF3D5E | Primary brand colour                    |
+| `green` | #00C853 | Success                                 |
+| `red`   | #D70000 | Error fills, field borders, error icons |
 
 The system is monochrome: surfaces, text, borders and the header are mixes of
 black and white without a brand tint. Pink is the only brand colour. Semantic
@@ -69,7 +68,8 @@ therefore still show a visible change on hover.
 There are two statuses. `error` (= `destructive`) is a real red, kept clearly
 apart from the pink: it fills icons and destructive controls with white labels
 and marks invalid field borders; it is never a button fill for actions. Text
-uses `error-text`, which is the same red in light mode and #FF8A80 in dark mode.
+uses `error-text`, which is the same red in light mode and 65% red mixed into
+white in dark mode (#EE7969, at least 5:1 on three nested cards).
 `success` is green with black labels. Info and warning are not statuses.
 
 Use semantic Tailwind utilities such as `bg-primary text-primary-foreground`,
