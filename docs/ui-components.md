@@ -170,7 +170,9 @@ The street field (`AddressField`) is an ARIA 1.2 combobox with a listbox popup
 that overlays the fields below. ↓/↑ move through the suggestions (wrapping), Enter
 picks, Escape closes only the list, Tab closes it; a pointer or tap picks without
 moving focus. A polite status line announces the number of suggestions and the
-picked address. Browser autofill does not open suggestions. See
+picked address. Browser autofill does not open suggestions. Escape, leaving the
+field, a pick or new typing abort the running search; a late answer never reopens
+the list. See
 [shop](shop.md#address-suggestions) for the data source.
 
 The confirmation and a found order status use the same split (`OrderLayout`), so
@@ -188,6 +190,21 @@ summary's quantity badge is a squircle; circles are only in the timeline. The st
 with two `Field`s; its one-line answers share a grid cell, so the longest sets the
 height and no answer moves the page. Server-rendered field errors focus the first
 field; an answer below the button takes focus.
+
+The order code field (`CodeInput`) is one real text input, invisible over eight
+drawn cells (4 + dash + 4, each group joined like shadcn's input-otp), so it is
+one tab stop and one textbox for screen readers. Cells are 48 × 56 px at most and
+shrink only as far as a 320 px screen needs; the code stays left-to-right in
+every language and uses a monospace face whose zero is slashed. Typing and paste
+read the code as the CMS does (O as 0, I and L as 1) without a message; a pasted
+sentence or status link fills all cells. A caret inside the code marks one
+character, which typing replaces; ←/→ move one cell, Home/End jump. The one focus
+ring is on the active cell, or around the whole code while it is selected.
+Without JavaScript it is a plain text field of the same size. When the eighth
+character is entered, the form is sent if the email is valid, otherwise the email
+gets focus and the form is sent when it is left valid or with Enter; a code from
+the confirmation link also focuses the email. A pair that was just answered is
+not sent again on its own, and one press sends the form once.
 
 From the shop to checkout the new page slides in from the right while the header
 stays; on wide screens the cart lines move into the summary. Back slides the other

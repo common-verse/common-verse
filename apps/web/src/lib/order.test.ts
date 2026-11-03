@@ -3,9 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { rateLimiter } from "./address";
 import {
   decodeReceipt,
-  formatCode,
   limitedLookup,
-  normalizeCode,
   orderSteps,
   parseLookup,
   returnOutcome,
@@ -16,23 +14,6 @@ const form = (entries: Record<string, string>) => {
   for (const [key, value] of Object.entries(entries)) data.set(key, value);
   return data;
 };
-
-describe("order code", () => {
-  it.each([
-    ["k7qd-93fa", "K7QD93FA"],
-    [" K7QD 93FA ", "K7QD93FA"],
-    ["oiL0-0000", "01100000"],
-    ["K7QD-93F", null],
-    ["K7QD-93FU", null],
-    [undefined, null],
-  ])("reads %o as %o, like the CMS", (value, expected) => {
-    expect(normalizeCode(value)).toBe(expected);
-  });
-
-  it("shows the code in two groups", () => {
-    expect(formatCode("K7QD93FA")).toBe("K7QD-93FA");
-  });
-});
 
 describe("status form", () => {
   it("accepts a typed code and an email", () => {

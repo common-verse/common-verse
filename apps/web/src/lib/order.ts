@@ -3,27 +3,13 @@ import type { OrderLookup, OrderLookupStatus } from "@poetry/types";
 import { rateLimiter } from "./address";
 import { type } from "arktype";
 import { email } from "./checkout";
+import { normalizeCode } from "./order-code";
 import { eventFormatLocale } from "./event-date";
 import type { PaymentFacts } from "./payment";
 import * as m from "../paraglide/messages.js";
 
 /** Placeholder until the association names its shop address. */
 export const shopEmail = "shop@thepoetryproject.de";
-
-/** Reads what buyers type as the CMS does: any case, hyphens, spaces, and O, I or L for 0 and 1. */
-export function normalizeCode(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const code = value
-    .toUpperCase()
-    .replace(/[\s-]/g, "")
-    .replace(/O/g, "0")
-    .replace(/[IL]/g, "1");
-  return /^[0-9A-HJKMNP-TV-Z]{8}$/.test(code) ? code : null;
-}
-
-/** `K7QD93FA` → `K7QD-93FA`. */
-export const formatCode = (code: string) =>
-  `${code.slice(0, 4)}-${code.slice(4)}`;
 
 export const formatOrderDate = (date: string, locale: Locale) =>
   new Intl.DateTimeFormat(eventFormatLocale(locale), {

@@ -14,6 +14,9 @@ export const cartCountCookie = "poetry-cart-count";
 export const checkoutCookie = "poetry-checkout";
 export const orderCookie = "poetry-order";
 
+/** An email address as checkout and the status page accept it (the checkout also limits its length). */
+export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export interface CartAccess {
   id: string;
   secret: string;

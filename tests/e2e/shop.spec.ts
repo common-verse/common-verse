@@ -1783,6 +1783,63 @@ test("the street field suggests addresses: keyboard picks, Escape closes only th
   ).toHaveText("Übernommen: Hermannstraße 12, 12049 Berlin.");
 });
 
+test("a late address answer after Escape, leaving or new typing never reopens the list", async ({
+  page,
+}) => {
+  await stubStripe(page, "decline");
+  // Photon answers slowly: every search waits until the test lets it go.
+  const pending: (() => Promise<void>)[] = [];
+  await page.route("**/api/address?**", (route) => {
+    pending.push(() =>
+      route
+        .fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({
+            suggestions: [
+              {
+                line1: "Weserstraße 12",
+                postalCode: "12047",
+                city: "Berlin",
+                area: "Neukölln",
+              },
+            ],
+          }),
+        })
+        // The page aborted the request.
+        .catch(() => {}),
+    );
+  });
+  const answerAll = async () => {
+    await Promise.all(pending.splice(0).map((answer) => answer()));
+    await page.waitForTimeout(100);
+  };
+  await addToCart(page, "/shop/beside-me");
+  await page.goto("/shop/checkout");
+  await hydrated(page, ".checkout-form");
+  const street = page.getByRole("combobox", { name: "Straße und Hausnummer" });
+  const list = page.getByRole("listbox", { name: "Adressvorschläge" });
+
+  await street.pressSequentially("Weserstraße 12");
+  await expect.poll(() => pending.length).toBeGreaterThan(0);
+  await street.press("Escape");
+  await answerAll();
+  await expect(list).toBeHidden();
+  await expect(street).toHaveAttribute("aria-expanded", "false");
+
+  await street.press("Backspace");
+  await expect.poll(() => pending.length).toBeGreaterThan(0);
+  await page.locator("#postalCode").focus();
+  await street.focus();
+  await answerAll();
+  await expect(list).toBeHidden();
+
+  // Only the answer to the latest typing opens the list.
+  await street.pressSequentially("2");
+  await expect.poll(() => pending.length).toBeGreaterThan(0);
+  await answerAll();
+  await expect(list.getByRole("option")).toHaveCount(1);
+});
+
 test.describe("on a touch screen", () => {
   test.use({
     hasTouch: true,

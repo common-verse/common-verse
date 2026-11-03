@@ -30,10 +30,18 @@
   let status = $state('')
   let timer: ReturnType<typeof setTimeout> | undefined
   let request: AbortController | undefined
+  // Counts searches and dismissals: only the latest search, not dismissed since, may open the list.
+  let sequence = 0
   onMount(() => {
     hydrated = true
-    return () => { clearTimeout(timer); request?.abort() }
+    return cancel
   })
+
+  function cancel() {
+    sequence++
+    clearTimeout(timer)
+    request?.abort()
+  }
 
   function close() {
     open = false
@@ -41,30 +49,33 @@
   }
 
   async function search(query: string) {
-    request?.abort()
+    cancel()
+    const current = sequence
     request = new AbortController()
+    let found: AddressSuggestion[]
     try {
       const response = await fetch(`/api/address?q=${encodeURIComponent(query)}`, { signal: request.signal })
-      suggestions = response.ok ? ((await response.json()).suggestions ?? []) : []
+      found = response.ok ? ((await response.json()).suggestions ?? []) : []
     } catch {
-      // Aborted by newer typing, offline or Photon down: no suggestions, no message.
+      // Aborted by newer typing or a dismissal, offline or Photon down: no suggestions, no message.
       return
     }
+    // A late answer after Escape, a pick, newer typing or leaving the field stays closed.
+    if (current !== sequence || document.activeElement?.id !== id) return
+    suggestions = found
     active = -1
-    // An answer arriving after the buyer left the field stays closed.
-    open = suggestions.length > 0 && document.activeElement?.id === id
+    open = suggestions.length > 0
     status = open ? m.shop_address_count({ count: formatNumber(suggestions.length, locale) }, options) : ''
   }
 
   function typed(event: Event) {
     oninput?.(event)
-    clearTimeout(timer)
+    cancel()
     // Autofill fills street, postcode and city at once; it needs no suggestions.
     const input = event as InputEvent
     if (!input.inputType || input.inputType === 'insertReplacementText') return close()
     const query = (event.currentTarget as HTMLInputElement).value.trim()
     if (query.length < minQueryLength) {
-      request?.abort()
       suggestions = []
       return close()
     }
@@ -74,6 +85,7 @@
   function pick(index: number) {
     const suggestion = suggestions[index]
     if (!suggestion) return
+    cancel()
     onpick(suggestion)
     close()
     suggestions = []
@@ -90,10 +102,13 @@
     } else if (event.key === 'Enter' && open && active >= 0) {
       event.preventDefault()
       pick(active)
-    } else if (event.key === 'Escape' && open) {
+    } else if (event.key === 'Escape') {
       // Closes only the list, not a notice or the page's other Escape handlers.
-      event.preventDefault()
-      event.stopPropagation()
+      if (open) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      cancel()
       close()
     } else if (event.key === 'Tab') close()
   }
@@ -111,7 +126,7 @@
         {...attributes}
         bind:value
         oninput={typed}
-        onblur={() => { close(); onblur?.() }}
+        onblur={() => { cancel(); close(); onblur?.() }}
         onkeydown={keydown}
         role={hydrated ? 'combobox' : undefined}
         aria-autocomplete={hydrated ? 'list' : undefined}

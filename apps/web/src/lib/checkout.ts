@@ -1,6 +1,7 @@
 import type { Locale } from "@poetry/i18n";
 import { type } from "arktype";
 import * as m from "../paraglide/messages.js";
+import { emailPattern } from "./shop";
 
 // Kept apart from shop.ts: ArkType is large, and only the checkout needs it in the browser.
 
@@ -53,7 +54,7 @@ export type CheckoutResult =
       tooLong: boolean;
     };
 
-export const email = type(/^[^\s@]+@[^\s@]+\.[^\s@]+$/).and("string <= 254");
+export const email = type(emailPattern).and("string <= 254");
 const filled = type("string > 0");
 /** Crockford base32 without hyphen, as the CMS stores it. */
 const orderCode = type(/^[0-9A-HJKMNP-TV-Z]{8}$/);

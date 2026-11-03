@@ -14,7 +14,10 @@ test.beforeEach(async ({ context }) => {
 });
 
 async function lookUp(page: Page, code: string, address = email) {
-  await page.locator("#code").fill(code);
+  // Not fill(): it selects before focusing, and the code field puts a focused caret after the code.
+  await page.locator("#code").focus();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.insertText(code);
   await page.locator("#email").fill(address);
   await page
     .getByRole("button", { name: /Status anzeigen|Show status|عرض الحالة/ })
@@ -115,18 +118,22 @@ test("a wrong email or code gets one quiet answer in a reserved place", async ({
   expect([await button.boundingBox(), await privacy.boundingBox()]).toEqual(
     before,
   );
-  await expect(page.locator("#code")).toHaveValue("PA1D-0002");
+  await expect(page.locator("#code")).toHaveValue("PA1D0002");
   await expect(page.locator("#email")).toHaveValue("someone@example.org");
 
-  // Keyboard only: Shift+Tab from the message back to the email, then to the code; Enter sends.
+  // Keyboard only: Shift+Tab from the message back to the email, then to the code;
+  // the eighth character sends the form, since the email is valid.
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Shift+Tab");
   await expect(page.locator("#code")).toBeFocused();
   await page.keyboard.press("ControlOrMeta+a");
+  const sent = page.waitForResponse(
+    (response) => response.request().method() === "POST",
+  );
   await page.keyboard.type("zzzz-zzzz");
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#code")).toHaveValue("ZZZZ-ZZZZ");
+  await sent;
+  await expect(page.locator("#code")).toHaveValue("ZZZZZZZZ");
   await expect(message).toHaveText(
     "Keine Bestellung gefunden. Prüfe Bestellcode und E-Mail-Adresse.",
   );
@@ -233,4 +240,326 @@ test("at 375px no focused control hides under the bottom bar, including the foot
     content: ".site-header nav { translate: none !important; }",
   });
   await expectFocusNeverObscured(page, ".site-footer nav a >> nth=-1");
+});
+
+test.describe("the code field", () => {
+  const code = (page: Page) => page.locator("#code");
+  const cells = (page: Page) => page.locator(".code-cell");
+  const hydrated = (page: Page) =>
+    expect(page.locator("astro-island:has(#code)")).not.toHaveAttribute("ssr");
+  const open = async (page: Page, path = "/bestellstatus") => {
+    await page.goto(path);
+    await hydrated(page);
+  };
+  const paste = (page: Page, text: string) =>
+    code(page).evaluate((input, text) => {
+      const data = new DataTransfer();
+      data.setData("text/plain", text);
+      input.dispatchEvent(
+        new ClipboardEvent("paste", {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    }, text);
+  const selection = (page: Page) =>
+    code(page).evaluate((input: HTMLInputElement) => [
+      input.selectionStart,
+      input.selectionEnd,
+    ]);
+  /** Every element in the code field that draws an outline. */
+  const rings = (page: Page) =>
+    page.locator(".code-box").evaluate((box) =>
+      [box, ...Array.from(box.querySelectorAll("*"))]
+        .filter((element) => {
+          const style = getComputedStyle(element);
+          return style.outlineStyle !== "none" && style.outlineWidth !== "0px";
+        })
+        .map((element) =>
+          element.matches(".code-cell")
+            ? `cell ${Array.from(box.querySelectorAll(".code-cell")).indexOf(element)}`
+            : element.className.split(" ")[0] || element.tagName,
+        ),
+    );
+
+  test("typing reads O, I and L as 0 and 1, skips other characters and moves on to the email", async ({
+    page,
+  }) => {
+    await open(page);
+    await code(page).click();
+    await page.keyboard.type("k7-qu d");
+    await expect(code(page)).toHaveValue("K7QD");
+    await page.keyboard.type("o1l");
+    await expect(code(page)).toHaveValue("K7QD011");
+    await expect(cells(page)).toHaveText([
+      "K",
+      "7",
+      "Q",
+      "D",
+      "0",
+      "1",
+      "1",
+      "",
+    ]);
+    await expect(page.locator("#email")).not.toBeFocused();
+    await page.keyboard.type("I");
+    await expect(code(page)).toHaveValue("K7QD0111");
+    await expect(page.locator("#email")).toBeFocused();
+    // One text field for assistive technology; the cells are drawn for the eye.
+    await expect(
+      page.getByRole("textbox", { name: "Bestellcode" }),
+    ).toHaveCount(1);
+    await expect(page.locator(".code-cells")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
+  test("a pasted link, sentence or spaced code fills all cells; a part goes in at the caret", async ({
+    page,
+  }) => {
+    await open(page);
+    for (const text of [
+      "https://thepoetryproject.de/bestellstatus?code=sh1p0003",
+      "Bestellcode: SH1P-0003",
+      "sh1p 0003",
+    ]) {
+      await code(page).focus();
+      await page.keyboard.press("ControlOrMeta+a");
+      await page.keyboard.press("Backspace");
+      await paste(page, text);
+      await expect(code(page)).toHaveValue("SH1P0003");
+    }
+    await code(page).focus();
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.press("Backspace");
+    await page.keyboard.type("sh");
+    await paste(page, "1p-o");
+    await expect(code(page)).toHaveValue("SH1P0");
+    await expect(page.locator(".code-cell[data-caret]")).toHaveCount(1);
+    await expect.poll(() => selection(page)).toEqual([5, 5]);
+  });
+
+  test("arrows move one cell, typing replaces the marked character, Backspace deletes it", async ({
+    page,
+  }) => {
+    await open(page);
+    await code(page).focus();
+    await page.keyboard.type("K7QD");
+    await expect.poll(() => selection(page)).toEqual([4, 4]);
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowLeft");
+    await expect.poll(() => selection(page)).toEqual([2, 3]);
+    await expect(page.locator(".code-cell[data-active]")).toHaveText("Q");
+    await page.keyboard.type("x");
+    await expect(code(page)).toHaveValue("K7XD");
+    await expect.poll(() => selection(page)).toEqual([3, 4]);
+    // A character a code cannot hold keeps the marked one.
+    await page.keyboard.type("u");
+    await expect(code(page)).toHaveValue("K7XD");
+    await page.keyboard.press("Backspace");
+    await expect(code(page)).toHaveValue("K7X");
+    await page.keyboard.press("Home");
+    await expect.poll(() => selection(page)).toEqual([0, 1]);
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => selection(page)).toEqual([1, 2]);
+    await page.keyboard.press("End");
+    await expect.poll(() => selection(page)).toEqual([3, 3]);
+    await page.keyboard.press("Backspace");
+    await expect(code(page)).toHaveValue("K7");
+    // A click on a cell puts the caret there, at most after the last character.
+    // The invisible field lies over the cells and takes the click.
+    await cells(page).nth(0).click({ force: true });
+    await expect.poll(() => selection(page)).toEqual([0, 1]);
+    await cells(page).nth(6).click({ force: true });
+    await expect.poll(() => selection(page)).toEqual([2, 2]);
+  });
+
+  test("one tab stop and one focus ring: the active cell, or the whole code while it is selected", async ({
+    page,
+  }) => {
+    await open(page);
+    await page.locator("label[for=code]").click();
+    await expect(code(page)).toBeFocused();
+    await expect.poll(() => rings(page)).toEqual(["cell 0"]);
+    await page.keyboard.type("K7");
+    await expect.poll(() => rings(page)).toEqual(["cell 2"]);
+    await page.keyboard.press("ControlOrMeta+a");
+    await expect.poll(() => rings(page)).toEqual(["code-input"]);
+    await page.keyboard.press("Tab");
+    await expect(page.locator("#email")).toBeFocused();
+    await expect.poll(() => rings(page)).toEqual([]);
+    // Tab selects the whole code, as in any text field: typing replaces it.
+    await page.keyboard.press("Shift+Tab");
+    await expect(code(page)).toBeFocused();
+    await expect.poll(() => selection(page)).toEqual([0, 2]);
+    await expect.poll(() => rings(page)).toEqual(["code-input"]);
+  });
+
+  test("the eighth character sends the form when the email is already valid", async ({
+    page,
+  }) => {
+    await open(page);
+    await page.locator("#email").fill(email);
+    await code(page).click();
+    await page.keyboard.type("pa1d000");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Bestellstatus",
+    );
+    await page.keyboard.type("2");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Bezahlt, wird gepackt",
+    );
+  });
+
+  test("otherwise the email is next, and leaving it or Enter sends the form once", async ({
+    page,
+  }) => {
+    const posts: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() === "POST") posts.push(request.url());
+    });
+    await open(page);
+    await code(page).click();
+    await page.keyboard.type("SH1P0003");
+    await expect(page.locator("#email")).toBeFocused();
+    await page.keyboard.type(email);
+    // Back to the code to check it does not send the form.
+    await page.keyboard.press("Shift+Tab");
+    await expect(code(page)).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.locator("#email")).toBeFocused();
+    expect(posts).toEqual([]);
+    // Leaving by pressing the button sends once, not once for the blur and once for the press,
+    // even when the press takes as long as a person's and the answer longer.
+    await page.route("**/bestellstatus", async (route) => {
+      if (route.request().method() === "POST")
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      await route.continue();
+    });
+    await page.getByRole("button", { name: "Status anzeigen" }).hover();
+    await page.mouse.down();
+    await page.waitForTimeout(200);
+    await page.mouse.up();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Versendet",
+    );
+    expect(posts).toHaveLength(1);
+
+    await open(page);
+    await code(page).click();
+    await page.keyboard.type("SH1P0003");
+    await page.keyboard.type(email);
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Versendet",
+    );
+  });
+
+  test("a code from the link focuses the email; leaving it sends the form", async ({
+    page,
+  }) => {
+    await open(page, "/bestellstatus?code=sh1p0003");
+    await expect(page.locator("#email")).toBeFocused();
+    await expect(code(page)).toHaveValue("SH1P0003");
+    await page.keyboard.type(email);
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Versendet",
+    );
+  });
+
+  test("after „not found“ leaving the email does not send the same pair again", async ({
+    page,
+  }) => {
+    await open(page);
+    await lookUp(page, "PA1D-0002", "someone@example.org");
+    await expect(page.locator("#status-problem")).toBeFocused();
+    await hydrated(page);
+    const posts: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() === "POST") posts.push(request.url());
+    });
+    await page.locator("#email").focus();
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(300);
+    expect(posts).toEqual([]);
+  });
+
+  test("hydration moves nothing: the plain field without JavaScript has the cells' size", async ({
+    browser,
+  }) => {
+    for (const width of [320, 1280]) {
+      const boxes = [];
+      for (const javaScriptEnabled of [false, true]) {
+        const context = await browser.newContext({
+          javaScriptEnabled,
+          viewport: { width, height: 900 },
+        });
+        const page = await context.newPage();
+        await page.goto("/bestellstatus?code=SH1P0003");
+        if (javaScriptEnabled) await hydrated(page);
+        else {
+          await expect(code(page)).toHaveValue("SH1P-0003");
+          await expect(page.locator(".code-cells")).toBeHidden();
+        }
+        boxes.push([
+          await code(page).boundingBox(),
+          await page
+            .getByRole("button", { name: "Status anzeigen" })
+            .boundingBox(),
+        ]);
+        await context.close();
+      }
+      expect(boxes[1]).toEqual(boxes[0]);
+    }
+  });
+
+  test("cells keep 48 × 56 px when there is room and shrink only as far as 320 px needs", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page);
+    const sizes = await cells(page).evaluateAll((all) =>
+      all.map((cell) => {
+        const { width, height } = cell.getBoundingClientRect();
+        return [Math.round(width), height];
+      }),
+    );
+    expect(sizes).toEqual(Array(8).fill([49, 56]));
+    const field = (await page.locator("#email").boundingBox())!;
+    const input = (await code(page).boundingBox())!;
+    expect(input.width).toBeLessThan(field.width);
+    expect(input.x).toBe(field.x);
+
+    await page.setViewportSize({ width: 320, height: 700 });
+    expect(await noSideScroll(page)).toBe(true);
+    const narrow = (await cells(page).first().boundingBox())!;
+    expect(narrow.width).toBeGreaterThanOrEqual(30);
+    expect(narrow.height).toBe(48);
+    const narrowField = (await page.locator("#email").boundingBox())!;
+    const narrowInput = (await code(page).boundingBox())!;
+    expect(narrowInput.x + narrowInput.width).toBeLessThanOrEqual(
+      narrowField.x + narrowField.width + 0.5,
+    );
+  });
+
+  test("Arabic keeps the code left-to-right, the field at the start of the line", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, "/ar/order-status");
+    await code(page).click();
+    await page.keyboard.type("K7");
+    const [k, seven] = await Promise.all([
+      cells(page).nth(0).boundingBox(),
+      cells(page).nth(1).boundingBox(),
+    ]);
+    expect(k!.x).toBeLessThan(seven!.x);
+    const field = (await page.locator("#email").boundingBox())!;
+    const input = (await code(page).boundingBox())!;
+    expect(input.x + input.width).toBeCloseTo(field.x + field.width, 0);
+    await expectAccessible(page);
+  });
 });

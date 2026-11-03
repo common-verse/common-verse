@@ -2,16 +2,17 @@
 import { ORDER_LOOKUP_SECRET } from 'astro:env/server'
 import { ShieldCheck } from 'lucide-svelte'
 import { Button } from '$lib/components/ui/button'
-import { Field } from '$lib/components/ui/field'
 import { Heading } from '$lib/components/ui/heading'
 import { Text } from '$lib/components/ui/text'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import type { OrderLookup } from '@poetry/types'
+import OrderLookupForm from '../../components/OrderLookupForm.svelte'
 import OrderLayout from '../../components/OrderLayout.astro'
 import OrderSteps from '../../components/OrderSteps.astro'
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { lookupOrder } from '../../lib/cms'
-import { formatCode, limitedLookup, lookupAttempts, normalizeCode, orderSteps, parseLookup, shopEmail, statusLabel, type LookupField } from '../../lib/order'
+import { limitedLookup, lookupAttempts, orderSteps, parseLookup, shopEmail, statusLabel, type LookupField } from '../../lib/order'
+import { formatCode, normalizeCode } from '../../lib/order-code'
 import { formatPrice } from '../../lib/shop'
 import * as m from '../../paraglide/messages.js'
 
@@ -44,16 +45,6 @@ if (Astro.request.method === 'POST') {
   }
 }
 
-const problems = {
-  not_found: t(m.order_status_not_found),
-  too_many: t(m.order_status_too_many),
-  unavailable: t(m.order_status_unavailable),
-}
-const firstError = (['code', 'email'] as const).find((field) => errors[field])
-const fieldMessages = {
-  code: { required: t(m.shop_error_required), invalid: t(m.order_status_error_code) },
-  email: { required: t(m.shop_error_required), invalid: t(m.shop_error_email) },
-}
 const lines = (order?.items ?? []).map((item, index) => ({ id: String(index), title: item.title, titleLanguage: null, quantity: item.quantity }))
 const title = order ? statusLabel(order.status, locale) : t(m.order_status_title)
 // The shop's address sits inside the translated sentence as a link.
@@ -85,24 +76,7 @@ const [orderBefore, orderAfter] = m.order_status_of({ code: '\u0000' }, options)
     <section class="status-lookup">
       <Heading level={1}>{title}</Heading>
       <Text>{t(m.order_status_intro)}</Text>
-      <form method="post" action={path} novalidate>
-        <Field id="code" name="code" label={t(m.shop_order_code)} value={values.code} class="status-code-field"
-          hint={linked && !errors.code ? t(m.order_status_from_link) : t(m.order_status_code_hint)}
-          messages={fieldMessages.code} error={errors.code} autofocus={firstError === 'code'}
-          dir="ltr" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength={16} placeholder="K7QD-93FA" required />
-        <Field id="email" name="email" type="email" label={t(m.shop_email)} value={values.email}
-          messages={fieldMessages.email} error={errors.email} autofocus={firstError === 'email'}
-          dir="ltr" autocomplete="email" spellcheck="false" required />
-        <Button type="submit" size="lg" class="w-full">{t(m.order_status_submit)}</Button>
-        <!-- Every text has its place in one cell, so the longest sets the height and nothing moves. -->
-        <div class="status-problem">
-          {Object.entries(problems).map(([key, text]) => (
-            key === problem
-              ? <p id="status-problem" tabindex="-1" autofocus data-active>{text}</p>
-              : <p aria-hidden="true">{text}</p>
-          ))}
-        </div>
-      </form>
+      <OrderLookupForm client:load {locale} action={path} {values} {errors} {problem} linked={linked !== null} />
       <p class="status-privacy"><ShieldCheck size={16} aria-hidden="true" /><span>{t(m.order_status_privacy)}</span></p>
     </section>
   )}
@@ -111,14 +85,6 @@ const [orderBefore, orderAfter] = m.order_status_of({ code: '\u0000' }, options)
 <style>
   .status-lookup { display: grid; gap: var(--space-sm); max-inline-size: 30rem; margin-inline: auto; }
   .status-lookup :global(h1), .status-lookup :global(.ui-text) { margin: 0; }
-  form { display: grid; gap: var(--space-2xs); }
-  .status-lookup :global(.status-code-field input) { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-  .status-lookup :global(.status-code-field input::placeholder) { font-weight: 400; text-transform: none; }
-  .status-problem { display: grid; margin-block-start: var(--space-2xs); font-size: var(--font-size-sm); line-height: 1.5; }
-  .status-problem p { grid-area: 1 / 1; margin: 0; color: var(--error-text); font-weight: 600; }
-  .status-problem p:not([data-active]) { visibility: hidden; }
-  /* Focused only so it is read; it is not a control. */
-  .status-problem p:focus { outline: none; }
   .status-privacy { display: flex; gap: var(--space-2xs); margin: 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
   .status-privacy :global(svg) { flex: none; margin-block-start: 0.15em; }
 
