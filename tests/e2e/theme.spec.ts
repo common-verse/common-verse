@@ -173,6 +173,17 @@ test("presses during the theme reveal are not lost", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", "light");
   await page.mouse.click(x, y);
   await expect(html).toHaveAttribute("data-theme", "dark");
+  // A hold that starts during the reveal returns to System.
+  await page.mouse.down();
+  expect(
+    await page.evaluate(() =>
+      document.documentElement.matches(":active-view-transition"),
+    ),
+  ).toBe(true);
+  await expect(page.locator(".theme-toggle")).toHaveAttribute("data-holding");
+  await page.waitForTimeout(700);
+  await page.mouse.up();
+  await expect(html).toHaveAttribute("data-theme", "system");
 });
 
 test.describe("server-rendered themes", () => {

@@ -131,8 +131,8 @@ button writes its centre to `--theme-origin-x/y`, so the circle starts exactly
 at the button whether the header is expanded or compacted. During the reveal,
 colour transitions and other view-transition names are switched off. The
 browser sends pointer events to the root element while a view transition runs,
-so the button also catches presses inside its area during the reveal; quick
-repeated presses are not lost. Reduced motion uses a `motion-page` cross-fade
+so the button also catches presses and holds inside its area during the
+reveal; quick repeated presses are not lost. Reduced motion uses a `motion-page` cross-fade
 and no icon spring. Browsers without typed view transitions switch instantly.
 
 The system requires support for relative OKLCH, `color-mix()`, and `light-dark()`.

@@ -50,19 +50,23 @@
     const transition = document.startViewTransition({ update: apply, types: ['theme'] })
     // A quick second press skips this transition; that is expected, not an error.
     transition.ready.catch(() => {})
-    if (!reveal) document.addEventListener('click', onPressDuringReveal, true)
+    if (!reveal) for (const type of revealEvents) document.addEventListener(type, onPressDuringReveal, true)
     reveal = transition
     transition.finished.finally(() => {
       if (reveal !== transition) return
       reveal = undefined
-      document.removeEventListener('click', onPressDuringReveal, true)
+      for (const type of revealEvents) document.removeEventListener(type, onPressDuringReveal, true)
     })
   }
   // While the reveal runs, the browser sends pointer events to the root element, not the button.
+  const revealEvents = ['pointerdown', 'pointerup', 'pointercancel', 'click'] as const
   function onPressDuringReveal(event: MouseEvent) {
     if (button.contains(event.target as Node)) return
+    // A release anywhere ends the hold, as leaving the button would.
+    if (event.type === 'pointerup' || event.type === 'pointercancel') return endPointerHold()
     const { left, right, top, bottom } = button.getBoundingClientRect()
     if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) return
+    if (event.type === 'pointerdown') return onpointerdown(event as PointerEvent)
     event.preventDefault()
     onclick()
   }
