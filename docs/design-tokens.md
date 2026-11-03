@@ -108,17 +108,22 @@ wrong-theme flash.
 
 The header has one theme button. It starts at System, labelled "Automatisch"
 (the stored value stays `system`); a press switches to the opposite of what is
-currently shown, and later presses toggle Light and Dark. Holding the button
-for 500 ms returns to System, the same way for mouse, finger, pen, Enter and
-Space; there is no other shortcut. While it is held after a manual choice, a
-primary-coloured ring fills along its squircle outline, and Android vibrates briefly on the
-switch. Presses act on release, so a hold never toggles first. Its accessible
+currently shown, and later presses toggle Light and Dark. Holding the button for
+500 ms returns to System, the same way for mouse, finger, pen, Enter and Space;
+there is no key or click shortcut. While it is held after a manual choice, a
+primary-coloured ring fills along its squircle outline, and Android vibrates
+briefly on the switch. Presses act on release, so a hold never toggles first.
+The ring keeps its own transition during the reveal, so a hold started then
+still fills over time. Screen readers mostly click and cannot hold, so after a
+manual choice a visually hidden "reset to System" button follows the toggle;
+`tabindex="-1"` keeps it out of the Tab order while the screen reader's own
+cursor reaches it, and focus returns to the toggle after use. Its accessible
 name states the current choice; the description says what a press does and how
 to return to System. The tooltip only shows the way back, so it appears only
 after a manual choice: a small squircle drawn like the hold ring, with the
-System label, on hover (pointer devices only, after 350 ms) and keyboard focus; Escape
-hides it. Touch gets no tooltip; the ring explains itself. The icon morphs
-between a half-filled circle, sun and moon with CSS transitions only.
+System label, on hover (pointer devices only, after 350 ms) and keyboard focus;
+Escape hides it. Touch gets no tooltip; the ring explains itself. The icon
+morphs between a half-filled circle, sun and moon with CSS transitions only.
 
 The new theme grows as a circle from the button in a same-document view
 transition of type `theme`, lasting `motion-theme`. Before each switch the

@@ -29,6 +29,7 @@
   "theme_system": "تلقائي",
   "theme_switch_to": "اضغط للتبديل إلى {theme}.",
   "theme_reset_hint": "للعودة إلى {theme}: اضغط مطولًا.",
+  "theme_reset": "إعادة المظهر إلى {theme}",
   "home_translation_missing": "هذا المحتوى غير متاح بهذه اللغة بعد.",
   "home_no_poems": "ستظهر القصائد المنشورة هنا قريبًا.",
   "home_about": "من نحن",

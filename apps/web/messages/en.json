@@ -29,6 +29,7 @@
   "theme_system": "Automatic",
   "theme_switch_to": "Press to switch to {theme}.",
   "theme_reset_hint": "Back to {theme}: press and hold.",
+  "theme_reset": "Reset appearance to {theme}",
   "home_translation_missing": "This content is not yet available in this language.",
   "home_no_poems": "Published poems will appear here soon.",
   "home_about": "About",

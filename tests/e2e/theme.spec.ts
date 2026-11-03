@@ -82,11 +82,37 @@ for (const locale of ["de", "ar"] as const) {
     );
     await trigger.press("Enter");
     await expect(html).toHaveAttribute("data-theme", "dark");
+    // A hold that starts during the reveal still fills the ring over time.
     await page.keyboard.down("Enter");
+    const ring = page.locator(".theme-toggle .hold path");
+    const reveal = await page.evaluate(() =>
+      document.documentElement.matches(":active-view-transition"),
+    );
+    if (reveal)
+      expect(
+        await ring.evaluate((path) =>
+          parseFloat(getComputedStyle(path).strokeDashoffset),
+        ),
+      ).toBeGreaterThan(50);
     await page.waitForTimeout(700);
     await page.keyboard.up("Enter");
     await expect(html).toHaveAttribute("data-theme", "system");
     await expect(trigger).toHaveAccessibleName(`${name}: ${system}`);
+    // Screen readers usually cannot hold; they get a reset button outside the Tab order.
+    const reset = page.getByRole("button", {
+      name:
+        locale === "de"
+          ? "Darstellung auf Automatisch zurückstellen"
+          : "إعادة المظهر إلى تلقائي",
+    });
+    await expect(reset).toHaveCount(0);
+    await trigger.press("Enter");
+    await expect(reset).toHaveAttribute("tabindex", "-1");
+    // A screen reader moves focus to the button before activating it.
+    await reset.focus();
+    await reset.evaluate((button: HTMLButtonElement) => button.click());
+    await expect(html).toHaveAttribute("data-theme", "system");
+    await expect(trigger).toBeFocused();
     await page.goto("/en/events/test");
     await expect(
       page.getByRole("button", { name: "Appearance: Automatic" }),

@@ -29,6 +29,7 @@
   "theme_system": "خودکار",
   "theme_switch_to": "برای رفتن به {theme} فشار دهید.",
   "theme_reset_hint": "بازگشت به {theme}: نگه دارید.",
+  "theme_reset": "بازگرداندن ظاهر به {theme}",
   "home_translation_missing": "این محتوا هنوز به این زبان در دسترس نیست.",
   "home_no_poems": "شعرهای منتشرشده به‌زودی اینجا نمایش داده می‌شوند.",
   "home_about": "دربارهٔ ما",

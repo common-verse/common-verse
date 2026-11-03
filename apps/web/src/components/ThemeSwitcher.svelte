@@ -84,6 +84,11 @@
       setTheme('system')
     }, 500)
   }
+  // Screen readers mostly click and cannot hold, so they get their own way back.
+  function resetForScreenReader() {
+    setTheme('system')
+    button.focus()
+  }
   function cancelHold() {
     clearTimeout(holdTimer)
     holding = false
@@ -122,6 +127,7 @@
 <div class="theme-toggle" data-manual={theme !== 'system' || undefined} data-holding={holding || undefined} data-tip-off={tipOff || undefined}>
   <button
     bind:this={button}
+    class="theme-button"
     type="button"
     disabled={!hydrated}
     aria-label={`${m.theme_label({}, options)}: ${names[theme]}`}
@@ -155,6 +161,10 @@
     <svg class="tip-ring" viewBox="0 0 24 24" focusable="false"><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" /><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" pathLength="100" /></svg>
     {names.system}
   </span>
+  {#if theme !== 'system'}
+    <!-- Reached by the screen reader's own cursor; tabindex -1 keeps it out of the Tab order. -->
+    <button type="button" class="sr-only" tabindex="-1" onclick={resetForScreenReader}>{m.theme_reset({ theme: names.system }, options)}</button>
+  {/if}
   <span id="theme-description" hidden>{description}</span>
 </div>
 
@@ -165,7 +175,7 @@
     --spring: linear(0, 0.049, 0.172, 0.334, 0.508, 0.674, 0.819, 0.936, 1.023, 1.082, 1.114, 1.126, 1.122, 1.109, 1.089, 1.067, 1.046, 1.027, 1.011, 0.999, 0.991, 0.986, 0.984, 0.984, 0.986, 0.988, 0.991, 0.994, 0.996, 0.998, 1);
     position: relative;
   }
-  button {
+  .theme-button {
     position: relative;
     display: inline-grid;
     place-items: center;
@@ -181,7 +191,7 @@
     -webkit-touch-callout: none;
     user-select: none;
   }
-  button:hover {
+  .theme-button:hover {
     background: var(--accent);
   }
   /* Tooltip: hover where hover exists, and keyboard focus; Escape hides it. Physical side: the header is LTR. */
@@ -272,6 +282,10 @@
     opacity: 1;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset 500ms linear;
+  }
+  /* The reveal switches transitions off; a hold started meanwhile would show the ring full at once. */
+  :global(:root:active-view-transition-type(theme)) [data-holding] .hold path {
+    transition: stroke-dashoffset 500ms linear !important;
   }
 
   /* One icon: System is a half-filled circle, Light a sun, Dark a moon. */
