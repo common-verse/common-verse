@@ -8,7 +8,7 @@ import { slugField, type Field, type TextFieldSingleValidation } from "payload";
 import { contentFields } from "../components/contentFields";
 import { proseEditor } from "../utilities/proseEditor";
 import { authenticated } from "./access";
-import { languageOptions } from "./Poems";
+import { languageOptions } from "./languageOptions";
 import { validPublicSlug } from "./slug";
 
 export const currencies: CurrenciesConfig = {

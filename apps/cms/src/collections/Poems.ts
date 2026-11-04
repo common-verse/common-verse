@@ -2,17 +2,8 @@ import { validPublicSlug } from "./slug";
 import { label } from "@poetry/cms-ui";
 import type { CollectionConfig } from "payload";
 import { authenticated, publishedOrAuthenticated } from "./access";
+import { languageOptions } from "./languageOptions";
 import { collectionPreviewUrl, previewEndpoint } from "./preview";
-
-export const languageOptions = [
-  { label: label("german"), value: "de" },
-  { label: label("english"), value: "en" },
-  { label: label("arabic"), value: "ar" },
-  { label: label("persian"), value: "fa" },
-  { label: label("ukrainian"), value: "uk" },
-  { label: label("kurdish_kurmanji"), value: "ku" },
-  { label: label("other_language"), value: "other" },
-];
 
 export const Poems: CollectionConfig = {
   slug: "poems",
