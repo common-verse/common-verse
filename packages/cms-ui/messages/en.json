@@ -181,5 +181,11 @@
   "slug_reserved": "The shop uses this URL. Choose another one.",
   "order_code": "Order code",
   "shipped": "Shipped",
-  "paid": "Paid"
+  "paid": "Paid",
+  "slug_de": "German slug",
+  "slug_en": "English slug",
+  "slug_de_help": "Used for the German website. Until the first publish it follows the German title or name; once you change it, your version is kept. Titles without Latin letters need a slug typed by hand.",
+  "slug_en_help": "Used for all other languages. Leave empty to use the German slug.",
+  "slug_ascii_format": "Use only lowercase Latin letters (a–z), digits (0–9) and hyphens (-).",
+  "slug_taken": "Another entry already uses this URL. Choose another one."
 }
