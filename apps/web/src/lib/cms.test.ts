@@ -9,11 +9,31 @@ import {
   getUpcomingEvents,
   getEvents,
   getEventsPage,
+  getEventLocales,
   getCart,
   initiatePayment,
 } from "./cms";
 
 afterEach(() => vi.unstubAllGlobals());
+
+it("finds an event's translations by the slug each locale serves", async () => {
+  const fetch = vi.fn(async (url: URL) => {
+    const query = url.searchParams;
+    const found =
+      query.get("where[slug.de][equals]") === "lesung" ||
+      query.get("where[slug.en][equals]") === "reading";
+    const title = query.get("locale") === "fa" ? null : "Title";
+    return Response.json({ docs: found ? [{ title }] : [] });
+  });
+  vi.stubGlobal("fetch", fetch);
+  expect(await getEventLocales({ de: "lesung", en: "reading" })).toEqual([
+    "de",
+    "en",
+    "ar",
+    "uk",
+    "ku",
+  ]);
+});
 
 it.each([null, { title: "Partial", content: plainTextToRichText(" ") }])(
   "falls back to English for a missing or incomplete fixed-page translation",

@@ -654,6 +654,8 @@ const server = http.createServer((request, response) => {
       : (url.searchParams.get("where[slug.de][equals]") ??
         url.searchParams.get("where[slug.en][equals]"));
     const document = event(locale, isPreview);
+    // Lookups return the record they matched, so its slugs feed the alternates.
+    if (requestedSlug) document.slug = bothSlugs(requestedSlug);
     if (
       isPreview &&
       requestedSlug === "live-preview" &&
@@ -715,7 +717,6 @@ const server = http.createServer((request, response) => {
         },
       });
       document.title = `Reading ${locale}`;
-      document.slug = bothSlugs("reading");
     }
     if (requestedSlug === "bare-registration")
       document.registrationUrl = " google.de ";
