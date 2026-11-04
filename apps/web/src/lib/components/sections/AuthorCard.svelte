@@ -1,6 +1,6 @@
 <script lang="ts">
   import { localizedPath, type Locale } from "@poetry/i18n";
-  import type { Author, Poem } from "@poetry/types";
+  import type { LegacyAuthor, LegacyPoem } from "@poetry/types";
   import PersonPortrait from "../../../components/PersonPortrait.svelte";
   import { Heading } from "$lib/components/ui/heading";
   import { Link } from "$lib/components/ui/link";
@@ -11,7 +11,7 @@
     author,
     poem,
     locale,
-  }: { author: Author; poem?: Poem; locale: Locale } = $props();
+  }: { author: LegacyAuthor; poem?: LegacyPoem; locale: Locale } = $props();
   const translation = $derived(
     poem?.translations?.find((entry) => entry.language === locale),
   );

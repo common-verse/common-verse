@@ -8,7 +8,7 @@ import {
 import type {
   HomepageSection,
   MediaReference,
-  Poem,
+  LegacyPoem,
   Event,
 } from "@poetry/types";
 
@@ -78,7 +78,7 @@ export function upcomingEvents(
     .slice(0, Math.max(1, Math.min(4, limit)));
 }
 
-export function poemExcerpt(poem: Poem, locale: Locale) {
+export function poemExcerpt(poem: LegacyPoem, locale: Locale) {
   const translation = poem.translations?.find(
     (entry) => entry.language === locale,
   );

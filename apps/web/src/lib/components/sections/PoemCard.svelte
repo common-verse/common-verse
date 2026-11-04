@@ -1,13 +1,13 @@
 <script lang="ts">
   import { localizedPath, type Locale } from "@poetry/i18n";
-  import type { Poem } from "@poetry/types";
+  import type { LegacyPoem } from "@poetry/types";
   import { Heading } from "$lib/components/ui/heading";
   import { Link } from "$lib/components/ui/link";
   import { authorDisplayName } from "$lib/editorial";
   import { contentDirection, poemExcerpt } from "$lib/homepage";
   import * as m from "../../../paraglide/messages.js";
 
-  let { poem, locale }: { poem: Poem; locale: Locale } = $props();
+  let { poem, locale }: { poem: LegacyPoem; locale: Locale } = $props();
   const excerpt = $derived(poemExcerpt(poem, locale));
   const author = $derived(typeof poem.author === "object" ? poem.author : null);
   const href = $derived(localizedPath(locale, `poems/${poem.slug}`));
