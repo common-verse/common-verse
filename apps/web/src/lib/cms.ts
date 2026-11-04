@@ -2,11 +2,11 @@ import { berlinDayStart } from "./event-date";
 import { locales, type Locale, type FixedPageKey } from "@poetry/i18n";
 import { convertLexicalToPlaintext } from "@payloadcms/richtext-lexical/plaintext";
 import type {
-  Author,
+  LegacyAuthor,
   FixedPage,
   Homepage,
   PayloadListResponse,
-  Poem,
+  LegacyPoem,
   Article,
   Event,
   EventsPage,
@@ -90,24 +90,24 @@ export const getEvent = (
 ) => fetchDocument<Event>("events", slug, locale, previewSecret);
 
 export const getPoem = (slug: string, locale: Locale, previewSecret?: string) =>
-  fetchDocument<Poem>("poems", slug, locale, previewSecret);
+  fetchDocument<LegacyPoem>("poems", slug, locale, previewSecret);
 
 export const getEvents = (locale: Locale) =>
   fetchCollection<Event>("events", locale);
 
 export const getPoems = (locale: Locale) =>
-  fetchCollection<Poem>("poems", locale);
+  fetchCollection<LegacyPoem>("poems", locale);
 
 export const getAuthors = (locale: Locale) =>
-  fetchCollection<Author>("authors", locale);
+  fetchCollection<LegacyAuthor>("authors", locale);
 
 /** Query a poet directly so their work is not lost beyond the archive's first page. */
 export async function getAuthorPoems(
   id: string,
   locale: Locale,
   limit?: number,
-): Promise<Poem[]> {
-  const poems: Poem[] = [];
+): Promise<LegacyPoem[]> {
+  const poems: LegacyPoem[] = [];
   let page = 1;
   let hasNextPage = false;
   do {
@@ -123,7 +123,7 @@ export async function getAuthorPoems(
     const response = await fetch(url);
     if (!response.ok)
       throw new Error(`Poet poems request failed with ${response.status}`);
-    const data = (await response.json()) as PayloadListResponse<Poem>;
+    const data = (await response.json()) as PayloadListResponse<LegacyPoem>;
     poems.push(...data.docs);
     hasNextPage = !limit && data.hasNextPage;
     page += 1;
@@ -152,7 +152,7 @@ export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
 export async function getAuthor(
   id: string,
   locale: Locale,
-): Promise<Author | null> {
+): Promise<LegacyAuthor | null> {
   const url = new URL(`/api/authors/${encodeURIComponent(id)}`, cmsUrl);
   url.searchParams.set("locale", locale);
   url.searchParams.set("fallback-locale", "none");
@@ -216,7 +216,7 @@ export async function getEventLocales(
     .map(({ locale }) => locale);
 }
 
-export async function getRecentPoems(locale: Locale): Promise<Poem[]> {
+export async function getRecentPoems(locale: Locale): Promise<LegacyPoem[]> {
   const url = new URL("/api/poems", cmsUrl);
   url.searchParams.set("locale", locale);
   url.searchParams.set("fallback-locale", "none");
@@ -227,16 +227,16 @@ export async function getRecentPoems(locale: Locale): Promise<Poem[]> {
   const response = await fetch(url);
   if (!response.ok)
     throw new Error(`Recent poems request failed with ${response.status}`);
-  const data = (await response.json()) as PayloadListResponse<Poem>;
+  const data = (await response.json()) as PayloadListResponse<LegacyPoem>;
   return data.docs;
 }
 
 /** Walk newest profiles until four have published work, including beyond the first page. */
 export async function getActiveAuthors(
   locale: Locale,
-): Promise<{ authors: Author[]; poems: Poem[] }> {
-  const authors: Author[] = [];
-  const poems: Poem[] = [];
+): Promise<{ authors: LegacyAuthor[]; poems: LegacyPoem[] }> {
+  const authors: LegacyAuthor[] = [];
+  const poems: LegacyPoem[] = [];
   let page = 1;
   let hasNextPage: boolean;
   do {
@@ -250,7 +250,7 @@ export async function getActiveAuthors(
     const response = await fetch(url);
     if (!response.ok)
       throw new Error(`Active authors request failed with ${response.status}`);
-    const data = (await response.json()) as PayloadListResponse<Author>;
+    const data = (await response.json()) as PayloadListResponse<LegacyAuthor>;
     const samples = await Promise.all(
       data.docs.map((author) => getAuthorPoems(String(author.id), locale, 1)),
     );

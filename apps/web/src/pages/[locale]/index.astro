@@ -1,7 +1,7 @@
 ---
 import { getSecret } from 'astro:env/server'
 import { isLocale } from '@poetry/i18n'
-import type { Author } from '@poetry/types'
+import type { LegacyAuthor } from '@poetry/types'
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import HomeFeature from '../../components/HomeFeature.astro'
 import HomeSections from '../../components/HomeSections.astro'
@@ -32,7 +32,7 @@ const authors = active.authors
 const events = result[1].status === 'fulfilled' ? result[1].value : []
 const recentPoems = result[2].status === 'fulfilled' ? result[2].value : []
 const authorIds = [...new Set(visible.filter((section) => section.blockType === 'authors' && section.selectionMode !== 'auto').flatMap((section) =>
-  (section.authors ?? []).filter((author): author is Author => Boolean(author) && typeof author === 'object').slice(0, 4).map((author) => String(author.id))
+  (section.authors ?? []).filter((author): author is LegacyAuthor => Boolean(author) && typeof author === 'object').slice(0, 4).map((author) => String(author.id))
 ))].filter((id) => !authors.some((author) => String(author.id) === id))
 const samples = await Promise.allSettled(authorIds.map((id) => getAuthorPoems(id, locale, 1)))
 const poems = [...active.poems, ...samples.flatMap((sample) => sample.status === 'fulfilled' ? sample.value : [])]

@@ -2,12 +2,12 @@
 import { Heading } from '$lib/components/ui/heading'
 import { Section, AuthorCard, PoemCard, EventItem } from '$lib/components/sections'
 import { localizedPath, type Locale } from '@poetry/i18n'
-import type { Author, HomepageSection, Poem, Event } from '@poetry/types'
+import type { LegacyAuthor, HomepageSection, LegacyPoem, Event } from '@poetry/types'
 import { mediaObject, safeHref, upcomingEvents, sectionItems, featuredItem } from '../lib/homepage'
 import EditorialImage from './EditorialImage.astro'
 import FeaturedContent from './FeaturedContent.astro'
 import * as m from '../paraglide/messages.js'
-interface Props { sections: HomepageSection[]; authors: Author[]; events: Event[]; poems: Poem[]; recentPoems: Poem[]; locale: Locale; preview?: boolean }
+interface Props { sections: HomepageSection[]; authors: LegacyAuthor[]; events: Event[]; poems: LegacyPoem[]; recentPoems: LegacyPoem[]; locale: Locale; preview?: boolean }
 const { sections, authors, events, poems, recentPoems, locale, preview = false } = Astro.props
 const o = { locale }
 ---

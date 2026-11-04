@@ -35,7 +35,7 @@ export interface EventsPage {
   _status?: "draft" | "published";
 }
 
-export interface PoemTranslation {
+export interface LegacyPoemTranslation {
   language: Locale | "other";
   languageLabel?: string | null;
   title: string;
@@ -43,24 +43,66 @@ export interface PoemTranslation {
   translator?: string | null;
 }
 
-export interface Poem {
+export interface LegacyPoem {
   id: number | string;
   slug: string;
   title: string;
   originalLanguage: Locale | "other";
   originalLanguageLabel?: string | null;
   originalText: string;
-  author?: Author | number | string | null;
+  author?: LegacyAuthor | number | string | null;
   media?: (MediaReference | number | string)[] | null;
-  translations?: PoemTranslation[] | null;
+  translations?: LegacyPoemTranslation[] | null;
   _status?: "draft" | "published";
 }
 
-export interface Author {
+export interface LegacyAuthor {
   id: number | string;
   name: string;
   biography?: string | null;
   portrait?: MediaReference | number | string | null;
+}
+
+/** `de` serves the German site, `en` every other locale. */
+export interface LocalizedSlug {
+  de: string;
+  en: string;
+}
+
+export interface City {
+  id: number;
+  /** Non-localized group with one name per site locale. */
+  names: Record<Locale, string>;
+  /** ISO 3166-1 alpha-2. */
+  country: string;
+}
+
+export interface Author {
+  id: number;
+  name?: string | null;
+  slug: LocalizedSlug;
+  portrait?: MediaReference | number | null;
+  /** ISO 3166-1 alpha-2. */
+  country: string;
+  city?: City | number | null;
+  biography?: string | null;
+  awards: { id?: string | null; name: string; year: number }[];
+  poems?: { docs?: (Poem | number)[]; hasNextPage?: boolean } | null;
+  _status?: "draft" | "published";
+}
+
+export interface Poem {
+  id: number;
+  slug: LocalizedSlug;
+  title?: string | null;
+  content?: string | null;
+  originalLanguage: Locale;
+  translator?: string | null;
+  description?: string | null;
+  year?: number | null;
+  snippet?: string | null;
+  author: Author | number;
+  _status?: "draft" | "published";
 }
 
 export interface HomepageLink {
@@ -87,12 +129,12 @@ export interface HomepageSection {
   linkUrl?: string | null;
   selectionMode?: "auto" | "manual" | null;
   item?:
-    | { relationTo: "poems"; value: Poem | number | string | null }
-    | { relationTo: "authors"; value: Author | number | string | null }
+    | { relationTo: "poems"; value: LegacyPoem | number | string | null }
+    | { relationTo: "authors"; value: LegacyAuthor | number | string | null }
     | { relationTo: "events"; value: Event | number | string | null }
     | null;
-  poems?: (Poem | number | string)[] | null;
-  authors?: (Author | number | string)[] | null;
+  poems?: (LegacyPoem | number | string)[] | null;
+  authors?: (LegacyAuthor | number | string)[] | null;
   pinnedEvents?: (Event | number | string)[] | null;
   limit?: number | null;
   links?: HomepageLink[] | null;
@@ -103,7 +145,7 @@ export interface Homepage {
     kind?: "poem" | "event" | "announcement";
     heading?: string | null;
     description?: string | null;
-    poem?: Poem | number | string | null;
+    poem?: LegacyPoem | number | string | null;
     event?: Event | number | string | null;
     announcement?: {
       title?: string | null;
