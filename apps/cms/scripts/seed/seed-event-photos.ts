@@ -230,7 +230,7 @@ export async function seedEventPhotos(payload: Payload) {
         collection: "events",
         locale: "de",
         draft: true,
-        where: { slug: { equals: `bulk-demo-v1-workshop-${i + 1}` } },
+        where: { "slug.de": { equals: `bulk-demo-v1-workshop-${i + 1}` } },
         limit: 1,
       });
       const event = result.docs[0];

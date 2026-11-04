@@ -97,7 +97,7 @@ describe("editorial schemas", () => {
     });
   });
 
-  it("localizes event prose and uses Payload’s native slug helper", () => {
+  it("localizes event prose and uses the shared German/English slug", () => {
     expect(field(Events, "title")).toMatchObject({
       localized: true,
       required: true,
@@ -107,28 +107,10 @@ describe("editorial schemas", () => {
       maxLength: 160,
     });
     expect(field(Events, "title")).toMatchObject({ maxLength: 80 });
-    const slugFields = Events.fields.find(
-      (candidate) => candidate.type === "row",
-    )!.fields;
-    const slug = slugFields.find(
-      (candidate) => "name" in candidate && candidate.name === "slug",
-    );
-    expect(slug).toMatchObject({
-      type: "text",
-      required: true,
-      unique: true,
-      index: true,
+    expect(field(Events, "slug")).toMatchObject({
+      type: "group",
+      fields: [{ name: "de" }, { name: "en" }],
     });
-    expect(slug).not.toHaveProperty("localized", true);
-    expect(slugFields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "generateSlug",
-          type: "checkbox",
-          defaultValue: true,
-        }),
-      ]),
-    );
     expect(Events.hooks).toBeUndefined();
     expect(Events.versions).toMatchObject({ drafts: expect.any(Object) });
     for (const removed of ["kind", "price", "endDate", "seo"])
@@ -142,7 +124,7 @@ describe("editorial schemas", () => {
     );
     expect(visible).toEqual([
       field(Events, "title"),
-      Events.fields.find((candidate) => candidate.type === "row"),
+      field(Events, "slug"),
       field(Events, "description"),
       field(Events, "registrationUrl"),
       field(Events, "image"),
@@ -249,7 +231,7 @@ describe("draft preview endpoint", () => {
         draft: true,
         overrideAccess: true,
         locale: "ar",
-        where: { slug: { equals: "test" } },
+        where: { "slug.en": { equals: "test" } },
       }),
     );
     vi.unstubAllEnvs();

@@ -1,9 +1,10 @@
 import { eventLocationField } from "./locationField";
 import { label } from "@poetry/cms-ui";
-import { slugField, type CollectionConfig } from "payload";
+import type { CollectionConfig } from "payload";
 import { eventEditor } from "../utilities/proseEditor";
 import { authenticated, publishedOrAuthenticated } from "./access";
 import { collectionPreviewUrl, previewEndpoint } from "./preview";
+import { localeSlugField } from "./slug";
 
 export const Events: CollectionConfig = {
   slug: "events",
@@ -44,7 +45,7 @@ export const Events: CollectionConfig = {
       localized: true,
       required: true,
     },
-    slugField(),
+    localeSlugField("title"),
     {
       name: "description",
       maxLength: 160,

@@ -1,5 +1,10 @@
 import { berlinDayStart } from "./event-date";
-import { locales, type Locale, type FixedPageKey } from "@poetry/i18n";
+import {
+  locales,
+  slugLocale,
+  type Locale,
+  type FixedPageKey,
+} from "@poetry/i18n";
 import { convertLexicalToPlaintext } from "@payloadcms/richtext-lexical/plaintext";
 import type {
   LegacyAuthor,
@@ -61,7 +66,7 @@ async function fetchDocument<T>(
   slug: string,
   locale: Locale,
   previewSecret?: string,
-  field: "slug" | "id" = "slug",
+  field: "slug" | "slug.de" | "slug.en" | "id" = "slug",
 ): Promise<T | null> {
   const preview = Boolean(previewSecret);
   const path = preview ? `/api/${collection}/preview` : `/api/${collection}`;
@@ -87,7 +92,14 @@ export const getEvent = (
   slug: string,
   locale: Locale,
   previewSecret?: string,
-) => fetchDocument<Event>("events", slug, locale, previewSecret);
+) =>
+  fetchDocument<Event>(
+    "events",
+    slug,
+    locale,
+    previewSecret,
+    `slug.${slugLocale(locale)}`,
+  );
 
 export const getPoem = (slug: string, locale: Locale, previewSecret?: string) =>
   fetchDocument<LegacyPoem>("poems", slug, locale, previewSecret);
