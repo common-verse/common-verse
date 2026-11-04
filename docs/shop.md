@@ -291,3 +291,15 @@ berechnet.`) is a placeholder to confirm with the treasurer.
 - Cart reads send the cart secret as `?secret=`, so it appears in CMS access logs.
   Restrict access to those logs or drop the query string from them.
 - The plugin is in beta; review its release notes before upgrading Payload.
+
+## Agent team
+
+Shop work extends the [agent team](agent-team.md):
+
+- CMS developers and security review add `stripe-best-practices`, which yields to
+  the project overrides in [skills](skills.md): PaymentIntents with the Payment
+  Element and the pinned SDK.
+- Security review always runs and covers money as well as access and keys.
+- QA runs every acceptance criterion with Stripe test mode on the real stack.
+- The designer takes the checkout flow and [legal duties](#legal-duties) from
+  this page.

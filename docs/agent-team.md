@@ -1,31 +1,43 @@
 # Agent team
 
-How a main agent (the manager) splits feature work across sub-agents. The user
-approves the spec and design before any code is written.
+How a main agent (the manager) splits feature work across sub-agents and tracks
+it on GitHub. The user approves the spec and design before any code is written.
 
 ## Roles
 
-| Role             | Delivers                                                                   | Skills                                                                                                                 |
-| ---------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Spec             | User stories with testable acceptance criteria                             | `user-stories`                                                                                                         |
-| UX/UI designer   | Flow, every screen state, layout from existing components, a11y per screen | `frontend-design`, `apple-design`, `web-design-guidelines`, `web-accessibility`                                        |
-| Manager (main)   | Briefs, shared contract, merge, own verification                           | `verification-before-completion`, `requesting-code-review`                                                             |
-| CMS developer    | Code and tests in `apps/cms`                                               | `ponytail`, `payload`, `stripe-best-practices`, `vitest`, `receiving-code-review`, `verification-before-completion`    |
-| Web developer    | Code and tests in `apps/web`                                               | `ponytail`, `svelte-code-writer`, `shadcn-svelte`, `vitest`, `receiving-code-review`, `verification-before-completion` |
-| Security review  | Money, access, keys                                                        | `security-audit`, `stripe-best-practices`                                                                              |
-| Code review      | Bugs, repo rules, simplicity                                               | `requesting-code-review` (its `code-reviewer.md` template)                                                             |
-| Design + a11y QA | Built flow against the design, WCAG 2.2, RTL, 375 px                       | `web-accessibility`, `web-design-guidelines`                                                                           |
-| QA               | Every acceptance criterion on the real CMS with Stripe test mode           | `test-scenarios`, `playwright-cli`, `verification-before-completion`                                                   |
+| Role            | Delivers                                                              | Skills                                                                          |
+| --------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Manager (main)  | Issues, briefs, shared contract, merge, own verification              | `conventional-git`, `verification-before-completion`, `requesting-code-review`  |
+| Spec            | User stories with testable acceptance criteria                        | `user-stories`                                                                  |
+| Designer        | Flow, every screen state, layout from existing components, a11y       | `frontend-design`, `apple-design`, `web-design-guidelines`, `web-accessibility` |
+| Developer       | Code and tests in one app (`apps/cms` or `apps/web`)                  | per app, see below                                                              |
+| Code review     | Bugs, repo rules, simplicity                                          | `requesting-code-review` (its `code-reviewer.md` template)                      |
+| Security review | Access, private data, secrets; only when the feature touches them     | `security-audit`                                                                |
+| Design QA       | Built flow against the design, WCAG 2.2, RTL, 375 px                  | `web-accessibility`, `web-design-guidelines`                                    |
+| QA              | Every acceptance criterion on the [real stack](testing.md#real-stack) | `test-scenarios`, `playwright-cli`, `verification-before-completion`            |
 
-- `ponytail` lives in the user's `~/.claude/skills`, not in `.agents/skills`, so
-  Codex and other contributors do not have it.
-- `stripe-best-practices` yields to the project overrides in [skills](skills.md):
-  PaymentIntents with the Payment Element and the pinned SDK.
-- There is no Astro skill: the web developer looks up Astro APIs with the
-  `astro-docs` MCP server (`search_astro_docs`).
-- The designer takes product specifics from the brief and the topic docs, for
-  example the checkout flow and legal duties in [shop](shop.md).
-- QA runs the [real stack](testing.md#real-stack) checks, not only the mock CMS.
+Developer skills per app, plus `ponytail`, `vitest`, `receiving-code-review` and
+`verification-before-completion` for both:
+
+- `apps/cms`: `payload`.
+- `apps/web`: `svelte-code-writer`, `shadcn-svelte`; Astro APIs come from the
+  `astro-docs` MCP server (`search_astro_docs`), there is no Astro skill.
+
+Feature docs add their own skills and checks, for example [shop](shop.md#agent-team).
+`ponytail` lives in the user's `~/.claude/skills`, so Codex and other contributors
+do not have it.
+
+## GitHub workflow
+
+Work is tracked on the project board of `veridynn/common-verse`.
+
+1. The manager creates a milestone per deliverable and one issue per reviewable
+   change; the spec refines their acceptance criteria.
+2. Cards move Backlog → Ready → In Progress → In Review → Done. Whoever starts or
+   hands over a step moves the card.
+3. Branch from `origin/dev`: `<type>/cv-<issue>-<slug>`. Commits:
+   `<type>(cv-<issue>): <summary>` (see `conventional-git`).
+4. One pull request per issue into `dev`, with `Closes #<issue>` in the body.
 
 ## Gates
 
@@ -35,18 +47,18 @@ approves the spec and design before any code is written.
    summary.
 4. Failures go back to the developer who wrote the code.
 5. The manager re-runs the checks before reporting to the user. Commits, pushes,
-   and merge requests wait for the user's go.
+   and pull requests wait for the user's go.
 
 ## Brief checklist
 
-Every brief to a sub-agent names:
+Every brief names:
 
-1. The goal and the acceptance criteria it must meet.
+1. The issue, its goal and acceptance criteria.
 2. The files or area in scope, and what is out of scope.
 3. The docs and skills to read first.
-4. The shared contract it must keep (types in `@poetry/types`, CMS responses,
-   message keys).
-5. What to report back (format below).
+4. The shared contract to keep (types in `@poetry/types`, CMS responses, message
+   keys).
+5. The report format below.
 
 ## Report format
 

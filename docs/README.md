@@ -32,7 +32,7 @@ procedures; agent instructions live in the [root](../AGENTS.md),
 - [Migrations and local data](migrations.md) — Existing database upgrades, schema changes, and backups.
 - [Testing and verification](testing.md) — Checks by change type, browser setup, and limits of mock-CMS tests.
 - [Skills](skills.md) — Upstream skill installation, updates, and project overrides.
-- [Agent team](agent-team.md) — Sub-agent roles and skills, approval gates, briefs, and reports.
+- [Agent team](agent-team.md) — Sub-agent roles and skills, GitHub board workflow, approval gates, briefs, and reports.
 
 ## Research and historical records
 
