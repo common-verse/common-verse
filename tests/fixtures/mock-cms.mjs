@@ -656,6 +656,14 @@ const server = http.createServer((request, response) => {
     const document = event(locale, isPreview);
     // Lookups return the record they matched, so its slugs feed the alternates.
     if (requestedSlug) document.slug = bothSlugs(requestedSlug);
+    const germanSlug = url.searchParams.get("where[slug.de][equals]");
+    const englishSlug = url.searchParams.get("where[slug.en][equals]");
+    if (germanSlug === "fluss-lesung" || englishSlug === "river-reading") {
+      document.slug = { de: "fluss-lesung", en: "river-reading" };
+      if (locale === "fa") document.title = null;
+    }
+    if (germanSlug === "river-reading" || englishSlug === "fluss-lesung")
+      return response.end(JSON.stringify({ docs: [], totalDocs: 0 }));
     if (
       isPreview &&
       requestedSlug === "live-preview" &&

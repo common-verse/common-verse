@@ -40,6 +40,10 @@ describe("locale metadata", () => {
       expect(localizedPath(locale, recordPath("events", slug, locale))).toBe(
         `/${locale}/events/reading`,
       );
+    expect(recordPath("events", slug, "fa", ["de", "en"])).toBe("events");
+    expect(recordPath("events", slug, "en", ["de", "en"])).toBe(
+      "events/reading",
+    );
   });
   it("maps page identities without changing record slugs", () => {
     expect(localizedPath("de", "articles/project-news")).toBe(

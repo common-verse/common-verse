@@ -112,9 +112,14 @@ export function localizedPath(locale: Locale, path = ""): string {
 export const slugLocale = (locale: Locale): "de" | "en" =>
   locale === "de" ? "de" : "en";
 
-/** Unlocalized path of a record in `locale`, e.g. `events/lesung` or `events/reading`. */
+/**
+ * Unlocalized path of a record in `locale`, e.g. `events/lesung` or `events/reading`.
+ * Locales without the record get the section overview instead of a 404.
+ */
 export const recordPath = (
   route: keyof typeof routeSegments,
   slug: { de: string; en: string },
   locale: Locale,
-) => `${route}/${slug[slugLocale(locale)]}`;
+  available: readonly Locale[] = locales,
+) =>
+  available.includes(locale) ? `${route}/${slug[slugLocale(locale)]}` : route;
