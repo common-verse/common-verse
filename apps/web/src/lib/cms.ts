@@ -345,12 +345,16 @@ export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
   return data.docs;
 }
 
-export const getAuthor = (slug: string, locale: Locale) =>
+export const getAuthor = (
+  slug: string,
+  locale: Locale,
+  previewSecret?: string,
+) =>
   fetchDocument<Author>(
     "authors",
     slug,
     locale,
-    undefined,
+    previewSecret,
     slugField(locale),
     true,
   );

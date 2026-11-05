@@ -103,3 +103,23 @@ test("a pseudonym without portrait, city or poems in Arabic", async ({
   ).toBe(true);
   expect((await page.request.get("/autoren/moth")).status()).toBe(404);
 });
+
+test("author drafts render only in an authorized preview", async ({ page }) => {
+  expect((await page.goto("/en/authors/draft-author"))?.status()).toBe(404);
+  expect(
+    (await page.goto("/en/authors/draft-author?previewSecret=wrong"))?.status(),
+  ).toBe(401);
+  const response = await page.goto(
+    "/en/authors/draft-author?previewSecret=test-preview&editorLanguage=uk",
+  );
+  expect(response?.status()).toBe(200);
+  expect(response?.headers()["cache-control"]).toBe("no-store");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Draft Author",
+  );
+  await expect(page.locator(".preview-banner")).toHaveAttribute("lang", "uk");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    "noindex,nofollow",
+  );
+});

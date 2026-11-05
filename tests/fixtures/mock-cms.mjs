@@ -495,6 +495,18 @@ const rebuiltAuthors = [
     portrait: null,
     biography: {},
     awards: [],
+  }, // A draft: only the preview endpoint returns it.
+  {
+    id: 14,
+    slugDe: "entwurf-autorin",
+    slugEn: "draft-author",
+    name: { de: "Entwurf Autorin", en: "Draft Author" },
+    country: "IR",
+    city: null,
+    portrait: null,
+    biography: {},
+    awards: [],
+    draft: true,
   },
 ];
 const version = (title, content, extra = {}) => ({ title, content, ...extra });
@@ -584,7 +596,7 @@ const localizedAuthor = (author, locale, depth) => ({
   portrait: depth > 0 ? author.portrait : (author.portrait?.id ?? null),
   biography: author.biography[locale] ?? null,
   awards: author.awards,
-  _status: "published",
+  _status: author.draft ? "draft" : "published",
 });
 const localizedPoem = (poem, locale, depth) => {
   const text = poem.versions[locale] ?? {};
@@ -618,7 +630,9 @@ function rebuiltList(collection, params, locale) {
   const slugEn = params.get("where[slugEn][equals]");
   // Preview lookups send only the slug; a draft matches either slot.
   const previewSlug = params.get("slug");
+  const publishedOnly = params.get("where[_status][equals]") === "published";
   const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
+    .filter((entry) => !publishedOnly || !entry.draft)
     .filter((entry) => !ids || ids.includes(String(entry.id)))
     .filter((entry) => !author || String(entry.author) === author)
     .filter((entry) => !slugDe || entry.slugDe === slugDe)
