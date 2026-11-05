@@ -187,5 +187,8 @@
   "slug_de_help": "Gilt für die deutsche Website. Bis zur ersten Veröffentlichung folgt sie dem deutschen Titel oder Namen; änderst du sie, bleibt deine Fassung erhalten. Bei Titeln ohne lateinische Buchstaben bitte selbst eingeben.",
   "slug_en_help": "Gilt für alle anderen Sprachen. Leer lassen, um die deutsche URL-Kennung zu übernehmen.",
   "slug_ascii_format": "Verwende nur lateinische Kleinbuchstaben (a–z), Ziffern (0–9) und Bindestriche (-).",
-  "slug_taken": "Ein anderer Eintrag verwendet diese URL bereits. Bitte eine andere wählen."
+  "slug_taken": "Ein anderer Eintrag verwendet diese URL bereits. Bitte eine andere wählen.",
+  "city": "Stadt",
+  "cities": "Städte",
+  "country": "Land"
 }

@@ -18,7 +18,7 @@ are shown through Payload’s native join field in the admin. Fixed shared pages
 not need a byline; events describe activities rather than authored texts.
 
 Keep Payload’s native dashboard and cards. Organize the editorial sidebar as
-Content (Articles, Events, Locations), Media (Images & Files), Administration (Users),
+Content (Articles, Events, Locations, Cities), Media (Images & Files), Administration (Users),
 Pages (Home, About, Contact, Privacy, Legal Notice, Terms of sale), then Shop
 (Products, Orders, Shop settings). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
@@ -29,6 +29,11 @@ hidden to preserve existing records and is not used by public routing or bulk se
 
 Poems and Authors are hidden from admin navigation until v2.0; preserve their
 records and existing public routes.
+
+Cities have six required, unlocalized names (one per site locale, all in one
+form) and a required country, stored as an ISO 3166-1 alpha-2 code. The admin
+shows country names in the editor's interface language. Editors write cities;
+anyone can read them.
 See [accounts and permissions](accounts-and-permissions.md) for content access
 and the planned contributor workflow.
 
