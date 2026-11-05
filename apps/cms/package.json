@@ -18,7 +18,8 @@
     "seed:photos": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-cli.ts --bulk --photos",
     "seed:programme": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-programme.ts",
     "seed:shop": "pnpm --filter @poetry/cms-ui compile && tsx scripts/seed/seed-shop.ts",
-    "shop:purchase": "pnpm --filter @poetry/cms-ui compile && tsx scripts/shop-purchase.ts"
+    "shop:purchase": "pnpm --filter @poetry/cms-ui compile && tsx scripts/shop-purchase.ts",
+    "reset:poems": "docker compose -f ../../compose.yml exec -T postgres psql -U poetry -d poetry -v ON_ERROR_STOP=1 < scripts/reset-poems-authors.sql"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.90.2",
