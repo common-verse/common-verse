@@ -23,7 +23,7 @@ const { name, lang } = names.get(author.id)!
 // Never a generated face: without an upload there is no image at all.
 const portrait = mediaObject(author.portrait)?.url ? author.portrait : null
 const awards = [...(author.awards ?? [])].sort((a, b) => b.year - a.year)
-const localePath = (target: Locale) => recordPath('authors', author.slug, target)
+const localePath = (target: Locale) => recordPath('authors', author, target)
 ---
 
 <BaseLayout {locale} title={`${name} · ${m.site_title({}, o)}`} description={author.biography || undefined} canonicalPath={localePath(locale)} {localePath} contentType="website">

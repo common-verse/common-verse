@@ -22,7 +22,7 @@ const cards = authors
     return {
       id: author.id,
       ...names.get(author.id)!,
-      href: localizedPath(locale, recordPath('authors', author.slug, locale)),
+      href: localizedPath(locale, recordPath('authors', author, locale)),
       country: regionName(author.country, locale),
       poems: counts.get(author.id) ?? 0,
       portrait: portrait ? new URL(portrait, cmsUrl).href : undefined,

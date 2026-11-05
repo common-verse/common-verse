@@ -19,7 +19,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 const poem = (id: number, extra: Partial<Poem> = {}): Poem => ({
   id,
-  slug: { de: `p${id}`, en: `p${id}` },
+  slugDe: `p${id}`,
+  slugEn: `p${id}`,
   originalLanguage: "de",
   author: 1,
   ...extra,
@@ -143,7 +144,7 @@ it("finds public authors among published records only", async () => {
   vi.stubGlobal("fetch", fetch);
   await getAuthor("moth", "en");
   const query = fetch.mock.calls[0][0].searchParams;
-  expect(query.get("where[slug.en][equals]")).toBe("moth");
+  expect(query.get("where[slugEn][equals]")).toBe("moth");
   expect(query.get("where[_status][equals]")).toBe("published");
 });
 

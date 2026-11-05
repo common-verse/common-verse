@@ -38,11 +38,11 @@ const direction = getLocaleMetadata(language).direction
 const author = typeof poem.author === 'object' ? (poem.author as Author) : null
 const authorName = author ? (await authorNames([author], locale)).get(author.id) : undefined
 const name = authorName?.name
-const authorHref = author ? localizedPath(locale, recordPath('authors', author.slug, locale)) : undefined
+const authorHref = author ? localizedPath(locale, recordPath('authors', author, locale)) : undefined
 const morePoems = author ? await getAuthorPoemTeasers(author.id, locale, { except: poem.id, limit: 4 }) : []
 const title = `${shown.title} · ${m.site_title({}, o)}`
 const description = poem.description || excerptLines(shown.snippet, shown.content).join(' / ')
-const localePath = (target: Locale) => recordPath('poems', poem.slug, target)
+const localePath = (target: Locale) => recordPath('poems', poem, target)
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CreativeWork',

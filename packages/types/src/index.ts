@@ -14,10 +14,9 @@ export interface LocationValue {
   address?: string | null;
 }
 
-export interface Event {
+export interface Event extends LocaleSlugs {
   id: number | string;
   title: string;
-  slug: LocalizedSlug;
   description?: string | null;
   content?: FixedPage["content"];
   image?: MediaReference | number | string | null;
@@ -63,10 +62,10 @@ export interface LegacyAuthor {
   portrait?: MediaReference | number | string | null;
 }
 
-/** `de` serves the German site, `en` every other locale. */
-export interface LocalizedSlug {
-  de: string;
-  en: string;
+/** `slugDe` serves the German site, `slugEn` every other locale (`slugField`). */
+export interface LocaleSlugs {
+  slugDe: string;
+  slugEn: string;
 }
 
 export interface City {
@@ -77,10 +76,9 @@ export interface City {
   country: string;
 }
 
-export interface Author {
+export interface Author extends LocaleSlugs {
   id: number;
   name?: string | null;
-  slug: LocalizedSlug;
   portrait?: MediaReference | number | null;
   /** ISO 3166-1 alpha-2. */
   country: string;
@@ -91,9 +89,8 @@ export interface Author {
   _status?: "draft" | "published";
 }
 
-export interface Poem {
+export interface Poem extends LocaleSlugs {
   id: number;
-  slug: LocalizedSlug;
   title?: string | null;
   content?: string | null;
   originalLanguage: Locale;

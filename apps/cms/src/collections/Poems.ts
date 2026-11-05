@@ -17,15 +17,10 @@ export const Poems: CollectionConfig = {
       "keep_the_original_poem_intact_and_add_only_the_translations_that_actually_exist",
     ),
     preview: (doc, { locale, req }) =>
-      collectionPreviewUrl("poems", doc.slug, locale, req.i18n.language),
+      collectionPreviewUrl("poems", doc, locale, req.i18n.language),
     livePreview: {
       url: ({ data, locale, req }) =>
-        collectionPreviewUrl(
-          "poems",
-          data.slug,
-          locale?.code,
-          req.i18n.language,
-        ),
+        collectionPreviewUrl("poems", data, locale?.code, req.i18n.language),
     },
   },
   access: {

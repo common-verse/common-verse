@@ -31,14 +31,14 @@ const media = {
   height: 600,
 };
 
-const bothSlugs = (slug) => ({ de: slug, en: slug });
+const bothSlugs = (slug) => ({ slugDe: slug, slugEn: slug });
 
 function event(locale, preview) {
   const [title, description] = events[locale] ?? events.de;
   return {
     id: 1,
     title: preview ? `${title} — draft` : title,
-    slug: bothSlugs("test"),
+    ...bothSlugs("test"),
     description,
     content: plainTextToRichText(description),
     image: media,
@@ -56,7 +56,7 @@ function extraFeaturedEvents(locale) {
   return Array.from({ length: 4 }, (_, index) => ({
     ...event(locale, false),
     id: 30 + index,
-    slug: bothSlugs(`featured-${index + 1}`),
+    ...bothSlugs(`featured-${index + 1}`),
     title: locale === "fa" ? null : `Featured ${index + 1} ${locale}`,
     startDate: new Date(Date.now() + index * 3 * 86_400_000).toISOString(),
   }));
@@ -461,7 +461,7 @@ const latakia = {
 const rebuiltAuthors = [
   {
     id: 11,
-    slug: bothSlugs("nour-haddad"),
+    ...bothSlugs("nour-haddad"),
     name: { de: "Nour Haddad", ar: "نور حداد", fa: "نور حداد" },
     country: "SY",
     city: latakia,
@@ -477,7 +477,7 @@ const rebuiltAuthors = [
   },
   {
     id: 12,
-    slug: bothSlugs("samira-taleb"),
+    ...bothSlugs("samira-taleb"),
     name: { de: "Samira Taleb", ar: "سميرة طالب" },
     country: "SY",
     city: null,
@@ -487,7 +487,8 @@ const rebuiltAuthors = [
   },
   {
     id: 13,
-    slug: { de: "nachtfalter", en: "moth" },
+    slugDe: "nachtfalter",
+    slugEn: "moth",
     name: { de: "Nachtfalter", en: "Moth" },
     country: "AF",
     city: null,
@@ -500,7 +501,7 @@ const version = (title, content, extra = {}) => ({ title, content, ...extra });
 const rebuiltPoems = [
   {
     id: 201,
-    slug: bothSlugs("test-poem"),
+    ...bothSlugs("test-poem"),
     originalLanguage: "fa",
     year: 2024,
     author: 11,
@@ -527,7 +528,8 @@ const rebuiltPoems = [
   },
   {
     id: 202,
-    slug: { de: "regeln-des-ankommens", en: "rules-of-arrival" },
+    slugDe: "regeln-des-ankommens",
+    slugEn: "rules-of-arrival",
     originalLanguage: "ar",
     year: 2022,
     author: 11,
@@ -540,7 +542,8 @@ const rebuiltPoems = [
   },
   {
     id: 203,
-    slug: { de: "elbe-februar", en: "elbe-february" },
+    slugDe: "elbe-februar",
+    slugEn: "elbe-february",
     originalLanguage: "de",
     year: null,
     author: 12,
@@ -554,7 +557,8 @@ const rebuiltPoems = [
   // Enough poems for a second page; years run from 2013 down to 1990.
   ...Array.from({ length: 24 }, (_, index) => ({
     id: 233 - index,
-    slug: { de: `gedicht-${index}`, en: `poem-${index}` },
+    slugDe: `gedicht-${index}`,
+    slugEn: `poem-${index}`,
     originalLanguage: "de",
     year: 2013 - index,
     author: 12,
@@ -572,7 +576,8 @@ const rebuiltPoems = [
 ];
 const localizedAuthor = (author, locale, depth) => ({
   id: author.id,
-  slug: author.slug,
+  slugDe: author.slugDe,
+  slugEn: author.slugEn,
   name: author.name[locale] ?? null,
   country: author.country,
   city: depth > 0 ? author.city : (author.city?.id ?? null),
@@ -586,7 +591,8 @@ const localizedPoem = (poem, locale, depth) => {
   const author = rebuiltAuthors.find((entry) => entry.id === poem.author);
   return {
     id: poem.id,
-    slug: poem.slug,
+    slugDe: poem.slugDe,
+    slugEn: poem.slugEn,
     title: text.title ?? null,
     content: text.content ?? null,
     originalLanguage: poem.originalLanguage,
@@ -601,25 +607,25 @@ const localizedPoem = (poem, locale, depth) => {
 };
 const isRebuiltQuery = (params) =>
   ["-year", "name"].includes(params.get("sort")) ||
-  ["where[id][in]", "where[slug.de][equals]", "where[slug.en][equals]"].some(
+  ["where[id][in]", "where[slugDe][equals]", "where[slugEn][equals]"].some(
     (key) => params.has(key),
   );
 function rebuiltList(collection, params, locale) {
   const depth = Number(params.get("depth") ?? 0);
   const ids = params.get("where[id][in]")?.split(",");
   const author = params.get("where[author][equals]");
-  const slugDe = params.get("where[slug.de][equals]");
-  const slugEn = params.get("where[slug.en][equals]");
+  const slugDe = params.get("where[slugDe][equals]");
+  const slugEn = params.get("where[slugEn][equals]");
   // Preview lookups send only the slug; a draft matches either slot.
   const previewSlug = params.get("slug");
   const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
     .filter((entry) => !ids || ids.includes(String(entry.id)))
     .filter((entry) => !author || String(entry.author) === author)
-    .filter((entry) => !slugDe || entry.slug.de === slugDe)
-    .filter((entry) => !slugEn || entry.slug.en === slugEn)
+    .filter((entry) => !slugDe || entry.slugDe === slugDe)
+    .filter((entry) => !slugEn || entry.slugEn === slugEn)
     .filter(
       (entry) =>
-        !previewSlug || [entry.slug.de, entry.slug.en].includes(previewSlug),
+        !previewSlug || [entry.slugDe, entry.slugEn].includes(previewSlug),
     )
     .map((entry) =>
       collection === "poems"
@@ -730,6 +736,23 @@ const server = http.createServer((request, response) => {
     return response.end(JSON.stringify({ error: "Unauthorized" }));
   }
 
+  // Payload reads a locale code in a query path as a locale suffix and rejects the path.
+  const localeSuffixPath = [...url.searchParams.keys()].find((key) =>
+    /^where\[[^\]]*\.(de|en|ar|fa|uk|ku)(\.|\])/.test(key),
+  );
+  if (localeSuffixPath) {
+    response.statusCode = 400;
+    return response.end(
+      JSON.stringify({
+        errors: [
+          {
+            message: `The following path cannot be queried: ${localeSuffixPath}`,
+          },
+        ],
+      }),
+    );
+  }
+
   const locale = url.searchParams.get("locale") ?? "de";
   const fixedPage = url.pathname.match(
     /^\/api\/globals\/(about|contact|privacy|legal|terms)\/(public|preview)$/,
@@ -791,7 +814,7 @@ const server = http.createServer((request, response) => {
         featuredEvent: {
           ...event(locale, false),
           id: 20,
-          slug: bothSlugs("reading"),
+          ...bothSlugs("reading"),
           title: locale === "fa" ? null : `Reading ${locale}`,
         },
         _status: isPreview ? "draft" : "published",
@@ -850,15 +873,18 @@ const server = http.createServer((request, response) => {
   if (url.pathname.startsWith("/api/events")) {
     const requestedSlug = isPreview
       ? url.searchParams.get("slug")
-      : (url.searchParams.get("where[slug.de][equals]") ??
-        url.searchParams.get("where[slug.en][equals]"));
+      : (url.searchParams.get("where[slugDe][equals]") ??
+        url.searchParams.get("where[slugEn][equals]"));
     const document = event(locale, isPreview);
     // Lookups return the record they matched, so its slugs feed the alternates.
-    if (requestedSlug) document.slug = bothSlugs(requestedSlug);
-    const germanSlug = url.searchParams.get("where[slug.de][equals]");
-    const englishSlug = url.searchParams.get("where[slug.en][equals]");
+    if (requestedSlug) Object.assign(document, bothSlugs(requestedSlug));
+    const germanSlug = url.searchParams.get("where[slugDe][equals]");
+    const englishSlug = url.searchParams.get("where[slugEn][equals]");
     if (germanSlug === "fluss-lesung" || englishSlug === "river-reading") {
-      document.slug = { de: "fluss-lesung", en: "river-reading" };
+      Object.assign(document, {
+        slugDe: "fluss-lesung",
+        slugEn: "river-reading",
+      });
       if (locale === "fa") document.title = null;
     }
     if (germanSlug === "river-reading" || englishSlug === "fluss-lesung")
@@ -874,7 +900,7 @@ const server = http.createServer((request, response) => {
       const reading = {
         ...document,
         id: 20,
-        slug: bothSlugs("reading"),
+        ...bothSlugs("reading"),
         title: locale === "fa" ? null : `Reading ${locale}`,
       };
       return response.end(
@@ -886,7 +912,7 @@ const server = http.createServer((request, response) => {
             {
               ...document,
               id: 22,
-              slug: bothSlugs("next-workshop"),
+              ...bothSlugs("next-workshop"),
               title: locale === "fa" ? null : `Workshop ${locale}`,
               startDate: new Date(Date.now() + 14 * 86_400_000).toISOString(),
               image: {
@@ -897,7 +923,7 @@ const server = http.createServer((request, response) => {
             {
               ...document,
               id: 21,
-              slug: bothSlugs("past"),
+              ...bothSlugs("past"),
               title: `Past event ${locale}`,
               startDate: new Date(Date.now() - 7 * 86_400_000).toISOString(),
             },

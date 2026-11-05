@@ -1,6 +1,6 @@
 <script lang="ts">
   import { locationText } from "../../location";
-  import { localizedPath, slugLocale, type Locale } from "@poetry/i18n";
+  import { localizedPath, recordPath, type Locale } from "@poetry/i18n";
   import type { Event } from "@poetry/types";
   import { Heading } from "$lib/components/ui/heading";
   import { Link } from "$lib/components/ui/link";
@@ -14,7 +14,7 @@
       timeZone: "Europe/Berlin",
     }),
   );
-  const href = $derived(localizedPath(locale, `events/${event.slug[slugLocale(locale)]}`));
+  const href = $derived(localizedPath(locale, recordPath("events", event, locale)));
 </script>
 
 <article>

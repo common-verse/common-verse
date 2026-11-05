@@ -38,52 +38,60 @@ describe("German slugs", () => {
 describe("German/English slug field", () => {
   const field = localeSlugField("title");
   const findOne = vi.fn(async () => ({ _status: "published" }));
-  const fill = (args: Partial<FieldHookArgs>) =>
-    field.hooks!.beforeValidate![0]({
-      operation: "create",
-      collection: { slug: "events", versions: { drafts: true } },
-      req: { locale: "de", payload: { db: { findOne } } },
-      ...args,
-    } as never);
-  const update = (previousValue: object, value = previousValue) =>
+  const [de, en] = field.fields as TextField[];
+  type Slots = { slugDe?: string | null; slugEn?: string | null };
+  // Runs both slot hooks on the same input, as Payload does for one save.
+  const fill = async (args: Partial<FieldHookArgs>) => {
+    const run = (slot: TextField) =>
+      slot.hooks!.beforeValidate![0]({
+        operation: "create",
+        collection: { slug: "events", versions: { drafts: true } },
+        req: { locale: "de", payload: { db: { findOne } } },
+        siblingData: args.data,
+        ...args,
+      } as never);
+    return { slugDe: await run(de), slugEn: await run(en) };
+  };
+  const update = (stored: Slots, sent: Slots = stored) =>
     fill({
       operation: "update",
-      originalDoc: { id: 7, title: "Ü" },
-      data: { title: "Über den Fluss" },
-      previousValue,
-      value,
+      originalDoc: { id: 7, title: "Ü", ...stored },
+      data: { title: "Über den Fluss", ...sent },
     });
-  const [de, en] = field.fields as TextField[];
+
+  it("is two top-level fields, so queries never read a locale suffix", () => {
+    expect(field.type).toBe("row");
+    expect([de.name, en.name]).toEqual(["slugDe", "slugEn"]);
+  });
 
   it("fills the German slug from the German source and the English slug from the German one", async () => {
     expect(await fill({ data: { title: "Über den Fluss" } })).toEqual({
-      de: "ueber-den-fluss",
-      en: "ueber-den-fluss",
+      slugDe: "ueber-den-fluss",
+      slugEn: "ueber-den-fluss",
     });
     expect(
       await fill({
-        value: { de: "fluss", en: "" },
-        data: { title: "Über den Fluss" },
+        data: { title: "Über den Fluss", slugDe: "fluss", slugEn: "" },
       }),
-    ).toEqual({ de: "fluss", en: "fluss" });
+    ).toEqual({ slugDe: "fluss", slugEn: "fluss" });
     expect(
-      await fill({ value: { de: "fluss", en: "river" }, data: { title: "x" } }),
-    ).toEqual({ de: "fluss", en: "river" });
-    expect(await fill({ data: {} })).toEqual({ de: null, en: null });
+      await fill({ data: { title: "x", slugDe: "fluss", slugEn: "river" } }),
+    ).toEqual({ slugDe: "fluss", slugEn: "river" });
+    expect(await fill({ data: {} })).toEqual({ slugDe: null, slugEn: null });
   });
 
   it("generates nothing from other locales", async () => {
     expect(
       await fill({ data: { title: "River" }, req: { locale: "en" } as never }),
-    ).toEqual({ de: null, en: null });
+    ).toEqual({ slugDe: null, slugEn: null });
   });
 
   it("follows the German title until the first publish unless edited by hand", async () => {
     findOne.mockResolvedValue({ _status: "draft" });
-    const following = { de: "ue", en: "ue" };
+    const following = { slugDe: "ue", slugEn: "ue" };
     expect(await update(following)).toEqual({
-      de: "ueber-den-fluss",
-      en: "ueber-den-fluss",
+      slugDe: "ueber-den-fluss",
+      slugEn: "ueber-den-fluss",
     });
     expect(findOne).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -91,18 +99,22 @@ describe("German/English slug field", () => {
         where: { id: { equals: 7 } },
       }),
     );
-    expect(await update({ de: "fluss", en: "fluss" })).toEqual({
-      de: "fluss",
-      en: "fluss",
+    expect(await update({ slugDe: "fluss", slugEn: "fluss" })).toEqual({
+      slugDe: "fluss",
+      slugEn: "fluss",
     });
-    expect(await update({ de: "ue", en: "river" })).toEqual({
-      de: "ueber-den-fluss",
-      en: "river",
+    expect(await update({ slugDe: "ue", slugEn: "river" })).toEqual({
+      slugDe: "ueber-den-fluss",
+      slugEn: "river",
     });
-    expect(await update(following, { de: "strom", en: "ue" })).toEqual({
-      de: "strom",
-      en: "strom",
+    expect(await update(following, { slugDe: "strom", slugEn: "ue" })).toEqual({
+      slugDe: "strom",
+      slugEn: "strom",
     });
+    // The other slot's hook may already have written its result.
+    expect(
+      await update(following, { slugDe: "ueber-den-fluss", slugEn: "ue" }),
+    ).toEqual({ slugDe: "ueber-den-fluss", slugEn: "ueber-den-fluss" });
     findOne.mockResolvedValue({ _status: "published" });
     expect(await update(following)).toEqual(following);
     findOne.mockResolvedValue({} as never);
@@ -110,23 +122,20 @@ describe("German/English slug field", () => {
       await fill({
         operation: "update",
         collection: { slug: "authors", versions: false } as never,
-        originalDoc: { id: 7, title: "Ü" },
+        originalDoc: { id: 7, title: "Ü", ...following },
         data: { title: "Über den Fluss" },
-        previousValue: following,
       }),
     ).toEqual(following);
   });
 
   it("keeps stored slugs that an update leaves out", async () => {
-    const previousValue = { de: "fluss", en: "river" };
     expect(
       await fill({
         operation: "update",
-        previousValue,
-        value: { de: "strom" },
-        data: {},
+        originalDoc: { slugDe: "fluss", slugEn: "river" },
+        data: { slugDe: "strom" },
       }),
-    ).toEqual({ de: "strom", en: "river" });
+    ).toEqual({ slugDe: "strom", slugEn: "river" });
   });
 
   const count = vi.fn(async () => ({ totalDocs: 0 }));
@@ -142,51 +151,51 @@ describe("German/English slug field", () => {
 
   it("rejects anything but lowercase ASCII letters, digits and hyphens", async () => {
     for (const slug of ["mit leer", "Gross", "über", "عنوان", "лист"])
-      expect(await validate(de, { de: slug })).toBe(
+      expect(await validate(de, { slugDe: slug })).toBe(
         message("slug_ascii_format", "uk"),
       );
     const format = message("slug_ascii_format", "uk");
-    expect(await validate(de, { de: "" }, { data: { title: "عنوان" } })).toBe(
-      format,
-    );
+    expect(
+      await validate(de, { slugDe: "" }, { data: { title: "عنوان" } }),
+    ).toBe(format);
     expect(
       await validate(
         de,
-        { de: null },
+        { slugDe: null },
         { data: {}, previousValue: null, id: 7 },
       ),
     ).toBe(format);
     expect(
       await validate(
         de,
-        { de: "" },
+        { slugDe: "" },
         { req: { i18n: { language: "uk" }, locale: "en" } },
       ),
     ).toBe(format);
     expect(
       await validate(
         de,
-        { de: "Legacy_Slug" },
-        {
-          previousValue: "Legacy_Slug",
-        },
+        { slugDe: "Legacy_Slug" },
+        { previousValue: "Legacy_Slug" },
       ),
     ).toBe(true);
   });
 
   it("validates the slug it will save, unique within its slot and collection", async () => {
-    expect(await validate(en, { de: "", en: "" }, { id: 7 })).toBe(true);
+    expect(await validate(en, { slugDe: "", slugEn: "" }, { id: 7 })).toBe(
+      true,
+    );
     expect(count).toHaveBeenLastCalledWith(
       expect.objectContaining({
         collection: "events",
         where: {
-          "slug.en": { equals: "ueber-den-fluss" },
+          slugEn: { equals: "ueber-den-fluss" },
           id: { not_equals: 7 },
         },
       }),
     );
     count.mockResolvedValueOnce({ totalDocs: 1 });
-    expect(await validate(de, { de: "fluss" })).toBe(
+    expect(await validate(de, { slugDe: "fluss" })).toBe(
       message("slug_taken", "uk"),
     );
   });

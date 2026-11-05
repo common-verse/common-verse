@@ -133,7 +133,7 @@ try {
       collection: "events",
       draft: true,
       locale: "de",
-      where: { "slug.de": { equals: event.slug } },
+      where: { slugDe: { equals: event.slug } },
       limit: 1,
     });
     if (existing.docs[0]) {
@@ -190,7 +190,8 @@ try {
         title: event.text.de.title,
         description: event.text.de.description,
         content: programmeRichText(event, "de", index, media.id),
-        slug: { de: event.slug, en: event.slug },
+        slugDe: event.slug,
+        slugEn: event.slug,
         image: media.id,
         registrationUrl: "/contact",
         startDate,

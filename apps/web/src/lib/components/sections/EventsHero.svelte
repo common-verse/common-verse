@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-svelte';
-  import { getLocaleMetadata, localizedPath, slugLocale, type Locale } from '@poetry/i18n';
+  import { getLocaleMetadata, localizedPath, recordPath, type Locale } from '@poetry/i18n';
   import type { Event } from '@poetry/types';
   import { Heading } from '$lib/components/ui/heading';
   import { Link } from '$lib/components/ui/link';
@@ -46,7 +46,7 @@
           <div class="hero-copy">
             {#if status}<span class="hero-status">{status}</span>{/if}
             <Heading level={2} id={`feature-title-${event.id}`} style={`view-transition-name: ${index === active ? `event-title-${event.id}` : "none"}`}>
-              <Link variant="heading" href={localizedPath(locale, `events/${event.slug[slugLocale(locale)]}`)}>{event.title}</Link>
+              <Link variant="heading" href={localizedPath(locale, recordPath('events', event, locale))}>{event.title}</Link>
             </Heading>
             {#if event.description}<p style={`view-transition-name: ${index === active ? `event-description-${event.id}` : "none"}`}>{event.description}</p>{/if}
             <div class="hero-meta">

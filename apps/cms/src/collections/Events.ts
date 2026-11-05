@@ -15,15 +15,10 @@ export const Events: CollectionConfig = {
     defaultColumns: ["title", "startDate", "_status", "updatedAt"],
     description: label("events_help"),
     preview: (doc, { locale, req }) =>
-      collectionPreviewUrl("events", doc.slug, locale, req.i18n.language),
+      collectionPreviewUrl("events", doc, locale, req.i18n.language),
     livePreview: {
       url: ({ data, locale, req }) =>
-        collectionPreviewUrl(
-          "events",
-          data.slug,
-          locale?.code,
-          req.i18n.language,
-        ),
+        collectionPreviewUrl("events", data, locale?.code, req.i18n.language),
     },
   },
   access: {

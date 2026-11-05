@@ -108,9 +108,9 @@ export function localizedPath(locale: Locale, path = ""): string {
   );
 }
 
-/** Records with `{ de, en }` slugs: `de` serves the German site, `en` every other locale. */
-export const slugLocale = (locale: Locale): "de" | "en" =>
-  locale === "de" ? "de" : "en";
+/** The slug field serving `locale`: `slugDe` the German site, `slugEn` every other locale. */
+export const slugField = (locale: Locale): "slugDe" | "slugEn" =>
+  locale === "de" ? "slugDe" : "slugEn";
 
 /**
  * Unlocalized path of a record in `locale`, e.g. `events/lesung` or `events/reading`.
@@ -118,8 +118,8 @@ export const slugLocale = (locale: Locale): "de" | "en" =>
  */
 export const recordPath = (
   route: keyof typeof routeSegments,
-  slug: { de: string; en: string },
+  record: Record<ReturnType<typeof slugField>, string>,
   locale: Locale,
   available: readonly Locale[] = locales,
 ) =>
-  available.includes(locale) ? `${route}/${slug[slugLocale(locale)]}` : route;
+  available.includes(locale) ? `${route}/${record[slugField(locale)]}` : route;

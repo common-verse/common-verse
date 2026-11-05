@@ -13,15 +13,10 @@ export const Articles: CollectionConfig = {
     group: label("content"),
     defaultColumns: ["title", "publishedAt", "_status", "updatedAt"],
     preview: (doc, { locale, req }) =>
-      collectionPreviewUrl("articles", doc.slug, locale, req.i18n.language),
+      collectionPreviewUrl("articles", doc, locale, req.i18n.language),
     livePreview: {
       url: ({ data, locale, req }) =>
-        collectionPreviewUrl(
-          "articles",
-          data.slug,
-          locale?.code,
-          req.i18n.language,
-        ),
+        collectionPreviewUrl("articles", data, locale?.code, req.i18n.language),
     },
   },
   access: {

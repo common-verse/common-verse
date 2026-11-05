@@ -8,7 +8,7 @@ import {
 } from "./poems";
 import {
   locales,
-  slugLocale,
+  slugField,
   type Locale,
   type FixedPageKey,
 } from "@poetry/i18n";
@@ -22,7 +22,7 @@ import type {
   Article,
   Event,
   EventsPage,
-  LocalizedSlug,
+  LocaleSlugs,
   Author,
   Poem,
   OrderLookup,
@@ -74,7 +74,7 @@ async function fetchDocument<T>(
   slug: string,
   locale: Locale,
   previewSecret?: string,
-  field: "slug" | "slug.de" | "slug.en" | "id" = "slug",
+  field: "slug" | "slugDe" | "slugEn" | "id" = "slug",
   /** Public lookups ask for published records rather than rely on CMS access alone. */
   publishedOnly = false,
 ): Promise<T | null> {
@@ -110,7 +110,7 @@ export const getEvent = (
     slug,
     locale,
     previewSecret,
-    `slug.${slugLocale(locale)}`,
+    slugField(locale),
   );
 
 /**
@@ -129,7 +129,7 @@ export async function getPoem(
         slug,
         language,
         previewSecret,
-        `slug.${slugLocale(locale)}`,
+        slugField(locale),
         true,
       ),
     ),
@@ -351,7 +351,7 @@ export const getAuthor = (slug: string, locale: Locale) =>
     slug,
     locale,
     undefined,
-    `slug.${slugLocale(locale)}`,
+    slugField(locale),
     true,
   );
 
@@ -394,13 +394,13 @@ export async function getEventsPage(
 }
 
 export async function getEventLocales(
-  slug: LocalizedSlug,
+  event: LocaleSlugs,
   previewSecret?: string,
 ): Promise<Locale[]> {
   const localized = await Promise.all(
     locales.map(async (locale) => ({
       locale,
-      event: await getEvent(slug[slugLocale(locale)], locale, previewSecret),
+      event: await getEvent(event[slugField(locale)], locale, previewSecret),
     })),
   );
   return localized

@@ -23,9 +23,11 @@ translated navigation labels and internal field names.
   `/de` → `/`, `/de/contact` → `/kontakt`, `/ar/kontakt` → `/ar/contact`.
 - Content-record slugs are separate from interface labels. Keep existing slugs
   stable; changes to a record's public URL require an explicit naming decision.
-- Events store a German and an English slug. German routes use the German slug,
-  all other locales the English one (`slugLocale` and `recordPath` in
-  `@poetry/i18n`). A slug from the other slot returns 404. Canonical URLs,
+- Events, poems and authors store a German and an English slug in two top-level
+  fields, `slugDe` and `slugEn`. German routes use the German slug, all other
+  locales the English one (`slugField` and `recordPath` in `@poetry/i18n`). A slug
+  from the other slot returns 404. Do not nest them as `slug.de`/`slug.en`:
+  Payload reads a locale code in a query path as a locale suffix. Canonical URLs,
   alternates and the language switcher link each locale to its own slug; the
   switcher links locales without the record to the section overview.
 
