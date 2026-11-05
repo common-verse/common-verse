@@ -236,5 +236,18 @@
   "author_awards": "Auszeichnungen",
   "author_poems": "Gedichte",
   "author_no_poems": "Von {name} sind noch keine Gedichte veröffentlicht.",
-  "poems_discover": "Alle Gedichte entdecken"
+  "poems_discover": "Alle Gedichte entdecken",
+  "authors_title": "Autor:innen",
+  "authors_intro": "Die jungen Menschen hinter den Gedichten – manche mit Namen, manche mit Pseudonym.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Autor:in",
+        "countPlural=*": "{count} Autor:innen"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "Noch keine Gedichte"
 }

@@ -237,5 +237,19 @@
   "author_awards": "Нагороди",
   "author_poems": "Вірші",
   "author_no_poems": "Віршів автора {name} ще не опубліковано.",
-  "poems_discover": "Переглянути всі вірші"
+  "poems_discover": "Переглянути всі вірші",
+  "authors_title": "Автори",
+  "authors_intro": "Молоді люди, що стоять за віршами, – дехто під власним ім’ям, дехто під псевдонімом.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} автор",
+        "countPlural=few": "{count} автори",
+        "countPlural=*": "{count} авторів"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "Ще немає віршів"
 }

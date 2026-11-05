@@ -236,5 +236,18 @@
   "author_awards": "Awards",
   "author_poems": "Poems",
   "author_no_poems": "No poems by {name} have been published yet.",
-  "poems_discover": "Discover all poems"
+  "poems_discover": "Discover all poems",
+  "authors_title": "Authors",
+  "authors_intro": "The young people behind the poems – some with their names, some with a pseudonym.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} author",
+        "countPlural=*": "{count} authors"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "No poems yet"
 }

@@ -1183,3 +1183,32 @@ html[data-cart-transition] .book-card {
 .flip-rtl:dir(rtl) {
   transform: scaleX(-1);
 }
+/* Author cards share tile, name, country and count rows from two columns. */
+.author-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.author-cards > li {
+  display: grid;
+  min-inline-size: 0;
+}
+@media (min-width: 30rem) {
+  .author-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0;
+  }
+  .author-cards > li {
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    padding-block-end: var(--space-xs);
+  }
+}
+@media (min-width: 52rem) {
+  .author-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

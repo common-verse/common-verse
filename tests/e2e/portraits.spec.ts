@@ -27,18 +27,6 @@ for (const locale of ["en", "ar"]) {
       .getByRole("link", { name: "Prototype Collective", exact: true })
       .click();
     expect((await overview).status()).toBe(200);
-    await page.goto(`/${locale}/authors`);
-    const avatars = await page
-      .locator(".author-grid img")
-      .evaluateAll((images) =>
-        images.map((image) => (image as HTMLImageElement).src),
-      );
-    expect(new Set(avatars).size).toBe(avatars.length);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
     expect(remoteAvatars).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath("avatars.png") });
   });

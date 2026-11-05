@@ -238,5 +238,20 @@
   "author_awards": "الجوائز",
   "author_poems": "القصائد",
   "author_no_poems": "لم تُنشر قصائد لـ{name} بعد.",
-  "poems_discover": "اكتشف كل القصائد"
+  "poems_discover": "اكتشف كل القصائد",
+  "authors_title": "الكتّاب",
+  "authors_intro": "الشابات والشبان وراء القصائد، بعضهم بأسمائهم وبعضهم بأسماء مستعارة.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "كاتب واحد",
+        "countPlural=two": "كاتبان",
+        "countPlural=few": "{count} كتّاب",
+        "countPlural=*": "{count} كاتبًا"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "لا قصائد بعد"
 }

@@ -51,9 +51,7 @@ async function fetchCollection<T>(
       ? "-publishedAt,-createdAt"
       : collection === "events"
         ? "startDate"
-        : collection === "authors"
-          ? "-createdAt"
-          : "title",
+        : "title",
   );
   const documents: T[] = [];
   let page = 1;
@@ -151,12 +149,6 @@ export async function getPoem(
 export const getEvents = (locale: Locale) =>
   fetchCollection<Event>("events", locale);
 
-export const getPoems = (locale: Locale) =>
-  fetchCollection<LegacyPoem>("poems", locale);
-
-export const getAuthors = (locale: Locale) =>
-  fetchCollection<LegacyAuthor>("authors", locale);
-
 /** Query a poet directly so their work is not lost beyond the archive's first page. */
 export async function getAuthorPoems(
   id: string,
@@ -226,6 +218,22 @@ export const getPublishedPoems = (locale: Locale, author?: number) =>
     locale,
     author ? { "where[author][equals]": String(author) } : {},
   );
+
+/** Poem counts by author ID, from published poems without loading their text. */
+export async function getPoemCounts(): Promise<Map<number, number>> {
+  const poems = await fetchPublished<Pick<Poem, "author">>(
+    "poems",
+    "de",
+    { "select[author]": "true" },
+    0,
+  );
+  const counts = new Map<number, number>();
+  for (const { author } of poems) {
+    const id = typeof author === "object" ? author.id : author;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}
 
 export const getPublishedAuthors = (locale: Locale) =>
   fetchPublished<Author>("authors", locale);

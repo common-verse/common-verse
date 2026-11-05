@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Author, Poem } from "@poetry/types";
-import { authorNames, getAuthor, getPoem, poemVersions } from "./cms";
+import {
+  authorNames,
+  getAuthor,
+  getPoem,
+  getPoemCounts,
+  poemVersions,
+} from "./cms";
 import {
   byYear,
   displayName,
@@ -139,4 +145,19 @@ it("finds public authors among published records only", async () => {
   const query = fetch.mock.calls[0][0].searchParams;
   expect(query.get("where[slug.en][equals]")).toBe("moth");
   expect(query.get("where[_status][equals]")).toBe("published");
+});
+
+it("counts published poems per author from their author field only", async () => {
+  const fetch = vi.fn(async (url: URL) => {
+    expect(url.searchParams.get("select[author]")).toBe("true");
+    expect(url.searchParams.get("depth")).toBe("0");
+    return Response.json({
+      docs: [{ author: 1 }, { author: 2 }, { author: 1 }],
+    });
+  });
+  vi.stubGlobal("fetch", fetch);
+  expect([...(await getPoemCounts())]).toEqual([
+    [1, 2],
+    [2, 1],
+  ]);
 });

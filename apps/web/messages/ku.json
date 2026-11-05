@@ -235,5 +235,17 @@
   "author_awards": "Xelat",
   "author_poems": "Helbest",
   "author_no_poems": "Hîn tu helbestên {name} nehatine weşandin.",
-  "poems_discover": "Hemû helbestan keşf bike"
+  "poems_discover": "Hemû helbestan keşf bike",
+  "authors_title": "Nivîskar",
+  "authors_intro": "Ciwanên li pişt helbestan – hin bi navê xwe, hin bi navekî xwestî.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=*": "{count} nivîskar"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "Hîn helbest tune"
 }

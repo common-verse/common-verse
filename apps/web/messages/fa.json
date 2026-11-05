@@ -235,5 +235,17 @@
   "author_awards": "جایزه‌ها",
   "author_poems": "شعرها",
   "author_no_poems": "هنوز شعری از {name} منتشر نشده است.",
-  "poems_discover": "همهٔ شعرها را ببینید"
+  "poems_discover": "همهٔ شعرها را ببینید",
+  "authors_title": "نویسندگان",
+  "authors_intro": "جوانانی که پشت این شعرها هستند؛ برخی با نام خود و برخی با نام مستعار.",
+  "authors_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=*": "{count} نویسنده"
+      }
+    }
+  ],
+  "authors_no_poems_yet": "هنوز شعری نیست"
 }
