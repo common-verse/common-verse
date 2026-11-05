@@ -58,6 +58,8 @@ export default defineConfig({
   },
   vite: {
     envDir: "../../",
+    // Bundle all packages into dist so the server image needs no node_modules.
+    ssr: { noExternal: true },
     plugins: [tailwindcss(), paraglideVitePlugin(paraglideConfig)],
   },
 });
