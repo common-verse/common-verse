@@ -5,12 +5,7 @@ import {
   localizedPath,
   type Locale,
 } from "@poetry/i18n";
-import type {
-  HomepageSection,
-  MediaReference,
-  LegacyPoem,
-  Event,
-} from "@poetry/types";
+import type { HomepageSection, MediaReference, Event } from "@poetry/types";
 
 export function contentDirection(language: string) {
   return isLocale(language) ? getLocaleMetadata(language).direction : "auto";
@@ -76,16 +71,6 @@ export function upcomingEvents(
       return true;
     })
     .slice(0, Math.max(1, Math.min(4, limit)));
-}
-
-export function poemExcerpt(poem: LegacyPoem, locale: Locale) {
-  const translation = poem.translations?.find(
-    (entry) => entry.language === locale,
-  );
-  return {
-    original: poem.originalText.split("\n").slice(0, 5).join("\n"),
-    translation,
-  };
 }
 
 /** Explicit manual selections never silently fill empty slots with automatic content. */

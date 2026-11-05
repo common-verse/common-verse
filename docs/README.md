@@ -21,7 +21,7 @@ procedures; agent instructions live in the [root](../AGENTS.md),
 
 ## UI
 
-- [UI components](ui-components.md) — Component APIs, composition, accessibility, RTL, and profile portraits.
+- [UI components](ui-components.md) — Component APIs, composition, accessibility, RTL, and author portraits.
 - [Design tokens](design-tokens.md) — Color, typography, elevation, and Light/Dark/System preferences.
 
 ## Development and maintenance

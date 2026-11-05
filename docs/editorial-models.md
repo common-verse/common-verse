@@ -30,7 +30,7 @@ Pages (Home, About, Contact, Privacy, Legal Notice, Terms of sale), then Shop
 (Products, Orders, Shop settings). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
 Home, the Events page, About, Contact, Privacy, Legal Notice, and Terms of sale & withdrawal are fixed Payload globals. Event,
-poet, and poem detail pages come from their collections. Articles are an MVP collection with localized native rich text, drafts, preview
+author, and poem detail pages come from their collections. Articles are an MVP collection with localized native rich text, drafts, preview
 and public article routes. Do not add arbitrary pages. The legacy `pages` collection remains
 hidden to preserve existing records and is not used by public routing or bulk seeding.
 

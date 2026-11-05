@@ -640,25 +640,6 @@ footer {
   margin: 0;
   white-space: pre-wrap;
 }
-.feature-translation {
-  margin-block-start: var(--space-md-lg);
-  padding-block-start: var(--space-sm-md);
-  border-block-start: 1px solid var(--color-soft);
-}
-.feature-translation h3 {
-  font-size: var(--font-size-md);
-  line-height: 1.4;
-  margin-block: 0 var(--space-xs);
-}
-.verse {
-  font-family: var(--font-serif);
-  font-size: var(--font-size-md);
-  white-space: pre-wrap;
-  margin-block: var(--space-2xs);
-}
-.translation-credit {
-  font-size: var(--font-size-sm);
-}
 .feature-author {
   font-weight: 600;
   margin-block: var(--space-md) var(--space-3xs);
@@ -733,8 +714,6 @@ footer {
   padding-block: var(--space-xs);
   flex-shrink: 0;
 }
-.poem-grid,
-.author-grid,
 .participation-grid,
 .event-list {
   list-style: none;
@@ -742,24 +721,6 @@ footer {
   margin: 0;
   display: grid;
   gap: var(--space-md);
-}
-.author-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.author-grid > li {
-  min-width: 0;
-}
-.author-grid h3 {
-  font-size: var(--font-size-md);
-}
-.author-grid h3 a {
-  display: inline-block;
-  padding-block: var(--space-2xs);
-}
-.poet-excerpt {
-  white-space: pre-wrap;
-  font-family: var(--font-serif);
-  font-size: var(--font-size-base);
 }
 .section-events {
   border-block-start: 1px solid var(--color-soft);
@@ -898,9 +859,6 @@ footer {
     justify-content: space-between;
     gap: var(--space-lg);
   }
-  .author-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
   .event-list article {
     grid-template-columns: minmax(8rem, 0.6fr) minmax(0, 2fr) auto;
   }
@@ -924,9 +882,6 @@ footer {
   .site-header {
     gap: var(--space-2xs);
   }
-  .author-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .meta-card,
@@ -937,13 +892,6 @@ footer {
 }
 .section-newsletter {
   box-shadow: var(--shadow-raised);
-}
-.poem-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
-  gap: var(--space-lg-xl);
-}
-.poem-grid > li {
-  min-inline-size: 0;
 }
 .featured-layout {
   display: grid;

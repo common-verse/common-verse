@@ -14,8 +14,6 @@
   "dependencies": {
     "@astrojs/node": "11.1.6",
     "@astrojs/svelte": "9.0.1",
-    "@dicebear/core": "10.6.0",
-    "@dicebear/styles": "10.6.0",
     "@inlang/paraglide-js": "2.25.4",
     "@payloadcms/live-preview": "3.90.2",
     "@payloadcms/richtext-lexical": "3.90.2",

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { Event } from "@poetry/types";
 import {
   contentDirection,
-  poemExcerpt,
   safeHref,
   upcomingEvents,
   sectionItems,
@@ -47,19 +46,7 @@ describe("homepage editorial behaviour", () => {
       ),
     ).toEqual([]);
   });
-  it("preserves the original and does not invent a translation", () => {
-    const poem = {
-      id: 1,
-      slug: "a",
-      title: "A",
-      originalLanguage: "fa" as const,
-      originalText: "one\ntwo\nthree\nfour\nfive\nsix",
-      translations: [],
-    };
-    expect(poemExcerpt(poem, "ar")).toEqual({
-      original: "one\ntwo\nthree\nfour\nfive",
-      translation: undefined,
-    });
+  it("gives editorial languages their direction", () => {
     expect(contentDirection("fa")).toBe("rtl");
     expect(contentDirection("ku")).toBe("ltr");
   });

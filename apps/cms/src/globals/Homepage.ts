@@ -116,7 +116,7 @@ const blocks: Block[] = [
         required: true,
         admin: {
           description: label(
-            "choose_a_poem_poet_or_event_workshop_its_image_title_description_and_link_come_from_the_original_record",
+            "choose_a_poem_author_or_event_workshop_its_content_and_link_come_from_the_original_record",
           ),
         },
       },

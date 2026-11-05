@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getArticles,
   getArticle,
-  getActiveAuthors,
   getFixedPage,
   getRecentPoems,
   poemVersions,
@@ -97,42 +96,12 @@ describe("automatic homepage queries", () => {
       events.searchParams.get("where[startDate][greater_than_equal]"),
     ).toBeTruthy();
   });
-  it("skips inactive profiles and continues past the first page until four active authors", async () => {
-    const pages: string[] = [];
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: URL) => {
-        const url = new URL(input);
-        if (url.pathname === "/api/authors") {
-          const page = url.searchParams.get("page")!;
-          pages.push(page);
-          const ids = page === "1" ? [1, 2, 3, 4] : [5, 6, 7, 8];
-          return Response.json({
-            docs: ids.map((id) => ({ id, name: `Poet ${id}` })),
-            hasNextPage: page === "1",
-          });
-        }
-        const id = Number(url.searchParams.get("where[author][equals]"));
-        expect(url.searchParams.get("where[_status][equals]")).toBe(
-          "published",
-        );
-        return Response.json({
-          docs: id > 2 ? [{ id: 100 + id, author: { id } }] : [],
-        });
-      }),
-    );
-    const result = await getActiveAuthors("en");
-    expect(pages).toEqual(["1", "2"]);
-    expect(result.authors.map((author) => author.id)).toEqual([3, 4, 5, 6]);
-    expect(result.poems).toHaveLength(4);
-  });
   it("reports failed automatic requests instead of silently presenting empty content", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(new Response(null, { status: 503 })),
     );
     await expect(getRecentPoems("en")).rejects.toThrow("503");
-    await expect(getActiveAuthors("en")).rejects.toThrow("503");
   });
 });
 

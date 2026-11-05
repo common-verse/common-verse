@@ -19,11 +19,9 @@ import {
 } from "@poetry/i18n";
 import { convertLexicalToPlaintext } from "@payloadcms/richtext-lexical/plaintext";
 import type {
-  LegacyAuthor,
   FixedPage,
   Homepage,
   PayloadListResponse,
-  LegacyPoem,
   Article,
   Event,
   EventsPage,
@@ -163,36 +161,6 @@ export async function getPoem(
 
 export const getEvents = (locale: Locale) =>
   fetchCollection<Event>("events", locale);
-
-/** Query a poet directly so their work is not lost beyond the archive's first page. */
-export async function getAuthorPoems(
-  id: string,
-  locale: Locale,
-  limit?: number,
-): Promise<LegacyPoem[]> {
-  const poems: LegacyPoem[] = [];
-  let page = 1;
-  let hasNextPage = false;
-  do {
-    const url = new URL("/api/poems", cmsUrl);
-    url.searchParams.set("locale", locale);
-    url.searchParams.set("fallback-locale", "none");
-    url.searchParams.set("depth", "2");
-    url.searchParams.set("where[author][equals]", id);
-    url.searchParams.set("where[_status][equals]", "published");
-    url.searchParams.set("sort", "title");
-    url.searchParams.set("limit", String(limit ?? 100));
-    url.searchParams.set("page", String(page));
-    const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(`Poet poems request failed with ${response.status}`);
-    const data = (await response.json()) as PayloadListResponse<LegacyPoem>;
-    poems.push(...data.docs);
-    hasNextPage = !limit && data.hasNextPage;
-    page += 1;
-  } while (hasNextPage);
-  return poems;
-}
 
 /** All published records matching the `where[…]` query, across every page. */
 async function fetchPublished<T>(
@@ -491,41 +459,6 @@ export async function getRecentPoems(locale: Locale): Promise<Poem[]> {
   if (!response.ok)
     throw new Error(`Recent poems request failed with ${response.status}`);
   return ((await response.json()) as PayloadListResponse<Poem>).docs;
-}
-
-/** Walk newest profiles until four have published work, including beyond the first page. */
-export async function getActiveAuthors(
-  locale: Locale,
-): Promise<{ authors: LegacyAuthor[]; poems: LegacyPoem[] }> {
-  const authors: LegacyAuthor[] = [];
-  const poems: LegacyPoem[] = [];
-  let page = 1;
-  let hasNextPage: boolean;
-  do {
-    const url = new URL("/api/authors", cmsUrl);
-    url.searchParams.set("locale", locale);
-    url.searchParams.set("fallback-locale", "none");
-    url.searchParams.set("depth", "1");
-    url.searchParams.set("sort", "-createdAt");
-    url.searchParams.set("limit", "4");
-    url.searchParams.set("page", String(page));
-    const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(`Active authors request failed with ${response.status}`);
-    const data = (await response.json()) as PayloadListResponse<LegacyAuthor>;
-    const samples = await Promise.all(
-      data.docs.map((author) => getAuthorPoems(String(author.id), locale, 1)),
-    );
-    data.docs.forEach((author, index) => {
-      if (samples[index]?.length && authors.length < 4) {
-        authors.push(author);
-        poems.push(...samples[index]);
-      }
-    });
-    hasNextPage = data.hasNextPage;
-    page += 1;
-  } while (hasNextPage && authors.length < 4);
-  return { authors, poems };
 }
 
 export async function getFixedPage(
