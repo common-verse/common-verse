@@ -36,7 +36,7 @@ jobs:
           push: true
           build-args: |
             PUBLIC_SITE_URL=https://common-verse.weimer.pro
-            PUBLIC_CMS_URL=https://cms.common-verse.weimer.pro
+            PUBLIC_CMS_URL=https://cms-common-verse.weimer.pro
           tags: |
             ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:dev
             ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:${{ github.sha }}

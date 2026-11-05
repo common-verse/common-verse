@@ -30,7 +30,7 @@ services:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?}
       PREVIEW_SECRET: ${PREVIEW_SECRET:?}
       ORDER_LOOKUP_SECRET: ${ORDER_LOOKUP_SECRET:?}
-      PAYLOAD_PUBLIC_SERVER_URL: https://cms.common-verse.weimer.pro
+      PAYLOAD_PUBLIC_SERVER_URL: https://cms-common-verse.weimer.pro
       PUBLIC_SITE_URL: https://common-verse.weimer.pro
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOKS_SIGNING_SECRET: ${STRIPE_WEBHOOKS_SIGNING_SECRET:-}

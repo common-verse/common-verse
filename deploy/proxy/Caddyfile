@@ -1,16 +1,22 @@
+# Requests arrive from Cloudflare Tunnel (cloudflared) over plain HTTP. Trusting
+# its private address keeps the visitor's X-Forwarded-For for Astro's rate limits.
+{
+	auto_https off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
 (not_indexed) {
 	header X-Robots-Tag "noindex, nofollow"
 }
 
-common-verse.weimer.pro {
+http://common-verse.weimer.pro {
 	import not_indexed
-	basic_auth {
-		{$DEV_USER} {$DEV_PASSWORD_HASH}
-	}
 	reverse_proxy dev-web:4321
 }
 
-cms.common-verse.weimer.pro {
+http://cms-common-verse.weimer.pro {
 	import not_indexed
 	reverse_proxy dev-cms:3001
 }

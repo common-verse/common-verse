@@ -16,7 +16,7 @@ docker run --rm \
   -e NODE_ENV=development \
   -e DATABASE_URL="postgresql://poetry:$POSTGRES_PASSWORD@localhost:5432/poetry" \
   -e PAYLOAD_SECRET -e PREVIEW_SECRET -e ORDER_LOOKUP_SECRET \
-  -e PAYLOAD_PUBLIC_SERVER_URL=https://cms.common-verse.weimer.pro \
+  -e PAYLOAD_PUBLIC_SERVER_URL=https://cms-common-verse.weimer.pro \
   -e PUBLIC_SITE_URL=https://common-verse.weimer.pro \
   -e DEV_ADMIN_EMAIL -e DEV_ADMIN_PASSWORD \
   -e DEV_EDITOR_EMAIL -e DEV_EDITOR_PASSWORD \
