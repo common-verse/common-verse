@@ -31,12 +31,14 @@ const media = {
   height: 600,
 };
 
+const bothSlugs = (slug) => ({ de: slug, en: slug });
+
 function event(locale, preview) {
   const [title, description] = events[locale] ?? events.de;
   return {
     id: 1,
     title: preview ? `${title} — draft` : title,
-    slug: "test",
+    slug: bothSlugs("test"),
     description,
     content: plainTextToRichText(description),
     image: media,
@@ -54,7 +56,7 @@ function extraFeaturedEvents(locale) {
   return Array.from({ length: 4 }, (_, index) => ({
     ...event(locale, false),
     id: 30 + index,
-    slug: `featured-${index + 1}`,
+    slug: bothSlugs(`featured-${index + 1}`),
     title: locale === "fa" ? null : `Featured ${index + 1} ${locale}`,
     startDate: new Date(Date.now() + index * 3 * 86_400_000).toISOString(),
   }));
@@ -597,7 +599,7 @@ const server = http.createServer((request, response) => {
         featuredEvent: {
           ...event(locale, false),
           id: 20,
-          slug: "reading",
+          slug: bothSlugs("reading"),
           title: locale === "fa" ? null : `Reading ${locale}`,
         },
         _status: isPreview ? "draft" : "published",
@@ -649,7 +651,8 @@ const server = http.createServer((request, response) => {
   if (url.pathname.startsWith("/api/events")) {
     const requestedSlug = isPreview
       ? url.searchParams.get("slug")
-      : url.searchParams.get("where[slug][equals]");
+      : (url.searchParams.get("where[slug.de][equals]") ??
+        url.searchParams.get("where[slug.en][equals]"));
     const document = event(locale, isPreview);
     if (
       isPreview &&
@@ -662,7 +665,7 @@ const server = http.createServer((request, response) => {
       const reading = {
         ...document,
         id: 20,
-        slug: "reading",
+        slug: bothSlugs("reading"),
         title: locale === "fa" ? null : `Reading ${locale}`,
       };
       return response.end(
@@ -674,7 +677,7 @@ const server = http.createServer((request, response) => {
             {
               ...document,
               id: 22,
-              slug: "next-workshop",
+              slug: bothSlugs("next-workshop"),
               title: locale === "fa" ? null : `Workshop ${locale}`,
               startDate: new Date(Date.now() + 14 * 86_400_000).toISOString(),
               image: {
@@ -685,7 +688,7 @@ const server = http.createServer((request, response) => {
             {
               ...document,
               id: 21,
-              slug: "past",
+              slug: bothSlugs("past"),
               title: `Past event ${locale}`,
               startDate: new Date(Date.now() - 7 * 86_400_000).toISOString(),
             },
@@ -712,7 +715,7 @@ const server = http.createServer((request, response) => {
         },
       });
       document.title = `Reading ${locale}`;
-      document.slug = "reading";
+      document.slug = bothSlugs("reading");
     }
     if (requestedSlug === "bare-registration")
       document.registrationUrl = " google.de ";

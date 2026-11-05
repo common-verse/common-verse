@@ -11,7 +11,7 @@ const event = (
 ): Event => ({
   id,
   title: `Event ${id}`,
-  slug: `event-${id}`,
+  slug: { de: `event-${id}`, en: `event-${id}` },
   startDate,
   ...extra,
 });

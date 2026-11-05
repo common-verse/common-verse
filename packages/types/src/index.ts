@@ -17,7 +17,7 @@ export interface LocationValue {
 export interface Event {
   id: number | string;
   title: string;
-  slug: string;
+  slug: LocalizedSlug;
   description?: string | null;
   content?: FixedPage["content"];
   image?: MediaReference | number | string | null;

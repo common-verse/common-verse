@@ -4,7 +4,7 @@ import { authorDisplayName } from '../lib/editorial'
 import { Heading } from '$lib/components/ui/heading'
 import { Text } from '$lib/components/ui/text'
 import { Link } from '$lib/components/ui/link'
-import { localizedPath, type Locale } from '@poetry/i18n'
+import { localizedPath, slugLocale, type Locale } from '@poetry/i18n'
 import type { Homepage } from '@poetry/types'
 import { Button } from '$lib/components/ui/button'
 import { contentDirection, poemExcerpt, safeHref } from '../lib/homepage'
@@ -47,7 +47,7 @@ const o = { locale }
     <Heading level={2}>{event.title}</Heading>
     <p><time datetime={event.startDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))}</time></p>
     {locationText(event.location) && <p>{locationText(event.location)}</p>}
-    <Link variant="standalone" href={localizedPath(locale, `events/${event.slug}`)}>{m.home_event_details({}, o)}</Link>
+    <Link variant="standalone" href={localizedPath(locale, `events/${event.slug[slugLocale(locale)]}`)}>{m.home_event_details({}, o)}</Link>
   </article>}
   {announcement && <article class="featured-event">
     <EditorialImage image={announcement.image} {locale} eager />

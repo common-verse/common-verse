@@ -107,3 +107,7 @@ export function localizedPath(locale: Locale, path = ""): string {
     queryAndHash
   );
 }
+
+/** Records with `{ de, en }` slugs: `de` serves the German site, `en` every other locale. */
+export const slugLocale = (locale: Locale): "de" | "en" =>
+  locale === "de" ? "de" : "en";

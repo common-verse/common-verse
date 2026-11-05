@@ -41,7 +41,13 @@ async function fixture() {
       ];
       return {
         docs: (records[collection] ?? []).filter(
-          (record) => record[field] === condition.equals,
+          (record) =>
+            field
+              .split(".")
+              .reduce<unknown>(
+                (value, key) => (value as Record<string, unknown>)?.[key],
+                record,
+              ) === condition.equals,
         ),
       };
     }),

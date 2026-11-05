@@ -1,5 +1,5 @@
 ---
-import { localizedPath, type Locale } from '@poetry/i18n'
+import { localizedPath, slugLocale, type Locale } from '@poetry/i18n'
 import type { HomepageSection } from '@poetry/types'
 import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
@@ -23,7 +23,7 @@ const item = featuredItem(section, preview)
 </article>}
 {item?.kind === 'event' && <article class="featured-layout">
   <EditorialImage image={item.value.image} {locale} />
-  <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, `events/${item.value.slug}`)}>{item.value.title}</Link></Heading>
+  <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, `events/${item.value.slug[slugLocale(locale)]}`)}>{item.value.title}</Link></Heading>
   <p><time datetime={item.value.startDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(item.value.startDate))}</time></p>
   {item.value.description && <p class="section-prose">{item.value.description}</p>}</div>
 </article>}

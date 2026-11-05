@@ -91,7 +91,7 @@ export async function seed(payload: Payload, { onlyIfEmpty = false } = {}) {
     const existingWorkshop = await payload.find({
       req,
       collection: "events",
-      where: { slug: { equals: "test" } },
+      where: { "slug.de": { equals: "test" } },
       limit: 1,
     });
     if (!existingWorkshop.docs.length) {
@@ -133,7 +133,7 @@ export async function seed(payload: Payload, { onlyIfEmpty = false } = {}) {
         locale: "de",
         data: {
           title: de.title,
-          slug: "test",
+          slug: { de: "test", en: "test" },
           description: de.description,
           content: plainTextToRichText(de.content),
           image: media.id,
