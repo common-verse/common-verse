@@ -194,7 +194,7 @@ export async function seedBulk(payload: Payload) {
         collection: "events",
         locale: "de",
         draft: true,
-        where: { "slug.de": { equals: slug } },
+        where: { slugDe: { equals: slug } },
         limit: 1,
       });
       if (existing.docs[0]) continue;
@@ -225,7 +225,8 @@ export async function seedBulk(payload: Payload) {
         locale: "de",
         data: {
           ...localized("de"),
-          slug: { de: slug, en: slug },
+          slugDe: slug,
+          slugEn: slug,
           startDate: start.toISOString(),
           image: mediaIDs[i % mediaIDs.length],
           registrationUrl: "https://example.org/register",

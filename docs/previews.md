@@ -30,7 +30,10 @@ including Kurmanji, resolve to English.
 Collection draft reads use the existing secret-authorized `/preview` endpoints;
 fixed globals expose separate `/public` and `/preview` endpoints. Never bypass
 publication or secret checks when extending these paths. Routes must use the
-shared [public URL mappings](routing.md).
+shared [public URL mappings](routing.md). The `/preview` endpoints find a record
+by `slug` in the slot of the requested locale (`slugField`), or by `id`; a poem
+preview finds the poem by its slug, then loads its other versions by ID.
+A wrong preview secret returns 401; without one, drafts stay hidden (404).
 
 Use [testing guidance](testing.md) for authorization, live-preview, and
 signed-in editor checks.

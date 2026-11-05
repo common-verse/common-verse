@@ -8,7 +8,7 @@ import {
 } from "./poems";
 import {
   locales,
-  slugLocale,
+  slugField,
   type Locale,
   type FixedPageKey,
 } from "@poetry/i18n";
@@ -22,7 +22,7 @@ import type {
   Article,
   Event,
   EventsPage,
-  LocalizedSlug,
+  LocaleSlugs,
   Author,
   Poem,
   OrderLookup,
@@ -74,7 +74,7 @@ async function fetchDocument<T>(
   slug: string,
   locale: Locale,
   previewSecret?: string,
-  field: "slug" | "slug.de" | "slug.en" | "id" = "slug",
+  field: "slug" | "slugDe" | "slugEn" | "id" = "slug",
   /** Public lookups ask for published records rather than rely on CMS access alone. */
   publishedOnly = false,
 ): Promise<T | null> {
@@ -84,7 +84,7 @@ async function fetchDocument<T>(
   url.searchParams.set("locale", locale);
   url.searchParams.set("fallback-locale", "none");
   url.searchParams.set("depth", "2");
-  if (preview) url.searchParams.set("slug", slug);
+  if (preview) url.searchParams.set(field === "id" ? "id" : "slug", slug);
   else url.searchParams.set(`where[${field}][equals]`, slug);
   if (!preview && publishedOnly)
     url.searchParams.set("where[_status][equals]", "published");
@@ -110,7 +110,7 @@ export const getEvent = (
     slug,
     locale,
     previewSecret,
-    `slug.${slugLocale(locale)}`,
+    slugField(locale),
   );
 
 /**
@@ -122,20 +122,30 @@ export async function getPoem(
   locale: Locale,
   previewSecret?: string,
 ): Promise<{ poem: Poem; versions: Partial<Record<Locale, Poem>> } | null> {
+  const poem = await fetchDocument<Poem>(
+    "poems",
+    slug,
+    locale,
+    previewSecret,
+    slugField(locale),
+    true,
+  );
+  if (!poem) return null;
+  // By ID, because a preview looks up the slug in each locale's own slot.
   const documents = await Promise.all(
     locales.map((language) =>
-      fetchDocument<Poem>(
-        "poems",
-        slug,
-        language,
-        previewSecret,
-        `slug.${slugLocale(locale)}`,
-        true,
-      ),
+      language === locale
+        ? poem
+        : fetchDocument<Poem>(
+            "poems",
+            String(poem.id),
+            language,
+            previewSecret,
+            "id",
+            true,
+          ),
     ),
   );
-  const poem = documents[locales.indexOf(locale)];
-  if (!poem) return null;
   return {
     poem,
     versions: Object.fromEntries(
@@ -345,13 +355,17 @@ export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
   return data.docs;
 }
 
-export const getAuthor = (slug: string, locale: Locale) =>
+export const getAuthor = (
+  slug: string,
+  locale: Locale,
+  previewSecret?: string,
+) =>
   fetchDocument<Author>(
     "authors",
     slug,
     locale,
-    undefined,
-    `slug.${slugLocale(locale)}`,
+    previewSecret,
+    slugField(locale),
     true,
   );
 
@@ -394,13 +408,13 @@ export async function getEventsPage(
 }
 
 export async function getEventLocales(
-  slug: LocalizedSlug,
+  event: LocaleSlugs,
   previewSecret?: string,
 ): Promise<Locale[]> {
   const localized = await Promise.all(
     locales.map(async (locale) => ({
       locale,
-      event: await getEvent(slug[slugLocale(locale)], locale, previewSecret),
+      event: await getEvent(event[slugField(locale)], locale, previewSecret),
     })),
   );
   return localized

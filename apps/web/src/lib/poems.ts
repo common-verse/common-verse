@@ -94,7 +94,7 @@ export const poemTeaser = (
   author?: AuthorName,
 ): PoemTeaser => ({
   id: poem.id,
-  href: localizedPath(locale, recordPath("poems", poem.slug, locale)),
+  href: localizedPath(locale, recordPath("poems", poem, locale)),
   language,
   title: poem.title ?? "",
   lines: excerptLines(poem.snippet, poem.content),

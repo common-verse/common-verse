@@ -45,8 +45,8 @@ const html = eventContentHTML(event.content, cmsUrl)
 const date = new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))
 const registrationUrl = registrationHref(event.registrationUrl, locale)
 const credit = mediaCredit(eventMedia?.credit)
-const alternateLocales = await getEventLocales(event.slug, preview ? suppliedSecret : undefined)
-const localePath = (target: Locale) => recordPath('events', event.slug, target, alternateLocales)
+const alternateLocales = await getEventLocales(event, preview ? suppliedSecret : undefined)
+const localePath = (target: Locale) => recordPath('events', event, target, alternateLocales)
 ---
 
 <BaseLayout {locale} {title} {description} {image} {structuredData} {alternateLocales} canonicalPath={localePath(locale)} {localePath} {preview} contentType="article" mainClass="events-page">

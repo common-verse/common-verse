@@ -32,7 +32,7 @@ describe("locale metadata", () => {
     expect(unlocalizedPath("/en")).toBe("/");
   });
   it("uses the German record slug for German and the English one elsewhere", () => {
-    const slug = { de: "lesung", en: "reading" };
+    const slug = { slugDe: "lesung", slugEn: "reading" };
     expect(localizedPath("de", recordPath("events", slug, "de"))).toBe(
       "/veranstaltungen/lesung",
     );

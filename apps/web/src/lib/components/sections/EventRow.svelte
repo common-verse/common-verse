@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { localizedPath, slugLocale, type Locale } from '@poetry/i18n';
+  import { localizedPath, recordPath, type Locale } from '@poetry/i18n';
   import type { Event } from '@poetry/types';
   import { Heading } from '$lib/components/ui/heading';
   import { Link } from '$lib/components/ui/link';
@@ -14,7 +14,7 @@
 </script>
 
 <article class="event-row">
-  <Link class="event-row-link" variant="heading" href={localizedPath(locale, `events/${event.slug[slugLocale(locale)]}`)} aria-labelledby={`event-title-${event.id}`}>
+  <Link class="event-row-link" variant="heading" href={localizedPath(locale, recordPath('events', event, locale))} aria-labelledby={`event-title-${event.id}`}>
     <EventFacts {event} {locale} {now} />
     <div class="event-row-copy event-summary">
       {#if status}<Badge class="event-status">{status}</Badge>{/if}

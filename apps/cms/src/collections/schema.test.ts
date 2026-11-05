@@ -107,9 +107,9 @@ describe("editorial schemas", () => {
       maxLength: 160,
     });
     expect(field(Events, "title")).toMatchObject({ maxLength: 80 });
-    expect(field(Events, "slug")).toMatchObject({
-      type: "group",
-      fields: [{ name: "de" }, { name: "en" }],
+    expect(Events.fields[1]).toMatchObject({
+      type: "row",
+      fields: [{ name: "slugDe" }, { name: "slugEn" }],
     });
     expect(Events.hooks).toBeUndefined();
     expect(Events.versions).toMatchObject({ drafts: expect.any(Object) });
@@ -124,7 +124,7 @@ describe("editorial schemas", () => {
     );
     expect(visible).toEqual([
       field(Events, "title"),
-      field(Events, "slug"),
+      Events.fields[1],
       field(Events, "description"),
       field(Events, "registrationUrl"),
       field(Events, "image"),
@@ -231,7 +231,7 @@ describe("draft preview endpoint", () => {
         draft: true,
         overrideAccess: true,
         locale: "ar",
-        where: { "slug.en": { equals: "test" } },
+        where: { slugEn: { equals: "test" } },
       }),
     );
     vi.unstubAllEnvs();

@@ -19,7 +19,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 const poem = (id: number, extra: Partial<Poem> = {}): Poem => ({
   id,
-  slug: { de: `p${id}`, en: `p${id}` },
+  slugDe: `p${id}`,
+  slugEn: `p${id}`,
   originalLanguage: "de",
   author: 1,
   ...extra,
@@ -127,15 +128,30 @@ it("requests German names only for authors without a local name", async () => {
   ]);
 });
 
-it("finds public poems among published records only, previews among drafts", async () => {
-  const fetch = vi.fn(async (_url: URL) => Response.json({ docs: [] }));
+it("finds a poem by its locale's slug, then its other versions by ID", async () => {
+  const fetch = vi.fn(async (_url: URL) => Response.json({ docs: [poem(7)] }));
   vi.stubGlobal("fetch", fetch);
+  const queries = () =>
+    fetch.mock.calls.map(([url]) => Object.fromEntries(url.searchParams));
   await getPoem("lesung", "de");
-  await getPoem("lesung", "de", "secret");
-  const status = (call: number) =>
-    fetch.mock.calls[call][0].searchParams.get("where[_status][equals]");
-  expect(status(0)).toBe("published");
-  expect(status(6)).toBeNull();
+  expect(queries()).toHaveLength(6);
+  expect(queries()[0]).toMatchObject({
+    "where[slugDe][equals]": "lesung",
+    "where[_status][equals]": "published",
+  });
+  for (const query of queries().slice(1))
+    expect(query).toMatchObject({
+      "where[id][equals]": "7",
+      "where[_status][equals]": "published",
+    });
+  fetch.mockClear();
+  await getPoem("reading", "ar", "secret");
+  expect(queries()[0]).toMatchObject({ slug: "reading", locale: "ar" });
+  for (const query of queries().slice(1)) {
+    expect(query).toMatchObject({ id: "7" });
+    expect(query).not.toHaveProperty("slug");
+    expect(query).not.toHaveProperty("where[_status][equals]");
+  }
 });
 
 it("finds public authors among published records only", async () => {
@@ -143,7 +159,7 @@ it("finds public authors among published records only", async () => {
   vi.stubGlobal("fetch", fetch);
   await getAuthor("moth", "en");
   const query = fetch.mock.calls[0][0].searchParams;
-  expect(query.get("where[slug.en][equals]")).toBe("moth");
+  expect(query.get("where[slugEn][equals]")).toBe("moth");
   expect(query.get("where[_status][equals]")).toBe("published");
 });
 

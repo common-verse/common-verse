@@ -4,6 +4,7 @@ import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
 import * as Card from '$lib/components/ui/card'
 import { PoemCard } from '$lib/components/sections'
+import { getSecret } from 'astro:env/server'
 import { isLocale, localizedPath, recordPath, type Locale } from '@poetry/i18n'
 import EditorialImage from '../../../components/EditorialImage.astro'
 import { authorNames, getAuthor, getAuthorPoemTeasers } from '../../../lib/cms'
@@ -16,17 +17,21 @@ const { locale: rawLocale, slug } = Astro.params
 if (!isLocale(rawLocale) || !slug) return new Response('Not found', { status: 404 })
 const locale = rawLocale
 const o = { locale }
-const author = await getAuthor(slug, locale)
+const suppliedSecret = Astro.url.searchParams.get('previewSecret') ?? undefined
+const previewSecret = getSecret('PREVIEW_SECRET')
+const preview = Boolean(suppliedSecret && previewSecret && suppliedSecret === previewSecret)
+if (suppliedSecret && !preview) return new Response('Invalid preview link', { status: 401 })
+const author = await getAuthor(slug, locale, preview ? suppliedSecret : undefined)
 if (!author) return new Response('Not found', { status: 404 })
 const [names, poems] = await Promise.all([authorNames([author], locale), getAuthorPoemTeasers(author.id, locale)])
 const { name, lang } = names.get(author.id)!
 // Never a generated face: without an upload there is no image at all.
 const portrait = mediaObject(author.portrait)?.url ? author.portrait : null
 const awards = [...(author.awards ?? [])].sort((a, b) => b.year - a.year)
-const localePath = (target: Locale) => recordPath('authors', author.slug, target)
+const localePath = (target: Locale) => recordPath('authors', author, target)
 ---
 
-<BaseLayout {locale} title={`${name} · ${m.site_title({}, o)}`} description={author.biography || undefined} canonicalPath={localePath(locale)} {localePath} contentType="website">
+<BaseLayout {locale} title={`${name} · ${m.site_title({}, o)}`} description={author.biography || undefined} canonicalPath={localePath(locale)} {localePath} {preview} contentType="website">
   <Link variant="standalone" class="back-link" href={localizedPath(locale, 'authors')}><ArrowLeft class="flip-rtl" aria-hidden="true" />{m.authors_all({}, o)}</Link>
   <header class:list={['author-head', { 'has-portrait': portrait }]}>
     <div>
