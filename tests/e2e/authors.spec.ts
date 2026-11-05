@@ -104,6 +104,19 @@ test("a pseudonym without portrait, city or poems in Arabic", async ({
   expect((await page.request.get("/autoren/moth")).status()).toBe(404);
 });
 
+test("the language switch keeps the author across different German and English slugs", async ({
+  page,
+}) => {
+  await page.goto("/autoren/nachtfalter");
+  await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
+  await page.getByRole("link", { name: /^English/ }).click();
+  await expect(page).toHaveURL(/\/en\/authors\/moth$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Moth");
+  await page.getByRole("button", { name: /English$/ }).click();
+  await page.getByRole("link", { name: /^Deutsch/ }).click();
+  await expect(page).toHaveURL(/\/autoren\/nachtfalter$/);
+});
+
 test("author drafts render only in an authorized preview", async ({ page }) => {
   expect((await page.goto("/en/authors/draft-author"))?.status()).toBe(404);
   expect(
