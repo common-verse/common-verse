@@ -1,9 +1,13 @@
 import type { Endpoint } from "payload";
 import { isLocale, localizedPath, slugField } from "@poetry/i18n";
 
-type PreviewCollection = "events" | "poems" | "articles";
+type PreviewCollection = "events" | "poems" | "authors" | "articles";
 // Collections with `slugDe`/`slugEn` from `localeSlugField`.
-const localeSlugCollections: PreviewCollection[] = ["events", "poems"];
+const localeSlugCollections: PreviewCollection[] = [
+  "events",
+  "poems",
+  "authors",
+];
 
 export function collectionPreviewUrl(
   collection: PreviewCollection,
