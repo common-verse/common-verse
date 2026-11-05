@@ -1,11 +1,12 @@
 # Deployment
 
 One LUMASERV cloud server (`lx51`: 8 vCPU, 32 GiB RAM, 160 GiB, Ubuntu 24.04 LTS)
-runs every environment. There is no production yet; staging is deployed from `dev`.
+runs every environment. Only the dev environment exists so far; staging (with a
+sanitized copy of production data) and production follow later.
 
 | Environment | Site                              | CMS                                   | Deployed by               |
 | ----------- | --------------------------------- | ------------------------------------- | ------------------------- |
-| Staging     | `https://common-verse.weimer.pro` | `https://cms.common-verse.weimer.pro` | push to `dev` (GitHub CI) |
+| Dev         | `https://common-verse.weimer.pro` | `https://cms.common-verse.weimer.pro` | push to `dev` (GitHub CI) |
 
 DNS for `common-verse.weimer.pro` and `*.common-verse.weimer.pro` points to the
 server without the Cloudflare proxy; Caddy obtains the TLS certificates.
@@ -17,10 +18,10 @@ server without the Cloudflare proxy; Caddy obtains the TLS certificates.
 - Firewall (ufw) allows 22, 80 and 443 only. fail2ban bans IPs after repeated
   failed SSH connections for 10 minutes; automatic security updates are enabled.
 - `/srv/common-verse/proxy`: shared Caddy proxy (`deploy/proxy`). Its `.env`
-  holds the staging basic-auth user and password hash.
-- `/srv/common-verse/staging`: staging stack (`deploy/staging`). Its `.env`
+  holds the dev basic-auth user and password hash.
+- `/srv/common-verse/dev`: dev stack (`deploy/dev`). Its `.env`
   holds the database password and app secrets, generated once on the server.
-  Stripe keys are empty, so shop payments fail on staging.
+  Stripe keys are empty, so shop payments fail on dev.
 
 Every deploy replaces the compose files and the Caddyfile; the `.env` files
 are never in Git or CI and must be kept when changing the server.
@@ -35,27 +36,39 @@ development dependencies and sources for the startup
 seed below, so Next's standalone output is not used until the CMS has production
 migrations. Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL` and `TRUST_PROXY` at build time,
 so each environment needs its own web image. CI pushes
-`ghcr.io/veridynn/common-verse-{web,cms}` tagged `staging` and with the commit SHA.
+`ghcr.io/veridynn/common-verse-{web,cms}` tagged `dev` and with the commit SHA.
 
 The project has no production migrations yet ([migrations](migrations.md)). On
 start, the CMS container runs the seed CLI in development mode: Payload pushes the
-schema and seeds demo content into an empty database. A schema change that
-would lose data stops at Payload's confirmation prompt and is not applied; the
-CMS then starts with the old schema and the log shows the warning.
+schema and seeds demo content into an empty database.
 
-## Staging access
+## Dev data
 
-The site is behind basic auth and sends `X-Robots-Tag: noindex`. The credentials
-are not in Git. The CMS admin has its own accounts: the first account created at
-`/admin` becomes the Administrator.
+Dev starts fresh on every deploy: `deploy.sh` removes the dev database
+and media volumes, then `deploy/dev/seed.sh` runs every demo seed from
+[demo data](demo-data.md) (poems, bulk workshops with photos, programme, shop,
+fixed pages, homepage) and creates one admin and one editor account. Anything
+created on dev is lost with the next deploy; the site is down for about two
+minutes while it reseeds.
+
+The seed runs in a one-off CMS container that shares the database container's
+network, so the database is `localhost` there, as the bulk, programme and shop
+seeds require. The accounts come from `DEV_ADMIN_*` and `DEV_EDITOR_*`
+in the dev `.env`; `deploy/dev/seed-accounts.ts` is dev-only, the
+regular seeds never create credentials.
+
+## Dev access
+
+The site is behind basic auth and sends `X-Robots-Tag: noindex`. The basic-auth
+and CMS account credentials are not in Git.
 
 ## CI setup
 
-`.github/workflows/staging.yml` needs, in the GitHub environment `staging`:
+`.github/workflows/dev.yml` needs, in the GitHub environment `dev`:
 
-- secret `STAGING_SSH_KEY`: a private key used only by CI
-- variable `STAGING_KNOWN_HOSTS`: the server's ED25519 host key line
-- variable `STAGING_HOST`: `45.95.53.107`
+- secret `DEV_SSH_KEY`: a private key used only by CI
+- variable `DEV_KNOWN_HOSTS`: the server's ED25519 host key line
+- variable `DEV_HOST`: `45.95.53.107`
 
 The environment only accepts deployments from `dev`. On the server the public key
 is limited to one command:
@@ -69,5 +82,5 @@ Deploys run one at a time. Rolling back: run the workflow on an older commit.
 
 ## Backups
 
-Not set up yet. Back up the `staging_postgres` and `staging_media` volumes
+Not set up yet. Back up the `dev_postgres` and `dev_media` volumes
 together before risky changes.

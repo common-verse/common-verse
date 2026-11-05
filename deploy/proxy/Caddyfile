@@ -5,12 +5,12 @@
 common-verse.weimer.pro {
 	import not_indexed
 	basic_auth {
-		{$STAGING_USER} {$STAGING_PASSWORD_HASH}
+		{$DEV_USER} {$DEV_PASSWORD_HASH}
 	}
-	reverse_proxy staging-web:4321
+	reverse_proxy dev-web:4321
 }
 
 cms.common-verse.weimer.pro {
 	import not_indexed
-	reverse_proxy staging-cms:3001
+	reverse_proxy dev-cms:3001
 }
