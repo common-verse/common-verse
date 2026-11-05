@@ -4,6 +4,7 @@ import { readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Payload } from "payload";
+import { seedPoems } from "./seed-poems";
 
 const translations = {
   de: {
@@ -162,8 +163,10 @@ export async function seed(payload: Payload, { onlyIfEmpty = false } = {}) {
       }
     }
 
+    await seedPoems(payload, req, uploadPrefix);
+
     await payload.db.commitTransaction(transactionID);
-    payload.logger.info("Prototype workshop is ready.");
+    payload.logger.info("Prototype workshop, poems and authors are ready.");
   } catch (error) {
     try {
       await payload.db.rollbackTransaction(transactionID);

@@ -7,10 +7,20 @@ same schema and validation as editorial content. Application code does not impor
 seed tooling; Faker and the script runner remain development dependencies.
 
 The curated TypeScript seed uses Payload's Local API to create one six-language
-workshop, artwork with localized alternative text, and a Persian poem with explicit
-German and English translations. Automatic seeding checks authors, media, pages,
+workshop with artwork, plus fictional cities, authors and poems
+(`scripts/seed/seed-poems.ts`). Automatic seeding checks authors, media, pages,
 poems, and events and skips the database if any contain records. User accounts
 are excluded from this emptiness check.
+
+The poem seed covers every page state: 26 published poems and one draft, with
+originals in all six languages; Arabic and Persian originals without a German
+translation; poems translated into all six languages, into some, or none; poems
+with and without year and snippet. Its seven authors include ones with and
+without portrait (generated SVG artwork, no photos), city and awards, the
+pseudonym "Nachtfalke" without portrait or city, and one draft author. Names,
+awards and places are fictional demo data. Poems are matched by German slug
+(`demo-gedicht-*`), authors by German name and cities by German name; existing
+records are skipped.
 
 All writes share one PostgreSQL transaction. A failure rolls back records and
 removes only files belonging to that attempt. Existing editorial files and records
@@ -23,9 +33,8 @@ or uploads.
 
 ### Optional bulk demo data
 
-Run `pnpm --filter @poetry/cms seed:bulk` from the repository root to add 60
-fictional authors, 300 poems, 100 workshops, and 12 local SVG
-artwork assets. Start PostgreSQL first with `docker compose up -d postgres`.
+Run `pnpm --filter @poetry/cms seed:bulk` from the repository root to add 100
+workshops and 12 local SVG artwork assets. Start PostgreSQL first with `docker compose up -d postgres`.
 This separate command does not change the small automatic startup seed.
 
 The bulk command only accepts a local `poetry` database and refuses production.
@@ -35,13 +44,11 @@ including drafts, without updating or deleting editorial content. Do not run see
 concurrently. Keep the `bulk-demo-v1` identifiers in demo names, slugs, and artwork
 credits if you want later runs to recognize those records.
 
-Faker supplies localized fictional names and fixed-range workshop dates. Its
-version and random seeds are pinned. Six-language editorial fixtures supply
-matching demo poem translations and workshop prose; they are illustrative writing,
-not real poems or reviewed publication translations. Some poems have no
-translations, others have up to five. Workshop, page, and biography translations
-are intentionally incomplete in some records. One in five poems and workshops is
-a draft; text lengths, artwork relationships, and past/future dates vary. Workshops
+Faker supplies fixed-range workshop dates. Its version and random seeds are
+pinned. Six-language editorial fixtures supply workshop prose and the curated demo
+poems; they are illustrative writing, not real poems or reviewed publication
+translations. Workshop translations are intentionally incomplete in some records.
+One in five workshops is a draft; text lengths, artwork relationships, and past/future dates vary. Workshops
 are marked `noIndex` and omit registration links. No users or credentials are seeded.
 
 ### Optional event photographs (no API key)
