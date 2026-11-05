@@ -65,28 +65,47 @@ test("primary navigation is keyboard accessible", async ({ page }) => {
   await expect(page.getByRole("link", { name: /zum inhalt/i })).toBeFocused();
 });
 
-test("the mobile bottom bar shows named icon links and marks the current section", async ({
+test("the mobile bottom bar labels five links on one line and widens the current one", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 780 });
-  await page.goto("/en/events");
-  const nav = page.getByRole("navigation", { name: "Primary navigation" });
+  await page.goto("/autoren");
+  const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
   const links = nav.getByRole("link");
-  await expect(links).toHaveText(["Events", "Articles", "Poems", "Shop"]);
-  for (const link of await links.all()) {
-    await expect(link.locator(".nav-label")).toHaveCSS(
-      "clip-path",
-      "inset(50%)",
+  // The bar uses the short "Termine"; the desktop header keeps "Veranstaltungen".
+  const visibleText = () =>
+    links.evaluateAll((elements) =>
+      elements.map((element) => (element as HTMLElement).innerText.trim()),
     );
+  expect(await visibleText()).toEqual([
+    "Termine",
+    "Artikel",
+    "Gedichte",
+    "Autor:innen",
+    "Shop",
+  ]);
+  const widths: number[] = [];
+  for (const link of await links.all()) {
     await expect(link.locator("svg")).toBeVisible();
+    const label = link.locator("span:visible");
+    // One line that fits inside its item.
+    expect(
+      await label.evaluate(
+        (element) =>
+          element.getClientRects().length === 1 &&
+          element.scrollWidth <= element.parentElement!.clientWidth,
+      ),
+    ).toBe(true);
+    widths.push((await link.boundingBox())!.width);
   }
-  await expect(nav.getByRole("link", { name: "Events" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  await expect(nav.locator("[aria-current]")).toHaveCount(1);
+  const current = nav.locator("[aria-current]");
+  await expect(current).toHaveCount(1);
+  await expect(current).toHaveText("Autor:innen");
+  expect(widths[3] / widths[0]).toBeCloseTo(1.5, 1);
   const bar = (await nav.boundingBox())!;
   expect(bar.y + bar.height).toBeCloseTo(780, 0);
+  await page.setViewportSize({ width: 1280, height: 780 });
+  expect((await visibleText())[0]).toBe("Veranstaltungen");
 });
 
 test("primary navigation targets render collection indexes", async ({
@@ -103,6 +122,9 @@ test("primary navigation targets render collection indexes", async ({
   await expect(
     page.getByRole("link", { name: "A Shared Morning" }),
   ).toBeVisible();
+  await page.getByRole("link", { name: "Authors", exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/authors$/);
+  await expect(page.getByRole("link", { name: "Samira Taleb" })).toBeVisible();
 });
 
 test("language switcher changes the locale URL and document direction", async ({

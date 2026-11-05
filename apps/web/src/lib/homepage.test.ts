@@ -131,12 +131,28 @@ describe("composed homepage content", () => {
     };
     expect(featuredItem(section)).toBeNull();
     expect(featuredItem(section, true)?.kind).toBe("event");
+    const author = {
+      id: 3,
+      slugDe: "poet",
+      slugEn: "poet",
+      country: "SY",
+      awards: [],
+    };
     expect(
       featuredItem({
         blockType: "featured",
-        item: { relationTo: "authors", value: { id: 3, name: "Poet" } },
+        item: { relationTo: "authors", value: author },
       })?.kind,
-    ).toBe("poet");
+    ).toBe("author");
+    expect(
+      featuredItem({
+        blockType: "featured",
+        item: {
+          relationTo: "authors",
+          value: { ...author, _status: "draft" },
+        },
+      }),
+    ).toBeNull();
     expect(
       featuredItem({
         blockType: "featured",

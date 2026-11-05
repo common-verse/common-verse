@@ -121,18 +121,12 @@ export function sectionItems<
 export function featuredItem(section: HomepageSection, preview = false) {
   const item = section.item;
   if (!item?.value || typeof item.value !== "object") return null;
-  if (
-    item.relationTo === "poems" &&
-    (preview || item.value._status !== "draft")
-  )
+  if (!preview && item.value._status === "draft") return null;
+  if (item.relationTo === "poems")
     return { kind: "poem" as const, value: item.value };
-  if (item.relationTo === "authors" && item.value.name)
-    return { kind: "poet" as const, value: item.value };
-  if (
-    item.relationTo === "events" &&
-    item.value.title &&
-    (preview || item.value._status !== "draft")
-  )
-    return { kind: "event" as const, value: item.value };
-  return null;
+  if (item.relationTo === "authors")
+    return { kind: "author" as const, value: item.value };
+  return item.value.title
+    ? { kind: "event" as const, value: item.value }
+    : null;
 }

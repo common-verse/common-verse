@@ -1,6 +1,6 @@
 ---
 import { getLocaleMetadata, localizedPath, unlocalizedPath, type Locale } from '@poetry/i18n'
-import { MicVocal, Newspaper, Quote, ShoppingBag } from 'lucide-svelte'
+import { MicVocal, Newspaper, Quote, ShoppingBag, Users } from 'lucide-svelte'
 import * as m from '../paraglide/messages.js'
 import LanguageSwitcher from './LanguageSwitcher.astro'
 import ThemeSwitcher from './ThemeSwitcher.svelte'
@@ -23,9 +23,11 @@ const messageOptions = { locale }
 const { direction } = getLocaleMetadata(locale)
 const path = unlocalizedPath(Astro.originPathname)
 const links = [
-  { route: 'events', label: m.nav_events({}, messageOptions), Icon: MicVocal },
+  // The bottom bar shows `short` instead of `label` where one is set.
+  { route: 'events', label: m.nav_events({}, messageOptions), short: m.nav_events_short({}, messageOptions), Icon: MicVocal },
   { route: 'articles', label: m.nav_articles({}, messageOptions), Icon: Newspaper },
   { route: 'poems', label: m.nav_poems({}, messageOptions), Icon: Quote },
+  { route: 'authors', label: m.authors_title({}, messageOptions), Icon: Users },
   { route: 'shop', label: m.nav_shop({}, messageOptions), Icon: ShoppingBag },
 ]
 const current = (route: string) => (path === `/${route}` ? 'page' : path.startsWith(`/${route}/`) ? 'true' : undefined)
@@ -34,10 +36,11 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
 <header class="site-header" dir="ltr" style="view-transition-name: site-header">
   <a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, messageOptions) !== 'The Poetry Project' ? ` — ${m.site_title({}, messageOptions)}` : ''}</span></a>
   <nav aria-label={m.nav_primary({}, messageOptions)}>
-    {links.map(({ route, label, Icon }) => (
+    {links.map(({ route, label, short, Icon }) => (
       <a dir={direction} href={localizedPath(locale, route)} aria-current={current(route)}>
         <Icon class="nav-icon" size={24} aria-hidden="true" />
         <span class="nav-label">{label}</span>
+        {short && <span class="nav-label-short">{short}</span>}
       </a>
     ))}
   </nav>

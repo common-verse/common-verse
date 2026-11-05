@@ -6,6 +6,7 @@ import {
   getActiveAuthors,
   getFixedPage,
   getRecentPoems,
+  poemVersions,
   getUpcomingEvents,
   getEvents,
   getEventsPage,
@@ -255,5 +256,37 @@ describe("shop requests", () => {
       clientSecret: "pi_1_secret",
       paymentIntentID: "pi_1",
     });
+  });
+});
+
+describe("poem originals", () => {
+  const untranslated = {
+    id: 7,
+    slugDe: "a",
+    slugEn: "a",
+    originalLanguage: "ar" as const,
+    author: 1,
+  };
+  const original = { ...untranslated, title: "عنوان", content: "سطر" };
+  it("look up published originals publicly and drafts only in a preview", async () => {
+    const fetch = vi.fn(async () => Response.json({ docs: [original] }));
+    vi.stubGlobal("fetch", fetch);
+    expect(await poemVersions([untranslated], "de")).toEqual([
+      { poem: original, language: "ar" },
+    ]);
+    const [publicUrl] = fetch.mock.calls[0] as unknown as [URL];
+    expect(publicUrl.pathname).toBe("/api/poems");
+    expect(publicUrl.searchParams.get("where[_status][equals]")).toBe(
+      "published",
+    );
+    await poemVersions([untranslated], "de", "secret");
+    const [previewUrl, init] = fetch.mock.calls[1] as unknown as [
+      URL,
+      RequestInit,
+    ];
+    expect(previewUrl.pathname).toBe("/api/poems/preview");
+    expect(previewUrl.searchParams.get("id")).toBe("7");
+    expect(previewUrl.searchParams.get("locale")).toBe("ar");
+    expect(init.headers).toEqual({ "x-preview-secret": "secret" });
   });
 });

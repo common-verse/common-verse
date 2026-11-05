@@ -4,9 +4,8 @@ import { PoemCard } from '$lib/components/sections'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
 import EmptyState from '../../../components/EmptyState.astro'
-import { authorNames, getPublishedPoems, poemVersions } from '../../../lib/cms'
-import { byYear, poemsPerPage, poemTeaser } from '../../../lib/poems'
-import type { Author } from '@poetry/types'
+import { getPublishedPoems, poemTeasers, poemVersions } from '../../../lib/cms'
+import { byYear, poemsPerPage } from '../../../lib/poems'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
@@ -19,9 +18,7 @@ const page = /^[1-9]\d{0,5}$/.test(rawPage) ? Number(rawPage) : 0
 const poems = await poemVersions((await getPublishedPoems(locale)).sort(byYear), locale)
 const pageCount = Math.max(1, Math.ceil(poems.length / poemsPerPage))
 if (!page || page > pageCount) return new Response('Not found', { status: 404 })
-const shown = poems.slice((page - 1) * poemsPerPage, page * poemsPerPage)
-const names = await authorNames(shown.flatMap(({ poem }) => (typeof poem.author === 'object' ? [poem.author as Author] : [])), locale)
-const teasers = shown.map(({ poem, language }) => poemTeaser(poem, language, locale, typeof poem.author === 'object' ? names.get(poem.author.id) : undefined))
+const teasers = await poemTeasers(poems.slice((page - 1) * poemsPerPage, page * poemsPerPage), locale)
 const title = m.nav_poems({}, o)
 const description = m.poems_intro({}, o)
 const pagePath = (number: number) => (number === 1 ? 'poems' : `poems?page=${number}`)

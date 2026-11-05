@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Locale } from "@poetry/i18n";
-  import { Heading } from "$lib/components/ui/heading";
+  import { Heading, type HeadingLevel } from "$lib/components/ui/heading";
   import { Link } from "$lib/components/ui/link";
   import * as m from "../../../paraglide/messages.js";
 
@@ -12,6 +12,7 @@
     poems,
     portrait,
     locale,
+    level = 2,
   }: {
     name: string;
     /** The name's language: the page's, or German for the fallback name. */
@@ -22,6 +23,7 @@
     /** An uploaded portrait's URL; never a generated face. */
     portrait?: string;
     locale: Locale;
+    level?: HeadingLevel;
   } = $props();
 </script>
 
@@ -35,7 +37,7 @@
       >{[...name][0]?.toLocaleUpperCase(locale)}</span
     >
   {/if}
-  <Heading level={2} class="author-card-name"
+  <Heading {level} class="author-card-name"
     ><Link variant="heading" {href}><bdi {lang}>{name}</bdi></Link></Heading
   >
   <p>{country}</p>

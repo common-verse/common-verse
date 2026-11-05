@@ -3,23 +3,21 @@ import { localizedPath, recordPath, type Locale } from '@poetry/i18n'
 import type { HomepageSection } from '@poetry/types'
 import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
-import { LegacyPoemCard } from '$lib/components/sections'
-import PersonPortrait from './PersonPortrait.svelte'
+import { AuthorCard, PoemCard } from '$lib/components/sections'
 import EditorialImage from './EditorialImage.astro'
-import { authorDisplayName } from '../lib/editorial'
-import { featuredItem, mediaObject } from '../lib/homepage'
-interface Props { section: HomepageSection; locale: Locale; preview?: boolean }
-const { section, locale, preview = false } = Astro.props
+import type { AuthorCardData } from '../lib/cms'
+import type { PoemTeaser } from '../lib/poems'
+import { featuredItem } from '../lib/homepage'
+interface Props { section: HomepageSection; teasers: Map<number, PoemTeaser>; cards: Map<number, AuthorCardData>; locale: Locale; preview?: boolean }
+const { section, teasers, cards, locale, preview = false } = Astro.props
 const item = featuredItem(section, preview)
+const poem = item?.kind === 'poem' ? teasers.get(item.value.id) : undefined
+const author = item?.kind === 'author' ? cards.get(item.value.id) : undefined
 ---
-{item?.kind === 'poem' && <div class="featured-layout">
-  <EditorialImage image={item.value.media?.find((image) => mediaObject(image))} {locale} />
-  <LegacyPoemCard poem={item.value} {locale} />
-</div>}
-{item?.kind === 'poet' && <article class="featured-layout featured-poet">
-  <PersonPortrait userId={item.value.id} image={item.value.portrait} />
-  <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, 'authors')}>{authorDisplayName(item.value.name)}</Link></Heading>
-  {item.value.biography && <p class="section-prose">{item.value.biography}</p>}</div>
+{poem && <div class="featured-layout"><PoemCard {poem} {locale} level={3} /></div>}
+{item?.kind === 'author' && author && <article class="featured-layout featured-author">
+  <AuthorCard {...author} {locale} level={3} />
+  {item.value.biography && <p class="section-prose">{item.value.biography}</p>}
 </article>}
 {item?.kind === 'event' && <article class="featured-layout">
   <EditorialImage image={item.value.image} {locale} />

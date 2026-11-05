@@ -62,41 +62,6 @@ function extraFeaturedEvents(locale) {
   }));
 }
 
-const poem = {
-  id: 2,
-  slug: "test-poem",
-  title: "صبح مشترک",
-  originalLanguage: "fa",
-  originalText: "صبح از میان پنجره‌های ما می‌گذرد",
-  author: { id: 3, name: "Prototype Collective" },
-  translations: [
-    {
-      language: "de",
-      title: "Gemeinsamer Morgen",
-      text: "Der Morgen zieht durch unsere Fenster",
-      translator: "Prototype translation",
-    },
-    {
-      language: "en",
-      title: "A Shared Morning",
-      text: "Morning passes through our windows",
-      translator: "Prototype translation",
-    },
-  ],
-  _status: "published",
-};
-
-const authors = [poem.author, { id: 4, name: "Workshop Collective" }];
-const recentPoems = Array.from({ length: 5 }, (_, index) => ({
-  ...poem,
-  id: 20 + index,
-  slug: `recent-${index}`,
-  title: `Recent poem ${index}`,
-  originalLanguage: "en",
-  originalText: `Recent verse ${index}`,
-  translations: [],
-}));
-
 function homepage(locale, preview) {
   const content = structuredClone(
     homepageContent[locale] ?? homepageContent.de,
@@ -114,11 +79,13 @@ function homepage(locale, preview) {
               linkUrl: "/events",
             },
           }
-        : { kind: "poem", poem };
+        : { kind: "poem", poem: homepagePoem(201, locale) };
   Object.assign(feature, content.feature, { kind: feature.kind });
   const sections = content.sections.map((section) => ({
     ...section,
-    ...(section.blockType === "authors" ? { authors: authors } : {}),
+    ...(section.blockType === "authors"
+      ? { authors: [homepageAuthor(12, locale), homepageAuthor(13, locale)] }
+      : {}),
   }));
   sections.push(
     {
@@ -129,9 +96,8 @@ function homepage(locale, preview) {
       item: {
         relationTo: "authors",
         value: {
-          ...authors[0],
+          ...homepageAuthor(11, locale),
           biography: "The biography comes from the poet profile.",
-          portrait: media,
         },
       },
     },
@@ -145,14 +111,15 @@ function homepage(locale, preview) {
       blockType: "featured",
       enabled: true,
       heading: "Featured poetry",
-      item: { relationTo: "poems", value: { ...poem, media: [media] } },
+      item: { relationTo: "poems", value: homepagePoem(201, locale) },
     },
     {
       blockType: "poems",
       enabled: true,
       heading: "Selected poems",
       selectionMode: "manual",
-      poems: [recentPoems[4], recentPoems[1]],
+      // The draft stands in for one the public endpoint would not strip.
+      poems: [202, 204, 203].map((id) => homepagePoem(id, locale)),
     },
     {
       blockType: "poems",
@@ -160,6 +127,12 @@ function homepage(locale, preview) {
       heading: "Empty selection",
       selectionMode: "manual",
       poems: [],
+    },
+    {
+      blockType: "authors",
+      enabled: true,
+      heading: "Newest authors",
+      selectionMode: "auto",
     },
   );
   sections.push({
@@ -444,8 +417,7 @@ async function handleShop(request, response, url) {
   return send(404, { error: "Not found" });
 }
 
-// Rebuilt poems, authors and cities (#9–#11), localized per request like Payload.
-// The homepage still reads the legacy shapes above until it is rewired (#21).
+// Poems, authors and cities, localized per request like Payload.
 const latakia = {
   id: 1,
   names: {
@@ -633,14 +605,19 @@ const localizedPoem = (poem, locale, depth) => {
     _status: poem.draft ? "draft" : "published",
   };
 };
-const isRebuiltQuery = (params) =>
-  ["-year", "name"].includes(params.get("sort")) ||
-  [
-    "where[id][in]",
-    "where[id][equals]",
-    "where[slugDe][equals]",
-    "where[slugEn][equals]",
-  ].some((key) => params.has(key));
+// The homepage global populates relationships two levels deep.
+const homepagePoem = (id, locale) =>
+  localizedPoem(
+    rebuiltPoems.find((poem) => poem.id === id),
+    locale,
+    1,
+  );
+const homepageAuthor = (id, locale) =>
+  localizedAuthor(
+    rebuiltAuthors.find((author) => author.id === id),
+    locale,
+    1,
+  );
 function rebuiltList(collection, params, locale) {
   const depth = Number(params.get("depth") ?? 0);
   const ids = (
@@ -865,23 +842,10 @@ const server = http.createServer((request, response) => {
   const rebuiltCollection = url.pathname.match(
     /^\/api\/(poems|authors)(\/preview)?$/,
   )?.[1];
-  if (rebuiltCollection && (isPreview || isRebuiltQuery(url.searchParams)))
+  if (rebuiltCollection)
     return response.end(
       JSON.stringify(rebuiltList(rebuiltCollection, url.searchParams, locale)),
     );
-  if (url.pathname === "/api/authors") {
-    return response.end(
-      JSON.stringify({ docs: authors, totalDocs: authors.length }),
-    );
-  }
-  if (url.pathname.startsWith("/api/authors/")) {
-    const author = authors.find(
-      (entry) => String(entry.id) === url.pathname.split("/").at(-1),
-    );
-    if (author) return response.end(JSON.stringify(author));
-    response.statusCode = 404;
-    return response.end(JSON.stringify({ error: "Not found" }));
-  }
   if (url.pathname.startsWith("/api/articles")) {
     const slug = isPreview
       ? url.searchParams.get("slug")
@@ -993,52 +957,6 @@ const server = http.createServer((request, response) => {
     if (requestedSlug === "partial" && locale === "fa") document.title = null;
     return response.end(JSON.stringify({ docs: [document], totalDocs: 1 }));
   }
-  if (url.pathname.startsWith("/api/poems")) {
-    if (url.searchParams.get("sort") === "-createdAt")
-      return response.end(
-        JSON.stringify({ docs: recentPoems, totalDocs: recentPoems.length }),
-      );
-    const author = url.searchParams.get("where[author][equals]");
-    if (author === "4") {
-      if (url.searchParams.get("page") === "2") {
-        return response.end(
-          JSON.stringify({
-            docs: [
-              {
-                ...poem,
-                id: 6,
-                slug: "next-page-poem",
-                title: "A poem on the next page",
-                author: authors[1],
-              },
-            ],
-            totalDocs: 2,
-            hasNextPage: false,
-          }),
-        );
-      }
-      return response.end(
-        JSON.stringify({
-          docs: [
-            {
-              ...poem,
-              id: 5,
-              slug: "later-poem",
-              title: "A later poem",
-              originalLanguage: "en",
-              originalText: "A voice beyond the first archive page",
-              author: authors[1],
-              translations: [],
-            },
-          ],
-          totalDocs: 1,
-          hasNextPage: url.searchParams.get("limit") !== "1",
-        }),
-      );
-    }
-    return response.end(JSON.stringify({ docs: [poem], totalDocs: 1 }));
-  }
-
   response.statusCode = 404;
   response.end(JSON.stringify({ error: "Not found" }));
 });

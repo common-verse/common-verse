@@ -1,12 +1,12 @@
 ---
 import { getSecret } from 'astro:env/server'
 import { isLocale } from '@poetry/i18n'
-import type { LegacyAuthor } from '@poetry/types'
+import type { Author, Poem } from '@poetry/types'
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import HomeFeature from '../../components/HomeFeature.astro'
 import HomeSections from '../../components/HomeSections.astro'
-import { getActiveAuthors, getAuthorPoems, getHomepage, getUpcomingEvents, getRecentPoems } from '../../lib/cms'
-import { mediaObject } from '../../lib/homepage'
+import { authorCards, getHomepage, getPoemCounts, getPublishedAuthors, getRecentPoems, getUpcomingEvents, poemTeasers, poemVersions } from '../../lib/cms'
+import { featuredItem, mediaObject, sectionItems } from '../../lib/homepage'
 import * as m from '../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
@@ -20,23 +20,42 @@ const homepageResult = await Promise.allSettled([getHomepage(locale, preview ? s
 const homepage = homepageResult[0].status === 'fulfilled' ? homepageResult[0].value : null
 const sections = homepage?.sections ?? []
 const visible = sections.filter((section) => section.enabled !== false)
-const autoAuthors = visible.some((section) => section.blockType === 'authors' && (section.selectionMode === 'auto' || (!section.selectionMode && !section.authors?.length)))
-const autoPoems = visible.some((section) => section.blockType === 'poems' && section.selectionMode !== 'manual')
+const authorSections = visible.filter((section) => section.blockType === 'authors')
 const result = await Promise.allSettled([
-  autoAuthors ? getActiveAuthors(locale) : Promise.resolve({ authors: [], poems: [] }),
+  authorSections.length || visible.some((section) => section.item?.relationTo === 'authors') ? getPoemCounts() : Promise.resolve(new Map<number, number>()),
+  authorSections.some((section) => section.selectionMode === 'auto' || (!section.selectionMode && !section.authors?.length)) ? getPublishedAuthors(locale, '-createdAt') : Promise.resolve([]),
   visible.some((section) => section.blockType === 'events' && section.selectionMode !== 'manual') ? getUpcomingEvents(locale) : Promise.resolve([]),
-  autoPoems ? getRecentPoems(locale) : Promise.resolve([]),
+  visible.some((section) => section.blockType === 'poems' && section.selectionMode !== 'manual') ? getRecentPoems(locale) : Promise.resolve([]),
 ])
-const active = result[0].status === 'fulfilled' ? result[0].value : { authors: [], poems: [] }
-const authors = active.authors
-const events = result[1].status === 'fulfilled' ? result[1].value : []
-const recentPoems = result[2].status === 'fulfilled' ? result[2].value : []
-const authorIds = [...new Set(visible.filter((section) => section.blockType === 'authors' && section.selectionMode !== 'auto').flatMap((section) =>
-  (section.authors ?? []).filter((author): author is LegacyAuthor => Boolean(author) && typeof author === 'object').slice(0, 4).map((author) => String(author.id))
-))].filter((id) => !authors.some((author) => String(author.id) === id))
-const samples = await Promise.allSettled(authorIds.map((id) => getAuthorPoems(id, locale, 1)))
-const poems = [...active.poems, ...samples.flatMap((sample) => sample.status === 'fulfilled' ? sample.value : [])]
-const unavailable = [...homepageResult, ...result, ...samples].some((entry) => entry.status === 'rejected')
+const counts = result[0].status === 'fulfilled' ? result[0].value : new Map<number, number>()
+// Automatic: the newest profiles with at least one published poem.
+const recentAuthors = (result[1].status === 'fulfilled' ? result[1].value : []).filter((author) => counts.has(author.id)).slice(0, 4)
+const events = result[2].status === 'fulfilled' ? result[2].value : []
+const recentPoems = result[3].status === 'fulfilled' ? result[3].value : []
+
+// Every poem and author the page shows, resolved once to the version and name it displays.
+const feature = homepage?.feature
+const heroPoem = feature?.kind === 'poem' && typeof feature.poem === 'object' && feature.poem && (preview || feature.poem._status !== 'draft') ? feature.poem : null
+const featured = visible.map((section) => featuredItem(section, preview))
+const poems = [
+  ...recentPoems,
+  ...visible.flatMap((section) => (section.blockType === 'poems' ? sectionItems<Poem>([], section.poems, 'manual', preview) : [])),
+  ...featured.flatMap((item) => (item?.kind === 'poem' ? [item.value] : [])),
+  ...(heroPoem ? [heroPoem] : []),
+]
+const authors = [
+  ...recentAuthors,
+  ...authorSections.flatMap((section) => sectionItems<Author>([], section.authors, 'manual', preview)),
+  ...featured.flatMap((item) => (item?.kind === 'author' ? [item.value] : [])),
+]
+const unique = <T extends { id: number }>(items: T[]) => [...new Map(items.map((item) => [item.id, item])).values()]
+const resolved = await Promise.allSettled([
+  poemVersions(unique(poems), locale, preview ? suppliedSecret! : undefined).then((shown) => poemTeasers(shown, locale)),
+  authorCards(unique(authors), locale, counts),
+])
+const teasers = new Map((resolved[0].status === 'fulfilled' ? resolved[0].value : []).map((teaser) => [teaser.id, teaser]))
+const cards = new Map((resolved[1].status === 'fulfilled' ? resolved[1].value : []).map((card) => [card.id, card]))
+const unavailable = [...homepageResult, ...result, ...resolved].some((entry) => entry.status === 'rejected')
 if (unavailable) Astro.response.status = 503
 const title = homepage?.seo?.title || m.site_title({}, { locale })
 const description = homepage?.seo?.description || m.site_description({}, { locale })
@@ -47,6 +66,6 @@ const hasUpcoming = sections.some((section) => section.blockType === 'events' &&
 
 <BaseLayout {locale} {title} {description} {image} {preview} mainClass="homepage">
   {unavailable && <p class="content-unavailable" role="status">{m.home_unavailable({}, { locale })}</p>}
-  <HomeFeature feature={homepage?.feature} {locale} {preview} {hasUpcoming} />
-  <HomeSections {sections} {authors} {events} {poems} {recentPoems} {locale} {preview} />
+  <HomeFeature {feature} poem={heroPoem ? teasers.get(heroPoem.id) : undefined} {locale} {preview} {hasUpcoming} />
+  <HomeSections {sections} {recentAuthors} {recentPoems} {events} {teasers} {cards} {locale} {preview} />
 </BaseLayout>
