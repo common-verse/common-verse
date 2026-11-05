@@ -63,9 +63,13 @@ describe("curated prototype seeding", () => {
     ];
     for (const [args] of operations)
       expect(args.req.transactionID).toBe("transaction-1");
-    expect(
-      f.payload.create.mock.calls.map(([args]) => args.collection),
-    ).toEqual(["media", "events"]);
+    const created = f.payload.create.mock.calls.map(
+      ([args]) => args.collection,
+    );
+    expect(created.slice(0, 2)).toEqual(["media", "events"]);
+    expect(new Set(created)).toEqual(
+      new Set(["media", "events", "cities", "authors", "poems"]),
+    );
     expect(
       f.payload.update.mock.calls
         .filter(([args]) => args.collection === "events")
