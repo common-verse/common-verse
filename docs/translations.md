@@ -29,10 +29,13 @@ field label “Project introduction” is UI; the introduction typed into that f
 is content. Payload localization stores editorial translations; it does not
 automatically write translations for either editorial text or our UI labels.
 
-Poems belong to the website-content bucket. Preserve one original title, language,
-and text, plus optional explicit translation records and translator attribution.
-Do not treat the original as missing merely because it differs from the website
-language, or require a translation in every supported language.
+Poems belong to the website-content bucket. A poem's original language is one of
+the six site locales; that locale holds the original title and text, the others
+hold optional translations with their translator. Do not treat the original as
+missing merely because it differs from the website language, or require a
+translation in every supported language. Where a poem has no version in the
+website language, the website shows the original with a "not available in this
+language" note, never a third language.
 
 ## Independent language choices
 
@@ -137,8 +140,8 @@ tests, metadata alternates, and editor documentation to be updated together.
   slugs, block identifiers, selection values, or existing records were renamed.
 - **Inputs:** native Payload text and textarea controls retain their validation
   and behavior. Localized editorial inputs declare the selected content language
-  and direction. Original poems and explicit translations use their own language
-  fields, so Arabic originals and English translations can share one form.
+  and direction. Poem title and text are localized fields: the original language's
+  locale holds the original, other locales hold translations.
   Interface labels continue to follow the editor preference.
 
 ## Catalog compilation

@@ -34,34 +34,6 @@ export interface EventsPage {
   _status?: "draft" | "published";
 }
 
-export interface LegacyPoemTranslation {
-  language: Locale | "other";
-  languageLabel?: string | null;
-  title: string;
-  text: string;
-  translator?: string | null;
-}
-
-export interface LegacyPoem {
-  id: number | string;
-  slug: string;
-  title: string;
-  originalLanguage: Locale | "other";
-  originalLanguageLabel?: string | null;
-  originalText: string;
-  author?: LegacyAuthor | number | string | null;
-  media?: (MediaReference | number | string)[] | null;
-  translations?: LegacyPoemTranslation[] | null;
-  _status?: "draft" | "published";
-}
-
-export interface LegacyAuthor {
-  id: number | string;
-  name: string;
-  biography?: string | null;
-  portrait?: MediaReference | number | string | null;
-}
-
 /** `slugDe` serves the German site, `slugEn` every other locale (`slugField`). */
 export interface LocaleSlugs {
   slugDe: string;

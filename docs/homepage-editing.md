@@ -21,10 +21,11 @@ content and UI remain supported. Custom editor labels use the CMS UI catalog des
   The headline and short introduction are translated independently. Poems keep
   their original language and show a translation only when one actually exists.
 - **Featured:** add a promotion anywhere in the section order. Choose a poem,
-  poet, or event/workshop, then give the section a translated title and short
-  introduction. The selected record supplies its own image, title, description,
-  and destination; editing that record updates the promotion too. Poems use their
-  media and original verse, plus an explicit translation when one exists. Articles are available in their own collection and public archive.
+  author, or event/workshop, then give the section a translated title and short
+  introduction. The selected record supplies its own content and destination;
+  editing that record updates the promotion too. A poem shows as a poem card, an
+  author as an author card with their biography. Articles are available in their
+  own collection and public archive.
 - **Mission:** the project introduction. Edit its heading, text, image, link,
   and position. It can be removed or repeated like the other sections.
 - **Events:** events and workshops share one picker. Automatic shows up to
@@ -33,11 +34,13 @@ content and UI remain supported. Custom editor labels use the CMS UI catalog des
   without a title in the current language are omitted. Events remain
   listed through their calendar day. Dates use Europe/Berlin time.
 - **Poems:** Automatic shows the four newest published poems by creation date.
-  Manual shows only the chosen poems, up to four and in selection order. Originals
-  remain visible; only available translations appear alongside them.
-- **Poets:** Automatic shows the four newest profiles with at least one published
-  poem. Manual shows only the chosen profiles, up to four and in selection order.
-  Names are shared; biographies and image descriptions are localised.
+  Manual shows only the chosen poems, up to four and in selection order. Each card
+  shows the poem in the visitor's language, else its original with a "not
+  available in this language" note; never a third language.
+- **Authors:** Automatic shows the four newest published authors with at least one
+  published poem. Manual shows only the chosen authors, up to four and in
+  selection order. Cards link to the author page (`/autoren/<slug>`); names
+  missing in a language show the German name.
 - **Take part:** edit up to three destinations and their translated labels and
   descriptions. Root-relative links automatically use the visitor's locale.
 - **Newsletter:** edit its heading, text, and signup destination. Signup opens the

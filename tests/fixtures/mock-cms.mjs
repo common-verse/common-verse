@@ -430,7 +430,7 @@ const latakia = {
   },
   country: "SY",
 };
-const rebuiltAuthors = [
+const authors = [
   {
     id: 11,
     ...bothSlugs("nour-haddad"),
@@ -482,7 +482,7 @@ const rebuiltAuthors = [
   },
 ];
 const version = (title, content, extra = {}) => ({ title, content, ...extra });
-const rebuiltPoems = [
+const poems = [
   {
     id: 201,
     ...bothSlugs("test-poem"),
@@ -588,7 +588,7 @@ const localizedAuthor = (author, locale, depth) => ({
 });
 const localizedPoem = (poem, locale, depth) => {
   const text = poem.versions[locale] ?? {};
-  const author = rebuiltAuthors.find((entry) => entry.id === poem.author);
+  const author = authors.find((entry) => entry.id === poem.author);
   return {
     id: poem.id,
     slugDe: poem.slugDe,
@@ -608,17 +608,17 @@ const localizedPoem = (poem, locale, depth) => {
 // The homepage global populates relationships two levels deep.
 const homepagePoem = (id, locale) =>
   localizedPoem(
-    rebuiltPoems.find((poem) => poem.id === id),
+    poems.find((poem) => poem.id === id),
     locale,
     1,
   );
 const homepageAuthor = (id, locale) =>
   localizedAuthor(
-    rebuiltAuthors.find((author) => author.id === id),
+    authors.find((author) => author.id === id),
     locale,
     1,
   );
-function rebuiltList(collection, params, locale) {
+function poetryList(collection, params, locale) {
   const depth = Number(params.get("depth") ?? 0);
   const ids = (
     params.get("where[id][in]") ??
@@ -633,7 +633,7 @@ function rebuiltList(collection, params, locale) {
   const slugEn =
     params.get("where[slugEn][equals]") ?? (locale === "de" ? null : slugParam);
   const publishedOnly = params.get("where[_status][equals]") === "published";
-  const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
+  const docs = (collection === "poems" ? poems : authors)
     .filter((entry) => !publishedOnly || !entry.draft)
     .filter((entry) => !ids || ids.includes(String(entry.id)))
     .filter((entry) => !author || String(entry.author) === author)
@@ -839,12 +839,12 @@ const server = http.createServer((request, response) => {
       document.sections.reverse();
     return response.end(JSON.stringify(document));
   }
-  const rebuiltCollection = url.pathname.match(
+  const poetryCollection = url.pathname.match(
     /^\/api\/(poems|authors)(\/preview)?$/,
   )?.[1];
-  if (rebuiltCollection)
+  if (poetryCollection)
     return response.end(
-      JSON.stringify(rebuiltList(rebuiltCollection, url.searchParams, locale)),
+      JSON.stringify(poetryList(poetryCollection, url.searchParams, locale)),
     );
   if (url.pathname.startsWith("/api/articles")) {
     const slug = isPreview

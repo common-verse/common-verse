@@ -45,8 +45,8 @@ one Author profile; the account connection is private and managed by administrat
 Do not derive public credit from whoever last edited a record.
 
 Poems link to their original Author. Articles gain an Author relationship.
-Each poem translation gains a translator relationship to an Author profile,
-separate from the original poem author. Under an Author, show their poems, articles and translations using native Payload relationships and reverse joins.
+Each poem translation (a poem locale other than the original) gains a translator
+relationship to an Author profile, separate from the original poem author. Under an Author, show their poems, articles and translations using native Payload relationships and reverse joins.
 Preserve original-language text and existing translator attribution during migration;
 resolve existing text credits explicitly rather than guessing matches by name.
 
@@ -57,11 +57,12 @@ Assignments and credit are separate: writing a translation does not grant editin
 access to the original poem or to another person's translation. Contributors
 cannot change ownership, account links, roles, or publication status themselves.
 
-Current translations are nested rows inside Poems. Before allowing independent
-translator editing, review whether to move them to their own collection, linked
-to the source poem, with independent drafts, versions and publication approval.
-Document-level ownership checks alone cannot safely authorize one nested row.
-Migration must preserve translation IDs/content, languages, credits and versions,
+Current translations are localized fields of the poem, one per site locale.
+Before allowing independent translator editing, review whether to move them to
+their own collection, linked to the source poem, with independent drafts, versions
+and publication approval. Document-level ownership checks alone cannot safely
+authorize one locale. Migration must preserve translation content, languages,
+credits and versions,
 and public rendering must keep each original and translation's actual language
 and direction. Test permission enforcement through REST, GraphQL and the Local
 API (`overrideAccess: false`), not just dashboard visibility. Include attempts to

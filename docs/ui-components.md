@@ -228,24 +228,24 @@ language from `Intl.DisplayNames`. A small script carries the URL fragment over
 to the chosen language and closes the menu when focus moves outside it. Without
 anchor positioning the menu sits at a fixed place below the header's end.
 
-Below 52rem the primary navigation becomes a bottom bar of four icons
-(`mic-vocal`, `newspaper`, `quote`, `shopping-bag`). It is the same `<nav>`:
-labels stay in the markup as accessible names and are only visually hidden.
-The current section is marked with `aria-current` and a soft pink squircle
-(an outline in forced-colors mode).
+Below 52rem the primary navigation becomes a bottom bar of five labelled icons
+(`mic-vocal`, `newspaper`, `quote`, `users`, `shopping-bag`). It is the same `<nav>`.
+Items share the width equally (`flex: 1 1 0`); the current one grows to
+`flex-grow: 1.5` and is filled pink, with `aria-current` (an outline in
+forced-colors mode). Labels never wrap or hide: a condensed font shrinks with the
+bar's width (`cqi`). Events uses its short label (`nav_events_short`, „Termine“)
+only in the bar; the header keeps „Veranstaltungen“.
 A `scroll-state` container query tucks the bar away while scrolling down and
 brings it back on scrolling up or keyboard focus; browsers without that query
 keep it visible. The theme button is described in
 [design tokens](design-tokens.md#preferences-and-verification).
 
-## Profile portraits
+## Author portraits
 
-Public poet cards and profile pages use DiceBear Open Peeps with the Bold Pop
-preset. A missing portrait is generated locally from the person’s ID; the same ID
-produces the same illustration across locales and pages. Uploaded editorial
-portraits take precedence. Earlier imported demo portrait photos are replaced in
-the public UI by illustrations; their media records remain intact. No external
-avatar API calls, browser JavaScript, or portrait-photo seed step is needed.
+Author cards show an uploaded portrait or, without one, a pink monogram tile with
+the name's first letter and the logo's bar (`aria-hidden`, the name follows).
+Author and poem pages show no image at all without an upload. Never a generated
+face or silhouette.
 
 ## Event page transitions
 
