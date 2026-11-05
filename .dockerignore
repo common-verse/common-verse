@@ -1,0 +1,14 @@
+**/node_modules
+**/.next
+**/dist
+**/.astro
+**/*.tsbuildinfo
+**/src/paraglide
+apps/cms/media
+.env
+.env.*
+.git
+.claude
+output
+playwright-report
+test-results
