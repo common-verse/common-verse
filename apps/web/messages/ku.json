@@ -205,5 +205,19 @@
   "order_status_payment_failed": "Dayîn bi ser neket",
   "order_status_cancelled_text": "Ne hewce ye tu tiştekî bikî. Heke te berê dabe, pereyê te dê vegere.",
   "order_status_failed_text": "Dayîn pêk nehat. Ji me re binivîse: {email}.",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "Ciwan li ser gihîştin, bîranîn û jiyana rojane dinivîsin – bi zimanê orîjînal û bi wergerê.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=*": "{count} helbest"
+      }
+    }
+  ],
+  "poem_not_available": "Bi kurdî tune ye",
+  "pagination_label": "Rûpel",
+  "pagination_page": "Rûpel {page}",
+  "back_home": "Biçe rûpela sereke"
 }

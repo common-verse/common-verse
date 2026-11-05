@@ -205,5 +205,19 @@
   "order_status_payment_failed": "پرداخت ناموفق بود",
   "order_status_cancelled_text": "لازم نیست کاری انجام دهید. اگر پرداخت کرده‌اید، پولتان برگردانده می‌شود.",
   "order_status_failed_text": "پرداخت انجام نشد. به ما بنویسید: {email}",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "جوانان دربارهٔ رسیدن، خاطره و زندگی روزمره می‌نویسند؛ به زبان اصلی و در ترجمه.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=*": "{count} شعر"
+      }
+    }
+  ],
+  "poem_not_available": "به فارسی موجود نیست",
+  "pagination_label": "صفحه‌ها",
+  "pagination_page": "صفحهٔ {page}",
+  "back_home": "رفتن به صفحهٔ اصلی"
 }

@@ -100,7 +100,9 @@ test("primary navigation targets render collection indexes", async ({
   ).toBeVisible();
   await page.getByRole("link", { name: "Poems", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/poems$/);
-  await expect(page.getByRole("link", { name: "صبح مشترک" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "A Shared Morning" }),
+  ).toBeVisible();
 });
 
 test("language switcher changes the locale URL and document direction", async ({

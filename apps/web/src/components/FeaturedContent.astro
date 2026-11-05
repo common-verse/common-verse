@@ -3,7 +3,7 @@ import { localizedPath, slugLocale, type Locale } from '@poetry/i18n'
 import type { HomepageSection } from '@poetry/types'
 import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
-import { PoemCard } from '$lib/components/sections'
+import { LegacyPoemCard } from '$lib/components/sections'
 import PersonPortrait from './PersonPortrait.svelte'
 import EditorialImage from './EditorialImage.astro'
 import { authorDisplayName } from '../lib/editorial'
@@ -14,7 +14,7 @@ const item = featuredItem(section, preview)
 ---
 {item?.kind === 'poem' && <div class="featured-layout">
   <EditorialImage image={item.value.media?.find((image) => mediaObject(image))} {locale} />
-  <PoemCard poem={item.value} {locale} />
+  <LegacyPoemCard poem={item.value} {locale} />
 </div>}
 {item?.kind === 'poet' && <article class="featured-layout featured-poet">
   <PersonPortrait userId={item.value.id} image={item.value.portrait} />

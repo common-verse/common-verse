@@ -15,8 +15,8 @@ for (const locale of settings.locales) {
   for (const [key, value] of Object.entries(catalog)) {
     if (
       !Object.hasOwn(english, key) ||
-      typeof value !== "string" ||
-      !value.trim()
+      // Plural messages are arrays of variants.
+      !(Array.isArray(value) ? value.length : value?.trim?.())
     )
       throw new Error(`Invalid UI message: ${locale}.${key}`);
   }

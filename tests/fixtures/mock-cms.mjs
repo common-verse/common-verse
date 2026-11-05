@@ -444,6 +444,192 @@ async function handleShop(request, response, url) {
   return send(404, { error: "Not found" });
 }
 
+// Rebuilt poems, authors and cities (#9–#11), localized per request like Payload.
+// The homepage still reads the legacy shapes above until it is rewired (#21).
+const latakia = {
+  id: 1,
+  names: {
+    de: "Latakia",
+    en: "Latakia",
+    ar: "اللاذقية",
+    fa: "لاذقیه",
+    uk: "Латакія",
+    ku: "Lazkiye",
+  },
+  country: "SY",
+};
+const rebuiltAuthors = [
+  {
+    id: 11,
+    slug: bothSlugs("nour-haddad"),
+    name: { de: "Nour Haddad", ar: "نور حداد", fa: "نور حداد" },
+    country: "SY",
+    city: latakia,
+    portrait: null,
+    biography: {
+      de: "Nour Haddad schreibt auf Arabisch und übersetzt mit der Werkstatt.",
+      ar: "تكتب نور حداد بالعربية وتترجم قصائدها مع الورشة.",
+    },
+    awards: [
+      { id: "a1", name: "Schreibstipendium Wasserzeichen", year: 2021 },
+      { id: "a2", name: "Preis für junge Lyrik", year: 2024 },
+    ],
+  },
+  {
+    id: 12,
+    slug: bothSlugs("samira-taleb"),
+    name: { de: "Samira Taleb", ar: "سميرة طالب" },
+    country: "SY",
+    city: null,
+    portrait: media,
+    biography: {},
+    awards: [],
+  },
+  {
+    id: 13,
+    slug: { de: "nachtfalter", en: "moth" },
+    name: { de: "Nachtfalter", en: "Moth" },
+    country: "AF",
+    city: null,
+    portrait: null,
+    biography: {},
+    awards: [],
+  },
+];
+const version = (title, content, extra = {}) => ({ title, content, ...extra });
+const rebuiltPoems = [
+  {
+    id: 201,
+    slug: bothSlugs("test-poem"),
+    originalLanguage: "fa",
+    year: 2024,
+    author: 11,
+    versions: {
+      fa: version(
+        "صبح مشترک",
+        "صبح از میان پنجره‌های ما می‌گذرد\nو نام‌مان را آهسته می‌خواند",
+        { description: "شعری دربارهٔ صبح." },
+      ),
+      de: version(
+        "Gemeinsamer Morgen",
+        "Der Morgen zieht durch unsere Fenster\nund ruft leise unsere Namen",
+        {
+          translator: "Prototype translation",
+          description: "Ein Gedicht über den Morgen.",
+        },
+      ),
+      en: version(
+        "A Shared Morning",
+        "Morning passes through our windows\nand softly calls our names",
+        { translator: "Prototype translation" },
+      ),
+    },
+  },
+  {
+    id: 202,
+    slug: { de: "regeln-des-ankommens", en: "rules-of-arrival" },
+    originalLanguage: "ar",
+    year: 2022,
+    author: 11,
+    versions: {
+      ar: version(
+        "قواعد الوصول",
+        "تعلّمتُ أولًا «أنا»،\nثم «كنتُ»،\n\nثم انتظرتُ طويلًا\nقبل أن أقولَ «هنا».\nفي الدرسِ الأخير",
+      ),
+    },
+  },
+  {
+    id: 203,
+    slug: { de: "elbe-februar", en: "elbe-february" },
+    originalLanguage: "de",
+    year: null,
+    author: 12,
+    versions: {
+      de: version(
+        "Elbe, Februar",
+        "Der Fluss hier ist grau\nund trotzdem ein Fluss.",
+      ),
+    },
+  },
+  // Enough poems for a second page; years run from 2013 down to 1990.
+  ...Array.from({ length: 24 }, (_, index) => ({
+    id: 233 - index,
+    slug: { de: `gedicht-${index}`, en: `poem-${index}` },
+    originalLanguage: "de",
+    year: 2013 - index,
+    author: 12,
+    versions: {
+      de: version(
+        `Gedicht ${index}`,
+        `Zeile eins\nZeile zwei\nZeile drei\nZeile vier\nZeile fünf`,
+        index === 0 ? { snippet: "Ein eigener Auszug" } : {},
+      ),
+      en: version(`Poem ${index}`, "Line one\nLine two", {
+        translator: "Workshop",
+      }),
+    },
+  })),
+];
+const localizedAuthor = (author, locale, depth) => ({
+  id: author.id,
+  slug: author.slug,
+  name: author.name[locale] ?? null,
+  country: author.country,
+  city: depth > 0 ? author.city : (author.city?.id ?? null),
+  portrait: depth > 0 ? author.portrait : (author.portrait?.id ?? null),
+  biography: author.biography[locale] ?? null,
+  awards: author.awards,
+  _status: "published",
+});
+const localizedPoem = (poem, locale, depth) => {
+  const text = poem.versions[locale] ?? {};
+  const author = rebuiltAuthors.find((entry) => entry.id === poem.author);
+  return {
+    id: poem.id,
+    slug: poem.slug,
+    title: text.title ?? null,
+    content: text.content ?? null,
+    originalLanguage: poem.originalLanguage,
+    translator:
+      locale === poem.originalLanguage ? null : (text.translator ?? null),
+    description: text.description ?? null,
+    year: poem.year,
+    snippet: text.snippet ?? null,
+    author: depth > 0 ? localizedAuthor(author, locale, depth - 1) : author.id,
+    _status: "published",
+  };
+};
+const isRebuiltQuery = (params) =>
+  ["-year", "name"].includes(params.get("sort")) ||
+  ["where[id][in]", "where[slug.de][equals]", "where[slug.en][equals]"].some(
+    (key) => params.has(key),
+  );
+function rebuiltList(collection, params, locale) {
+  const depth = Number(params.get("depth") ?? 0);
+  const ids = params.get("where[id][in]")?.split(",");
+  const author = params.get("where[author][equals]");
+  const slugDe = params.get("where[slug.de][equals]");
+  const slugEn = params.get("where[slug.en][equals]");
+  const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
+    .filter((entry) => !ids || ids.includes(String(entry.id)))
+    .filter((entry) => !author || String(entry.author) === author)
+    .filter((entry) => !slugDe || entry.slug.de === slugDe)
+    .filter((entry) => !slugEn || entry.slug.en === slugEn)
+    .map((entry) =>
+      collection === "poems"
+        ? localizedPoem(entry, locale, depth)
+        : localizedAuthor(entry, locale, depth),
+    );
+  // Small pages in the mock exercise the web's paging through every page.
+  const limit = Math.min(Number(params.get("limit") ?? 10), 10);
+  const page = Number(params.get("page") ?? 1);
+  return {
+    docs: docs.slice((page - 1) * limit, page * limit),
+    totalDocs: docs.length,
+    hasNextPage: page * limit < docs.length,
+  };
+}
+
 const previewTitles = new Map();
 const reversedHomepageLocales = new Set();
 
@@ -612,6 +798,11 @@ const server = http.createServer((request, response) => {
       document.sections.reverse();
     return response.end(JSON.stringify(document));
   }
+  const rebuiltCollection = url.pathname.match(/^\/api\/(poems|authors)$/)?.[1];
+  if (rebuiltCollection && isRebuiltQuery(url.searchParams))
+    return response.end(
+      JSON.stringify(rebuiltList(rebuiltCollection, url.searchParams, locale)),
+    );
   if (url.pathname === "/api/authors") {
     return response.end(
       JSON.stringify({ docs: authors, totalDocs: authors.length }),
