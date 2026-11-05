@@ -8,8 +8,6 @@ import type { Payload } from "payload";
 import { bulkFixtures } from "./seed-bulk-fixtures";
 
 export const bulkCounts = {
-  authors: 60,
-  poems: 300,
   events: 100,
   media: 12,
 } as const;
@@ -62,7 +60,7 @@ export async function seedBulk(payload: Payload) {
     throw new Error("Bulk seeding requires PostgreSQL transactions.");
   const req = { transactionID };
   const common = { req, overrideAccess: true, depth: 0 } as const;
-  const created = { authors: 0, poems: 0, events: 0, media: 0 };
+  const created = { events: 0, media: 0 };
   try {
     const mediaIDs: number[] = [];
     for (let i = 0; i < bulkCounts.media; i++) {
@@ -104,92 +102,6 @@ export async function seedBulk(payload: Payload) {
         });
       mediaIDs.push(media.id);
       created.media++;
-    }
-    const authorIDs: number[] = [];
-    for (let i = 0; i < bulkCounts.authors; i++) {
-      const locale = locales[i % locales.length];
-      generators[locale].seed(randomSeed + i);
-      const name = `${generators[locale].person.fullName()} [${prefix}-${i + 1}]`;
-      const existing = await payload.find({
-        ...common,
-        collection: "authors",
-        where: { name: { equals: name } },
-        limit: 1,
-      });
-      if (existing.docs[0]) {
-        authorIDs.push(existing.docs[0].id);
-        continue;
-      }
-      const author = await payload.create({
-        ...common,
-        collection: "authors",
-        locale,
-        data: {
-          name,
-          country: "DE",
-          biography: bulkFixtures[locale].biography,
-        },
-      });
-      for (const translatedLocale of editorialLocales(i).filter(
-        (code) => code !== locale,
-      ))
-        await payload.update({
-          ...common,
-          collection: "authors",
-          id: author.id,
-          locale: translatedLocale,
-          data: { biography: bulkFixtures[translatedLocale].biography },
-        });
-      authorIDs.push(author.id);
-      created.authors++;
-    }
-    for (let i = 0; i < bulkCounts.poems; i++) {
-      const slug = `${prefix}-poem-${i + 1}`;
-      const existing = await payload.find({
-        ...common,
-        collection: "poems",
-        draft: true,
-        where: { slug: { equals: slug } },
-        limit: 1,
-      });
-      if (existing.docs[0]) continue;
-      const originalLanguage = locales[i % locales.length];
-      const faker = generators.en;
-      faker.seed(randomSeed + i);
-      const lineIndices = faker.helpers.shuffle([0, 1, 2, 3, 4, 5]);
-      const stanzaCount = i % 10 === 0 ? 8 : 1 + (i % 3);
-      const text = (locale: Locale) =>
-        Array.from({ length: stanzaCount }, (_, stanza) =>
-          lineIndices
-            .slice(stanza % 3, (stanza % 3) + 3)
-            .map((line) => bulkFixtures[locale].lines[line])
-            .join("\n"),
-        ).join("\n\n");
-      const title = (locale: Locale) =>
-        `${bulkFixtures[locale].poemTitles[Math.floor(i / 6) % 3]} · ${i + 1}`;
-      const translatedLocales = locales
-        .filter((locale) => locale !== originalLanguage)
-        .slice(0, Math.floor(i / 6) % 6);
-      await payload.create({
-        ...common,
-        collection: "poems",
-        data: {
-          slug,
-          title: title(originalLanguage),
-          originalLanguage,
-          originalText: text(originalLanguage),
-          author: authorIDs[i % authorIDs.length],
-          media: i % 4 === 0 ? [mediaIDs[i % mediaIDs.length]] : [],
-          translations: translatedLocales.map((language) => ({
-            language,
-            title: title(language),
-            text: text(language),
-            translator: "Demo translation / Prototype Collective",
-          })),
-          _status: i % 5 === 0 ? "draft" : "published",
-        },
-      });
-      created.poems++;
     }
     for (let i = 0; i < bulkCounts.events; i++) {
       const slug = `${prefix}-workshop-${i + 1}`;

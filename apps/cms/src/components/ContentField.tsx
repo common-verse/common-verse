@@ -72,6 +72,13 @@ export function ContentText(
   );
 }
 
+/** Translators credit translations, so the poem's original language has none. */
+export function TranslatorText(props: TextFieldClientProps) {
+  const locale = useLocale();
+  const original = useFormFields(([fields]) => fields.originalLanguage?.value);
+  return original === locale.code ? null : <ContentText {...props} />;
+}
+
 export function ContentTextarea(
   props: TextareaFieldClientProps & { languageField?: string },
 ) {

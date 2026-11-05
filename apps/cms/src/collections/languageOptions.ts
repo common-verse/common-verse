@@ -10,7 +10,7 @@ export const languageLabels: Record<Locale, MessageKey> = {
   ku: "kurdish_kurmanji",
 };
 
-export const languageOptions = [
-  ...locales.map((value) => ({ label: label(languageLabels[value]), value })),
-  { label: label("other_language"), value: "other" },
-];
+export const languageOptions = locales.map((value) => ({
+  label: label(languageLabels[value]),
+  value,
+}));

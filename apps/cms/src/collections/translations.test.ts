@@ -48,30 +48,21 @@ describe("independent editor UI translations", () => {
   });
 });
 
-it("assigns native field adapters to localized prose and explicit poem languages", async () => {
+it("renders poem text in the edited locale and hides translators in the original", async () => {
   const config = await configPromise;
   const poems = config.collections.find(
     (collection) => collection.slug === "poems",
   )!;
-  const original = poems.fields.find(
-    (field) => "name" in field && field.name === "originalText",
-  );
-  expect(original?.admin?.components?.Field).toEqual({
+  const component = (name: string) =>
+    poems.fields.find((field) => "name" in field && field.name === name)?.admin
+      ?.components?.Field;
+  expect(component("content")).toEqual({
     path: "./components/ContentField#ContentTextarea",
-    clientProps: { languageField: "originalLanguage" },
+    clientProps: { languageField: undefined },
   });
-  const translations = poems.fields.find(
-    (field) => "name" in field && field.name === "translations",
+  expect(component("translator")).toBe(
+    "./components/ContentField#TranslatorText",
   );
-  if (translations?.type !== "array") throw new Error("Missing translations");
-  expect(
-    translations.fields.find(
-      (field) => "name" in field && field.name === "title",
-    )?.admin?.components?.Field,
-  ).toEqual({
-    path: "./components/ContentField#ContentText",
-    clientProps: { languageField: "language" },
-  });
 });
 
 it("uses the same location field in events and Locations", async () => {

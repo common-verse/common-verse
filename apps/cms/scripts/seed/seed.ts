@@ -162,56 +162,8 @@ export async function seed(payload: Payload, { onlyIfEmpty = false } = {}) {
       }
     }
 
-    const existingPoem = await payload.find({
-      req,
-      collection: "poems",
-      where: { slug: { equals: "test-poem" } },
-      limit: 1,
-    });
-    if (!existingPoem.docs.length) {
-      const existingAuthor = await payload.find({
-        req,
-        collection: "authors",
-        where: { name: { equals: "Prototype Collective" } },
-        limit: 1,
-      });
-      const author =
-        existingAuthor.docs[0] ??
-        (await payload.create({
-          req,
-          collection: "authors",
-          data: { name: "Prototype Collective", country: "DE" },
-        }));
-      await payload.create({
-        req,
-        collection: "poems",
-        data: {
-          title: "صبح مشترک",
-          slug: "test-poem",
-          originalLanguage: "fa",
-          originalText: "صبح از میان پنجره‌های ما می‌گذرد",
-          author: author.id,
-          translations: [
-            {
-              language: "de",
-              title: "Gemeinsamer Morgen",
-              text: "Der Morgen zieht durch unsere Fenster",
-              translator: "Prototype translation",
-            },
-            {
-              language: "en",
-              title: "A Shared Morning",
-              text: "Morning passes through our windows",
-              translator: "Prototype translation",
-            },
-          ],
-          _status: "published",
-        },
-      });
-    }
-
     await payload.db.commitTransaction(transactionID);
-    payload.logger.info("Prototype workshop and poem are ready.");
+    payload.logger.info("Prototype workshop is ready.");
   } catch (error) {
     try {
       await payload.db.rollbackTransaction(transactionID);

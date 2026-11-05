@@ -1,9 +1,5 @@
 import { message, type MessageKey } from "@poetry/cms-ui";
-import type {
-  CollectionSlug,
-  TextFieldSingleValidation,
-  TypedLocale,
-} from "payload";
+import type { CollectionSlug, TypedLocale, Validate } from "payload";
 
 /**
  * Requires a localized value in one locale, e.g. German or the poem's original language.
@@ -15,7 +11,7 @@ export const requiredInLocale =
     field: string,
     localeOf: (data: Record<string, unknown>) => unknown,
     error: MessageKey,
-  ): TextFieldSingleValidation =>
+  ): Validate<string | null | undefined> =>
   async (value, { collectionSlug, data, event, id, req }) => {
     const locale = localeOf(data as Record<string, unknown>);
     if (typeof locale !== "string") return true;

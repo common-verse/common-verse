@@ -12,9 +12,7 @@ it.each([Homepage, Poems, Events])(
     vi.stubEnv("PREVIEW_SECRET", "secret");
     // Arabic uses the English slot of a German/English slug.
     const doc =
-      config === Events
-        ? { slugDe: "deutsch", slugEn: "test" }
-        : { slug: "test" };
+      config === Homepage ? {} : { slugDe: "deutsch", slugEn: "test" };
     const livePreview = config.admin!.livePreview!.url;
     if (typeof livePreview !== "function") throw new Error("Missing preview");
     const req = { i18n: { language: "en" } };

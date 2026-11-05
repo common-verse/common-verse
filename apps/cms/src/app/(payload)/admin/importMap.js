@@ -23,6 +23,7 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { EditorAccessibility as EditorAccessibility_8ea082617d58b45c96951564b3f10cb6 } from '../../../components/EventFields'
 import { LocationAliasLabel as LocationAliasLabel_a7abfb4442f001086aefc41caa86c17c } from '../../../components/LocationField'
+import { TranslatorText as TranslatorText_6c61b22d6f594f71ca4bd0b8193e3f5d } from '../../../components/ContentField'
 import { CityField as CityField_b204cf7994a1a2d7653fb8f8c2d98114 } from '../../../components/CityField'
 import { RoleField as RoleField_f96784b8b8f3c6be62056c5b6c5bfa8d } from '../../../components/RoleField'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
@@ -58,6 +59,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "./components/EventFields#EditorAccessibility": EditorAccessibility_8ea082617d58b45c96951564b3f10cb6,
   "./components/LocationField#LocationAliasLabel": LocationAliasLabel_a7abfb4442f001086aefc41caa86c17c,
+  "./components/ContentField#TranslatorText": TranslatorText_6c61b22d6f594f71ca4bd0b8193e3f5d,
   "./components/CityField#CityField": CityField_b204cf7994a1a2d7653fb8f8c2d98114,
   "./components/RoleField#RoleField": RoleField_f96784b8b8f3c6be62056c5b6c5bfa8d,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,

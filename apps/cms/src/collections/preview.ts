@@ -3,7 +3,7 @@ import { isLocale, localizedPath, slugField } from "@poetry/i18n";
 
 type PreviewCollection = "events" | "poems" | "articles";
 // Collections with `slugDe`/`slugEn` from `localeSlugField`.
-const localeSlugCollections: PreviewCollection[] = ["events"];
+const localeSlugCollections: PreviewCollection[] = ["events", "poems"];
 
 export function collectionPreviewUrl(
   collection: PreviewCollection,
