@@ -6,6 +6,7 @@ import type {
 } from "payload";
 import { authenticated, isEditor, publishedOrAuthenticated } from "./access";
 import { countryField } from "./countries";
+import { collectionPreviewUrl, previewEndpoint } from "./preview";
 import { requiredInLocale } from "./requiredInLocale";
 import { localeSlugField } from "./slug";
 
@@ -33,6 +34,12 @@ export const Authors: CollectionConfig = {
     group: label("content"),
     defaultColumns: ["name", "country", "_status", "updatedAt"],
     description: label("authors_help"),
+    preview: (doc, { locale, req }) =>
+      collectionPreviewUrl("authors", doc, locale, req.i18n.language),
+    livePreview: {
+      url: ({ data, locale, req }) =>
+        collectionPreviewUrl("authors", data, locale?.code, req.i18n.language),
+    },
   },
   access: {
     read: publishedOrAuthenticated,
@@ -41,6 +48,7 @@ export const Authors: CollectionConfig = {
     delete: authenticated,
     readVersions: authenticated,
   },
+  endpoints: [previewEndpoint("authors")],
   versions: { drafts: { autosave: { interval: 375 } } },
   fields: [
     {
