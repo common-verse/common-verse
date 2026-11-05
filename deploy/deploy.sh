@@ -24,7 +24,7 @@ root=/srv/common-verse
 base=https://raw.githubusercontent.com/veridynn/common-verse/$sha/deploy
 # This script itself is not updated here: sh reads it while running. Changes to it
 # are installed by hand (docs/deployment.md).
-for file in proxy/compose.yml proxy/Caddyfile staging/compose.yml; do
+for file in proxy/compose.yml proxy/Caddyfile staging/compose.yml staging/seed.sh staging/seed-accounts.ts; do
   retry curl -fsSL "$base/$file" -o "$root/$file.new"
   # Rewrite in place: Caddy bind-mounts the Caddyfile by inode.
   cat "$root/$file.new" > "$root/$file" && rm "$root/$file.new"
@@ -41,6 +41,10 @@ docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
 cd "$root/staging"
 export IMAGE_TAG="$sha"
 retry docker compose pull -q
+# Staging starts from a fresh, fully seeded database on every deploy.
+docker compose down -v --remove-orphans
+docker compose up -d --wait postgres
+retry sh seed.sh
 docker compose up -d --remove-orphans
 # Removes every image no container uses, including earlier deploys.
 docker image prune -af >/dev/null
