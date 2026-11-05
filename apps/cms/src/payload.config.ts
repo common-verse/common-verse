@@ -16,6 +16,7 @@ import sharp from "sharp";
 import { administrator } from "./collections/access";
 import { Articles } from "./collections/Articles";
 import { Authors } from "./collections/Authors";
+import { Cities } from "./collections/Cities";
 import { Media } from "./collections/Media";
 import { Pages } from "./collections/Pages";
 import { Poems } from "./collections/Poems";
@@ -45,6 +46,7 @@ export default buildConfig({
     Locations,
     Poems,
     Authors,
+    Cities,
     Media,
     Users,
     Pages,

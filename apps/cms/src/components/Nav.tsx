@@ -13,6 +13,7 @@ const entityOrder = [
   "locations",
   "poems",
   "authors",
+  "cities",
   "media",
   "users",
   "homepage",
