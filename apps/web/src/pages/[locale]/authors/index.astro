@@ -1,23 +1,49 @@
 ---
-import PersonPortrait from '../../../components/PersonPortrait.svelte'
-import { authorDisplayName } from '../../../lib/editorial'
 import { Heading } from '$lib/components/ui/heading'
-import { Link } from '$lib/components/ui/link'
-import { isLocale, localizedPath } from '@poetry/i18n'
-import { getAuthors } from '../../../lib/cms'
+import { AuthorCard } from '$lib/components/sections'
+import { isLocale, localizedPath, recordPath } from '@poetry/i18n'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
+import EmptyState from '../../../components/EmptyState.astro'
+import { authorNames, cmsUrl, getPoemCounts, getPublishedAuthors } from '../../../lib/cms'
+import { mediaObject } from '../../../lib/homepage'
+import { regionName } from '../../../lib/poems'
 import * as m from '../../../paraglide/messages.js'
+
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
-const authors = await getAuthors(locale)
-const title = m.home_all_authors({}, { locale })
+const o = { locale }
+const [authors, counts] = await Promise.all([getPublishedAuthors(locale), getPoemCounts()])
+const names = await authorNames(authors, locale)
+const collator = new Intl.Collator(locale)
+const cards = authors
+  .map((author) => {
+    const portrait = mediaObject(author.portrait)?.url
+    return {
+      id: author.id,
+      ...names.get(author.id)!,
+      href: localizedPath(locale, recordPath('authors', author.slug, locale)),
+      country: regionName(author.country, locale),
+      poems: counts.get(author.id) ?? 0,
+      portrait: portrait ? new URL(portrait, cmsUrl).href : undefined,
+    }
+  })
+  .sort((a, b) => collator.compare(a.name, b.name))
+const title = m.authors_title({}, o)
+const description = m.authors_intro({}, o)
 ---
-<BaseLayout {locale} {title} canonicalPath="authors">
-  <Heading level={1}>{title}</Heading>
-  <ul class="author-grid">{authors.map((author) => <li><article>
-    <PersonPortrait userId={author.id} image={author.portrait} />
-    <Heading level={2} variant="subtitle"><Link variant="heading" href={localizedPath(locale, `authors/${author.id}`)}>{authorDisplayName(author.name)}</Link></Heading>
-  </article></li>)}</ul>
+
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, o)}`} {description} canonicalPath="authors">
+  <section>
+    <Heading level={1} class="page-title">{title}</Heading>
+    {cards.length ? (
+      <>
+        <p class="collection-intro">{description}</p>
+        <p class="collection-count">{m.authors_count({ count: cards.length }, o)}</p>
+        <ul class="author-cards">{cards.map(({ id, ...card }) => <li><AuthorCard {...card} {locale} /></li>)}</ul>
+      </>
+    ) : (
+      <EmptyState {locale} message={m.home_no_authors({}, o)} illustration="stage" />
+    )}
+  </section>
 </BaseLayout>
-<style>.author-grid { margin-block: 3rem; }</style>

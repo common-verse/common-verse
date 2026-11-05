@@ -1,5 +1,53 @@
 import { expect, test } from "@playwright/test";
 
+test("authors overview lists every author alphabetically, never a generated face", async ({
+  page,
+}) => {
+  await page.goto("/autoren");
+  await expect(page.locator(".collection-count")).toHaveText("3 Autor:innen");
+  const cards = page.locator(".author-card");
+  await expect(cards.getByRole("heading")).toHaveText([
+    "Nachtfalter",
+    "Nour Haddad",
+    "Samira Taleb",
+  ]);
+  await expect(cards.first()).toContainText("Afghanistan Noch keine Gedichte");
+  await expect(cards.last()).toContainText("25 Gedichte");
+  // Only Samira Taleb has an uploaded portrait; the others get no image.
+  await expect(cards.locator("img")).toHaveCount(1);
+  await expect(cards.last().locator("img")).toHaveCount(1);
+  await expect(cards.locator(".monogram")).toHaveText(["N", "N"]);
+  await expect(
+    page.getByRole("link", { name: "Nour Haddad", exact: true }),
+  ).toHaveAttribute("href", "/autoren/nour-haddad");
+});
+
+test("Arabic authors overview sorts Arabic names first and runs right to left", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.goto("/ar/authors");
+  const cards = page.locator(".author-card");
+  await expect(cards.getByRole("heading")).toHaveText([
+    "سميرة طالب",
+    "نور حداد",
+    "Nachtfalter",
+  ]);
+  await expect(cards.nth(1)).toContainText("قصيدتان");
+  await expect(cards.nth(2).locator("bdi")).toHaveAttribute("lang", "de");
+  const [first, second] = await Promise.all([
+    cards.nth(0).boundingBox(),
+    cards.nth(1).boundingBox(),
+  ]);
+  expect(first!.x).toBeGreaterThan(second!.x);
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("author page shows place, biography, awards and every poem", async ({
   page,
 }) => {
