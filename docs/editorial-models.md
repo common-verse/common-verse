@@ -18,7 +18,7 @@ are shown through Payload’s native join field in the admin. Fixed shared pages
 not need a byline; events describe activities rather than authored texts.
 
 Keep Payload’s native dashboard and cards. Organize the editorial sidebar as
-Content (Articles, Events, Locations, Cities), Media (Images & Files), Administration (Users),
+Content (Articles, Events, Locations, Authors, Cities), Media (Images & Files), Administration (Users),
 Pages (Home, About, Contact, Privacy, Legal Notice, Terms of sale), then Shop
 (Products, Orders, Shop settings). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
@@ -27,8 +27,17 @@ poet, and poem detail pages come from their collections. Articles are an MVP col
 and public article routes. Do not add arbitrary pages. The legacy `pages` collection remains
 hidden to preserve existing records and is not used by public routing or bulk seeding.
 
-Poems and Authors are hidden from admin navigation until v2.0; preserve their
-records and existing public routes.
+Poems are hidden from admin navigation until their rebuild.
+
+Authors have a localized name, written once in German in Latin script; a
+pseudonym is fine. Publishing requires the German name. The CMS returns stored
+values only; the website shows the German name (marked `lang="de"`) in locales
+without their own spelling.
+The German/English slug follows the German name. Portrait, city, biography
+(localized) and awards (name and year) are optional; the country (ISO code) is
+required. The city picker offers only cities of the chosen country, clears the
+city when the country changes, and creates a city with the country prefilled.
+Authors have drafts with autosave; the public sees published authors only.
 
 Cities have six required, unlocalized names (one per site locale, all in one
 form) and a required country, stored as an ISO 3166-1 alpha-2 code. The admin

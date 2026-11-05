@@ -190,5 +190,13 @@
   "slug_taken": "Ein anderer Eintrag verwendet diese URL bereits. Bitte eine andere wählen.",
   "city": "Stadt",
   "cities": "Städte",
-  "country": "Land"
+  "country": "Land",
+  "author_name_help": "Den Namen einmal auf Deutsch in lateinischer Schrift eintragen. Andere Sprachen zeigen ihn, bis dort eine eigene Schreibweise steht. Ein Pseudonym ist möglich.",
+  "author_name_required": "Vor dem Veröffentlichen den Namen auf Deutsch eintragen.",
+  "author_name_latin": "Den deutschen Namen in lateinischer Schrift schreiben.",
+  "create_city": "Stadt in diesem Land anlegen",
+  "awards": "Auszeichnungen",
+  "award": "Auszeichnung",
+  "award_name": "Auszeichnung",
+  "year": "Jahr"
 }

@@ -60,7 +60,7 @@ describe("editorial schemas", () => {
       expect(collection.access?.update).toBe(authenticated);
       expect(collection.access?.delete).toBe(authenticated);
     }
-    for (const collection of [Articles, Pages, Events, Poems]) {
+    for (const collection of [Articles, Pages, Events, Poems, Authors]) {
       expect(collection.access?.readVersions).toBe(authenticated);
     }
     expect(await authenticated({ req: { user: null } } as never)).toBe(false);
@@ -72,7 +72,7 @@ describe("editorial schemas", () => {
   });
 
   it("keeps contributor accounts out of MVP schemas and hides deferred content", () => {
-    expect(Authors.admin?.hidden).toBe(true);
+    expect(Authors.admin?.hidden).not.toBe(true);
     expect(Poems.admin?.hidden).toBe(true);
     expect(Articles.admin?.hidden).not.toBe(true);
     expect(Articles.labels).toMatchObject({
