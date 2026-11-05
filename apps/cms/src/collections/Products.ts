@@ -73,7 +73,7 @@ export const products: CollectionOverride = ({ defaultCollection }) => {
         name: "titleLanguage",
         label: label("title_language"),
         type: "select",
-        options: languageOptions.filter(({ value }) => value !== "other"),
+        options: languageOptions,
       },
       slugField({
         overrides: (row) => {

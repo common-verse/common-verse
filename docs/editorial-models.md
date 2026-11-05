@@ -4,10 +4,17 @@ Model editor meaning rather than anticipated layouts. Prefer a few intentional
 blocks over unrestricted visual configuration. Add a field only when editors can
 understand when to use it and the frontend has a clear rendering contract.
 
-Poems preserve one original title, language, and text, plus zero or more explicit
-translation records, each with language, title, text, and translator attribution.
-Never require one translation per site locale or hide the original based on the
-UI locale. Keep shared facts such as dates, media relationships, and IDs
+A poem's original language is one of the six site locales. Title, text,
+description, snippet and translator are localized: the original locale holds the
+original, other locales hold optional translations. Publishing requires an author,
+the original language, and title and text in the original locale; translations
+stay optional. The translator is hidden in the original locale, also publicly.
+The text is plain text with its line breaks. The year written is optional (four
+digits); the snippet is optional, and cards fall back to the first four lines.
+The German/English slug follows the German title; poems without one need a typed
+German slug. Untranslated fields come back empty (no fallback); the website reads
+the original with a second request in the original locale. Never require one
+translation per site locale. Keep shared facts such as dates, media relationships, and IDs
 unlocalized. Localize editorial prose and editor-authored link labels where
 independent translations make sense. Field labels and other editor controls are
 UI, not editorial content.
@@ -18,7 +25,7 @@ are shown through Payload’s native join field in the admin. Fixed shared pages
 not need a byline; events describe activities rather than authored texts.
 
 Keep Payload’s native dashboard and cards. Organize the editorial sidebar as
-Content (Articles, Events, Locations, Authors, Cities), Media (Images & Files), Administration (Users),
+Content (Articles, Events, Locations, Poems, Authors, Cities), Media (Images & Files), Administration (Users),
 Pages (Home, About, Contact, Privacy, Legal Notice, Terms of sale), then Shop
 (Products, Orders, Shop settings). Collection IDs, route identities and labels use the same editorial names, including `locations`.
 
@@ -26,8 +33,6 @@ Home, the Events page, About, Contact, Privacy, Legal Notice, and Terms of sale 
 poet, and poem detail pages come from their collections. Articles are an MVP collection with localized native rich text, drafts, preview
 and public article routes. Do not add arbitrary pages. The legacy `pages` collection remains
 hidden to preserve existing records and is not used by public routing or bulk seeding.
-
-Poems are hidden from admin navigation until their rebuild.
 
 Authors have a localized name, written once in German in Latin script; a
 pseudonym is fine. Publishing requires the German name. The CMS returns stored

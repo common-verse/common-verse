@@ -72,49 +72,9 @@ describe("optional bulk demo seed", () => {
   it("creates substantial multilingual content, preserving records on repeat runs", async () => {
     const f = await fixture();
     expect(await f.run()).toEqual(bulkCounts);
-    const poems = f.records.poems;
-    expect(new Set(poems.map((poem) => poem.originalLanguage))).toEqual(
-      new Set(locales),
-    );
-    expect(poems.filter((poem) => poem._status === "draft")).toHaveLength(60);
     expect(
       f.records.events.filter((event) => event._status === "draft"),
     ).toHaveLength(20);
-    for (const language of locales) {
-      const originals = poems.filter(
-        (poem) => poem.originalLanguage === language,
-      );
-      expect(
-        originals.some((poem) => (poem.translations as unknown[]).length === 0),
-      ).toBe(true);
-      expect(
-        originals.some((poem) => (poem.translations as unknown[]).length === 5),
-      ).toBe(true);
-    }
-    for (const poem of poems) {
-      const translations = poem.translations as {
-        language: string;
-        text: string;
-      }[];
-      expect(
-        translations.some(
-          (translation) => translation.language === poem.originalLanguage,
-        ),
-      ).toBe(false);
-      expect(
-        new Set(translations.map((translation) => translation.language)).size,
-      ).toBe(translations.length);
-      expect(
-        f.records.authors.some((author) => author.id === poem.author),
-      ).toBe(true);
-    }
-    const arabic = poems.find((poem) => poem.originalLanguage === "ar")!;
-    const german = poems.find((poem) => poem.originalLanguage === "de")!;
-    expect(arabic.originalText).toMatch(/[\u0600-\u06ff]/);
-    expect(german.originalText).toContain(".");
-    expect(
-      new Set(poems.map((poem) => (poem.originalText as string).length)).size,
-    ).toBeGreaterThan(10);
     for (const event of f.records.events) {
       expect(Number.isFinite(Date.parse(event.startDate as string))).toBe(true);
       expect(event.endDate).toBeUndefined();
@@ -132,15 +92,10 @@ describe("optional bulk demo seed", () => {
       ).toBe("bulk-transaction");
     expect(f.records.users).toBeUndefined();
     const updates = f.payload.update.mock.calls.length;
-    // A renamed poem remains identifiable by slug, including when it is a draft.
-    poems[0].title = "Editor revision";
-    expect(await f.run()).toEqual({
-      authors: 0,
-      poems: 0,
-      events: 0,
-      media: 0,
-    });
-    expect(poems[0].title).toBe("Editor revision");
+    // A renamed event remains identifiable by slug, including when it is a draft.
+    f.records.events[0].title = "Editor revision";
+    expect(await f.run()).toEqual({ events: 0, media: 0 });
+    expect(f.records.events[0].title).toBe("Editor revision");
     expect(f.payload.update.mock.calls).toHaveLength(updates);
     expect(f.payload.db.commitTransaction).toHaveBeenCalledTimes(2);
     expect(f.payload.db.rollbackTransaction).not.toHaveBeenCalled();

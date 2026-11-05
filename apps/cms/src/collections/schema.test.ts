@@ -73,7 +73,7 @@ describe("editorial schemas", () => {
 
   it("keeps contributor accounts out of MVP schemas and hides deferred content", () => {
     expect(Authors.admin?.hidden).not.toBe(true);
-    expect(Poems.admin?.hidden).toBe(true);
+    expect(Poems.admin?.hidden).not.toBe(true);
     expect(Articles.admin?.hidden).not.toBe(true);
     expect(Articles.labels).toMatchObject({
       singular: { en: "Article" },
@@ -170,7 +170,7 @@ describe("editorial schemas", () => {
     ).toBeUndefined();
   });
 
-  it("models poem translations as optional explicit records", () => {
+  it("localizes poem text with one author and a site-locale original", () => {
     expect(field(Poems, "author")).toMatchObject({
       type: "relationship",
       relationTo: "authors",
@@ -184,13 +184,22 @@ describe("editorial schemas", () => {
     expect(field(Poems, "originalLanguage")).toMatchObject({
       type: "select",
       required: true,
+      options: ["de", "en", "ar", "fa", "uk", "ku"].map((value) =>
+        expect.objectContaining({ value }),
+      ),
     });
-    expect(field(Poems, "originalText")).toMatchObject({
-      type: "textarea",
-      required: true,
+    for (const name of [
+      "title",
+      "content",
+      "translator",
+      "description",
+      "snippet",
+    ])
+      expect(field(Poems, name)).toMatchObject({ localized: true });
+    expect(field(Poems, "year")).toMatchObject({ min: 1000, max: 9999 });
+    expect(Poems.versions).toMatchObject({
+      drafts: { autosave: expect.any(Object) },
     });
-    expect(field(Poems, "translations")).toMatchObject({ type: "array" });
-    expect(field(Poems, "translations")).not.toHaveProperty("localized", true);
   });
 
   it("uses clear translated collection names and editorial groups", () => {

@@ -65,7 +65,7 @@ describe("curated prototype seeding", () => {
       expect(args.req.transactionID).toBe("transaction-1");
     expect(
       f.payload.create.mock.calls.map(([args]) => args.collection),
-    ).toEqual(["media", "events", "authors", "poems"]);
+    ).toEqual(["media", "events"]);
     expect(
       f.payload.update.mock.calls
         .filter(([args]) => args.collection === "events")

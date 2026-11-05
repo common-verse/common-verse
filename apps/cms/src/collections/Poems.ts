@@ -1,21 +1,32 @@
-import { validPublicSlug } from "./slug";
 import { label } from "@poetry/cms-ui";
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, FieldHook } from "payload";
 import { authenticated, publishedOrAuthenticated } from "./access";
 import { languageOptions } from "./languageOptions";
 import { collectionPreviewUrl, previewEndpoint } from "./preview";
+import { requiredInLocale } from "./requiredInLocale";
+import { localeSlugField } from "./slug";
+
+const requiredInOriginal = (field: string) =>
+  requiredInLocale(
+    field,
+    (data) => data.originalLanguage,
+    "poem_required_in_original",
+  );
+
+/** Translators credit translations; the original has none. */
+export const translatorOutsideOriginal: FieldHook = ({
+  value,
+  siblingData,
+  req,
+}) => (siblingData?.originalLanguage === req.locale ? null : value);
 
 export const Poems: CollectionConfig = {
   slug: "poems",
   labels: { singular: label("poem"), plural: label("poems") },
-
   admin: {
-    hidden: true,
     useAsTitle: "title",
     group: label("content"),
-    description: label(
-      "keep_the_original_poem_intact_and_add_only_the_translations_that_actually_exist",
-    ),
+    defaultColumns: ["title", "author", "originalLanguage", "_status"],
     preview: (doc, { locale, req }) =>
       collectionPreviewUrl("poems", doc, locale, req.i18n.language),
     livePreview: {
@@ -35,20 +46,12 @@ export const Poems: CollectionConfig = {
   fields: [
     {
       name: "title",
+      label: label("title"),
       type: "text",
-      required: true,
-      label: label("original_title"),
-      custom: { languageField: "originalLanguage" },
+      localized: true,
+      validate: requiredInOriginal("title"),
     },
-    {
-      name: "slug",
-      validate: validPublicSlug,
-      label: label("slug"),
-      type: "text",
-      required: true,
-      unique: true,
-      index: true,
-    },
+    localeSlugField("title"),
     {
       name: "originalLanguage",
       label: label("original_language"),
@@ -57,75 +60,48 @@ export const Poems: CollectionConfig = {
       options: languageOptions,
     },
     {
-      name: "originalLanguageLabel",
-      label: label("original_language_label"),
-      type: "text",
-      admin: {
-        condition: (_, siblingData) => siblingData.originalLanguage === "other",
-      },
-    },
-    {
-      name: "originalText",
-      label: label("original_text"),
-      custom: { languageField: "originalLanguage" },
-      type: "textarea",
-      required: true,
-    },
-    {
       name: "author",
       label: label("author"),
       type: "relationship",
       relationTo: "authors",
       required: true,
-      admin: { description: label("poem_author_help") },
     },
     {
-      name: "media",
-      label: label("media"),
-      type: "upload",
-      relationTo: "media",
-      hasMany: true,
+      name: "year",
+      label: label("year_written"),
+      type: "number",
+      min: 1000,
+      max: 9999,
     },
     {
-      name: "translations",
-      label: label("translations"),
-      type: "array",
-      labels: {
-        singular: label("translation"),
-        plural: label("available_translations"),
+      name: "content",
+      label: label("text"),
+      type: "textarea",
+      localized: true,
+      validate: requiredInOriginal("content"),
+    },
+    {
+      name: "translator",
+      label: label("translator"),
+      type: "text",
+      localized: true,
+      hooks: { afterRead: [translatorOutsideOriginal] },
+      admin: {
+        components: { Field: "./components/ContentField#TranslatorText" },
       },
-      fields: [
-        {
-          name: "language",
-          label: label("language"),
-          type: "select",
-          required: true,
-          options: languageOptions,
-        },
-        {
-          name: "languageLabel",
-          label: label("language_label"),
-          type: "text",
-          admin: {
-            condition: (_, siblingData) => siblingData.language === "other",
-          },
-        },
-        {
-          name: "title",
-          custom: { languageField: "language" },
-          label: label("title"),
-          type: "text",
-          required: true,
-        },
-        {
-          name: "text",
-          custom: { languageField: "language" },
-          label: label("text"),
-          type: "textarea",
-          required: true,
-        },
-        { name: "translator", label: label("translator"), type: "text" },
-      ],
+    },
+    {
+      name: "description",
+      label: label("description"),
+      type: "textarea",
+      localized: true,
+    },
+    {
+      name: "snippet",
+      label: label("snippet"),
+      type: "textarea",
+      localized: true,
+      admin: { description: label("snippet_help") },
     },
   ],
 };
