@@ -125,12 +125,12 @@ export interface HomepageSection {
   linkUrl?: string | null;
   selectionMode?: "auto" | "manual" | null;
   item?:
-    | { relationTo: "poems"; value: LegacyPoem | number | string | null }
-    | { relationTo: "authors"; value: LegacyAuthor | number | string | null }
+    | { relationTo: "poems"; value: Poem | number | null }
+    | { relationTo: "authors"; value: Author | number | null }
     | { relationTo: "events"; value: Event | number | string | null }
     | null;
-  poems?: (LegacyPoem | number | string)[] | null;
-  authors?: (LegacyAuthor | number | string)[] | null;
+  poems?: (Poem | number)[] | null;
+  authors?: (Author | number)[] | null;
   pinnedEvents?: (Event | number | string)[] | null;
   limit?: number | null;
   links?: HomepageLink[] | null;
@@ -141,7 +141,7 @@ export interface Homepage {
     kind?: "poem" | "event" | "announcement";
     heading?: string | null;
     description?: string | null;
-    poem?: LegacyPoem | number | string | null;
+    poem?: Poem | number | null;
     event?: Event | number | string | null;
     announcement?: {
       title?: string | null;

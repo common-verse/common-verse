@@ -4,10 +4,15 @@ import {
   displayName,
   hasVersion,
   poemTeaser,
+  regionName,
   type AuthorName,
+  type PoemTeaser,
 } from "./poems";
+import { mediaObject } from "./homepage";
 import {
   locales,
+  localizedPath,
+  recordPath,
   slugField,
   type Locale,
   type FixedPageKey,
@@ -245,8 +250,10 @@ export async function getPoemCounts(): Promise<Map<number, number>> {
   return counts;
 }
 
-export const getPublishedAuthors = (locale: Locale) =>
-  fetchPublished<Author>("authors", locale);
+export const getPublishedAuthors = (
+  locale: Locale,
+  sort: "name" | "-createdAt" = "name",
+) => fetchPublished<Author>("authors", locale, { sort });
 
 /**
  * Pairs each poem with its version in `locale`, else its original; poems with
@@ -255,14 +262,26 @@ export const getPublishedAuthors = (locale: Locale) =>
 export async function poemVersions(
   poems: Poem[],
   locale: Locale,
+  /** A preview also finds draft originals, one request per poem. */
+  previewSecret?: string,
 ): Promise<{ poem: Poem; language: Locale }[]> {
   const missing = poems.filter(
     (poem) => !hasVersion(poem) && poem.originalLanguage !== locale,
   );
   const languages = [...new Set(missing.map((poem) => poem.originalLanguage))];
-  const originals = new Map(
-    (
-      await Promise.all(
+  const found = previewSecret
+    ? await Promise.all(
+        missing.map((poem) =>
+          fetchDocument<Poem>(
+            "poems",
+            String(poem.id),
+            poem.originalLanguage,
+            previewSecret,
+            "id",
+          ),
+        ),
+      )
+    : await Promise.all(
         languages.map((language) =>
           fetchPublished<Poem>(
             "poems",
@@ -276,10 +295,9 @@ export async function poemVersions(
             0,
           ),
         ),
-      )
-    )
-      .flat()
-      .map((poem) => [poem.id, poem]),
+      );
+  const originals = new Map(
+    found.flat().flatMap((poem) => (poem ? [[poem.id, poem] as const] : [])),
   );
   return poems.flatMap((poem) => {
     if (hasVersion(poem)) return [{ poem, language: locale }];
@@ -335,6 +353,44 @@ export async function authorNames(
       ),
     ]),
   );
+}
+
+/** Cards for poems paired with the version they show (`poemVersions`). */
+export async function poemTeasers(
+  shown: { poem: Poem; language: Locale }[],
+  locale: Locale,
+): Promise<PoemTeaser[]> {
+  const author = (poem: Poem) =>
+    typeof poem.author === "object" && poem.author ? poem.author : undefined;
+  const names = await authorNames(
+    shown.flatMap(({ poem }) => author(poem) ?? []),
+    locale,
+  );
+  return shown.map(({ poem, language }) =>
+    poemTeaser(poem, language, locale, names.get(author(poem)?.id ?? 0)),
+  );
+}
+
+export type AuthorCardData = Awaited<ReturnType<typeof authorCards>>[number];
+
+/** Author cards with display name, country, poem count and uploaded portrait. */
+export async function authorCards(
+  authors: Author[],
+  locale: Locale,
+  counts: Map<number, number>,
+) {
+  const names = await authorNames(authors, locale);
+  return authors.map((author) => {
+    const portrait = mediaObject(author.portrait)?.url;
+    return {
+      id: author.id,
+      ...names.get(author.id)!,
+      href: localizedPath(locale, recordPath("authors", author, locale)),
+      country: regionName(author.country, locale),
+      poems: counts.get(author.id) ?? 0,
+      portrait: portrait ? new URL(portrait, cmsUrl).href : undefined,
+    };
+  });
 }
 
 export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
@@ -422,19 +478,19 @@ export async function getEventLocales(
     .map(({ locale }) => locale);
 }
 
-export async function getRecentPoems(locale: Locale): Promise<LegacyPoem[]> {
+/** The newest published poems by creation date, for the homepage. */
+export async function getRecentPoems(locale: Locale): Promise<Poem[]> {
   const url = new URL("/api/poems", cmsUrl);
   url.searchParams.set("locale", locale);
   url.searchParams.set("fallback-locale", "none");
-  url.searchParams.set("depth", "2");
+  url.searchParams.set("depth", "1");
   url.searchParams.set("where[_status][equals]", "published");
   url.searchParams.set("sort", "-createdAt");
   url.searchParams.set("limit", "4");
   const response = await fetch(url);
   if (!response.ok)
     throw new Error(`Recent poems request failed with ${response.status}`);
-  const data = (await response.json()) as PayloadListResponse<LegacyPoem>;
-  return data.docs;
+  return ((await response.json()) as PayloadListResponse<Poem>).docs;
 }
 
 /** Walk newest profiles until four have published work, including beyond the first page. */

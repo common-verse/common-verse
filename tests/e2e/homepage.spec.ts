@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test("featured authors include work outside the archive's first page", async ({
+test("automatic authors show the newest profiles with published poems", async ({
   page,
 }) => {
   await page.goto("/en");
-  await expect(page.locator(".author-grid")).toContainText(
-    "A voice beyond the first archive page",
-  );
+  await expect(
+    page.locator("#home-authors-11 .author-card").getByRole("heading"),
+  ).toHaveText(["Nour Haddad", "Samira Taleb"]);
 });
 
 test("embedded draft preview refreshes on a trusted CMS document event", async ({
@@ -51,9 +51,14 @@ for (const locale of ["en", "ar"]) {
     await page.setViewportSize({ width: 320, height: 780 });
     await page.goto(`/${locale}`);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // English has a translation; Arabic shows the Persian original.
     await expect(
-      page.locator('.featured-poem [lang="fa"][dir="rtl"]'),
-    ).toContainText("صبح");
+      page.locator(
+        locale === "en"
+          ? '.featured-poem [lang="en"][dir="ltr"]'
+          : '.featured-poem [lang="fa"][dir="rtl"]',
+      ),
+    ).toContainText(locale === "en" ? "A Shared Morning" : "صبح");
     await expect(page.locator("#upcoming time")).toBeVisible();
     await expect(page.getByText("Hidden section")).toHaveCount(0);
     const accessibility = await new AxeBuilder({ page })
@@ -69,12 +74,16 @@ for (const locale of ["en", "ar"]) {
     await expect(page.locator(".skip-link")).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#main")).toBeFocused();
-    // Legacy homepage cards lead to the authors overview until #21 rewires them.
+    const author = page.waitForResponse((response) =>
+      response.url().endsWith(`/${locale}/authors/samira-taleb`),
+    );
     await page
-      .locator(".author-grid")
-      .getByRole("link", { name: "Prototype Collective", exact: true })
+      .locator("#home-authors-1")
+      .getByRole("link", {
+        name: locale === "en" ? "Samira Taleb" : "سميرة طالب",
+      })
       .click();
-    await expect(page).toHaveURL(new RegExp(`/${locale}/authors$`));
+    expect((await author).status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   });
 }
@@ -83,10 +92,9 @@ test("all hero types render their correct content and destination", async ({
   page,
 }) => {
   await page.goto("/en");
-  await expect(page.locator(".featured-poem")).toBeVisible();
-  await expect(
-    page.locator(".home-feature .feature-translation"),
-  ).toContainText("A Shared Morning");
+  await expect(page.locator(".featured-poem")).toContainText(
+    "A Shared Morning",
+  );
   await page.goto("/");
   await expect(page.locator(".featured-event")).toContainText(
     "Poesie über Grenzen",
@@ -131,7 +139,12 @@ test("homepage preview requires runtime authorization, respects order and stays 
     "home-featured-8",
     "home-poems-9",
     "home-poems-10",
+    "home-authors-11",
   ]);
+  // A draft selection shows only in the preview.
+  await expect(
+    page.locator("#home-poems-9 .poem-card").getByRole("heading"),
+  ).toHaveText(["قواعد الوصول", "Draft", "Elbe, Februar"]);
   await page.goto("/en");
   await expect(page.getByText("Draft homepage")).toHaveCount(0);
 });
@@ -189,39 +202,52 @@ for (const locale of ["en", "ar"]) {
     page,
   }) => {
     await page.goto(`/${locale}`);
-    const automatic = page.locator("#home-poems-2");
-    await expect(automatic.locator(".poem-grid > li")).toHaveCount(4);
-    await expect(automatic).toContainText("Recent poem 0");
-    await expect(automatic).not.toContainText("Recent poem 4");
-    const selected = page.locator("#home-poems-9");
-    expect(await selected.locator("h3").allTextContents()).toEqual([
-      "Recent poem 4",
-      "Recent poem 1",
+    const automatic = page.locator("#home-poems-2 .poem-card");
+    await expect(automatic).toHaveCount(4);
+    // The page language where it exists, else the original with a note.
+    await expect(automatic.first()).toHaveAttribute(
+      "lang",
+      locale === "en" ? "en" : "fa",
+    );
+    await expect(automatic.nth(1)).toHaveAttribute("lang", "ar");
+    const selected = page.locator("#home-poems-9 .poem-card");
+    // The draft selection is never shown publicly.
+    await expect(selected.getByRole("heading")).toHaveText([
+      "قواعد الوصول",
+      "Elbe, Februar",
     ]);
-    await expect(page.locator("#home-poems-10 .poem-grid")).toHaveCount(0);
+    await expect(selected.last().locator(".poem-note")).toBeVisible();
+    await expect(page.locator("#home-poems-10 .poem-cards")).toHaveCount(0);
     await expect(page.locator("#home-featured-6")).toContainText(
       "The biography comes from the poet profile.",
     );
     await expect(
-      page.locator(`#home-featured-6 a[href="/${locale}/authors"]`),
+      page.locator(`#home-featured-6 a[href="/${locale}/authors/nour-haddad"]`),
     ).toBeVisible();
     await expect(
       page.locator(`#home-featured-7 a[href="/${locale}/events/test"]`),
     ).toBeVisible();
-    await expect(
-      page
-        .locator(`#home-featured-8 a[href="/${locale}/poems/test-poem"]`)
-        .first(),
-    ).toBeVisible();
-    await expect(
-      page.locator('#home-featured-8 [lang="fa"][dir="rtl"]'),
-    ).toContainText("صبح");
-    await expect(page.locator("#home-featured-8 img")).toHaveAttribute(
-      "alt",
-      "Layered colourful paper shapes",
+    const poem = page.locator(
+      `#home-featured-8 a[href="/${locale}/poems/test-poem"]`,
     );
-    await expect(page.locator(".section-authors .text-link")).toContainText(
-      locale === "en" ? "Meet all authors" : "تعرّف",
+    await expect(poem).toBeVisible();
+    await expect(
+      page.locator(".section-authors .text-link").first(),
+    ).toContainText(locale === "en" ? "Meet all authors" : "تعرّف");
+    const response = page.waitForResponse((entry) =>
+      entry.url().endsWith(`/${locale}/poems/test-poem`),
     );
+    await poem.click();
+    expect((await response).status()).toBe(200);
   });
 }
+
+test("authors without an uploaded portrait show a monogram, never a generated face", async ({
+  page,
+}) => {
+  await page.goto("/en");
+  const cards = page.locator("#home-authors-1 .author-card");
+  await expect(cards.first().locator("img")).toHaveAttribute("alt", "");
+  await expect(cards.last().locator("img")).toHaveCount(0);
+  await expect(cards.last().locator(".monogram")).toHaveText("M");
+});
