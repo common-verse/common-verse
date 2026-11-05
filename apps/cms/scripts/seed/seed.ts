@@ -180,7 +180,7 @@ export async function seed(payload: Payload, { onlyIfEmpty = false } = {}) {
         (await payload.create({
           req,
           collection: "authors",
-          data: { name: "Prototype Collective" },
+          data: { name: "Prototype Collective", country: "DE" },
         }));
       await payload.create({
         req,

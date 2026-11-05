@@ -8,7 +8,7 @@ Apply the [root guide](../../AGENTS.md) alongside these rules.
 - Use the `payload` skill and existing model, access, and preview helpers.
   Extend Payload's native controls before replacing them.
 - Home and the five informational pages use globals, not arbitrary page records.
-  Poems, Authors, and legacy Pages are hidden from navigation; preserve their
+  Poems and legacy Pages are hidden from navigation; preserve their
   records and existing public behavior.
 - Preserve poem originals, optional explicit translations, and translator credits.
   Do not require a translation for every site locale or turn UI labels into content.

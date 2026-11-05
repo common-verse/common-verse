@@ -190,5 +190,13 @@
   "slug_taken": "Another entry already uses this URL. Choose another one.",
   "city": "City",
   "cities": "Cities",
-  "country": "Country"
+  "country": "Country",
+  "author_name_help": "Write the name once in German, in Latin script. Other languages show it until you enter a different spelling there. A pseudonym is fine.",
+  "author_name_required": "Enter the name in German before publishing.",
+  "author_name_latin": "Write the German name in Latin script.",
+  "create_city": "Create city in this country",
+  "awards": "Awards",
+  "award": "Award",
+  "award_name": "Award",
+  "year": "Year"
 }

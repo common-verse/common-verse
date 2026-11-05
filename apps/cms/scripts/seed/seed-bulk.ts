@@ -124,7 +124,11 @@ export async function seedBulk(payload: Payload) {
         ...common,
         collection: "authors",
         locale,
-        data: { name, biography: bulkFixtures[locale].biography },
+        data: {
+          name,
+          country: "DE",
+          biography: bulkFixtures[locale].biography,
+        },
       });
       for (const translatedLocale of editorialLocales(i).filter(
         (code) => code !== locale,

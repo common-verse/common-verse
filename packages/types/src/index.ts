@@ -85,7 +85,6 @@ export interface Author extends LocaleSlugs {
   city?: City | number | null;
   biography?: string | null;
   awards: { id?: string | null; name: string; year: number }[];
-  poems?: { docs?: (Poem | number)[]; hasNextPage?: boolean } | null;
   _status?: "draft" | "published";
 }
 
