@@ -214,9 +214,10 @@ API's activation info navigate without the transition.
 
 ## Header
 
-The header stays `dir="ltr"`; its links and labels carry the locale direction.
-On wide screens the navigation sits beside the logo, with language and theme at
-the end. With large text on narrow screens the controls wrap below the logo
+The header follows the page direction: logo at the start, navigation beside it,
+language and theme at the end (mirrored in Arabic and Persian, see
+[translations](translations.md#direction-and-translation-quality)).
+On wide screens the navigation sits beside the logo. With large text on narrow screens the controls wrap below the logo
 instead of overflowing. Header, main content, footer and bottom bar keep clear of safe areas
 (`viewport-fit=cover`).
 

@@ -29,15 +29,20 @@ for (const [locale, direction] of expectations) {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     for (const width of [1280, 320]) {
       await page.setViewportSize({ width, height: 900 });
+      // In reading order: logo at the start, links next, controls at the end.
+      const start = (box: { x: number; width: number }) =>
+        direction === "ltr" ? box.x : -(box.x + box.width);
+      const end = (box: { x: number; width: number }) =>
+        direction === "ltr" ? box.x + box.width : -box.x;
       const brand = (await page.locator(".site-header .brand").boundingBox())!;
       const controls = (await page.locator(".header-controls").boundingBox())!;
-      expect(brand.x + brand.width).toBeLessThanOrEqual(controls.x);
+      expect(end(brand)).toBeLessThanOrEqual(start(controls));
       const links = page.locator(".site-header nav a");
-      let previousRight = 0;
+      let previousEnd = -Infinity;
       for (const link of await links.all()) {
         const box = (await link.boundingBox())!;
-        expect(box.x).toBeGreaterThanOrEqual(previousRight);
-        previousRight = box.x + box.width;
+        expect(start(box)).toBeGreaterThanOrEqual(previousEnd);
+        previousEnd = end(box);
         await expect(link).toHaveCSS("direction", direction);
       }
       expect(
@@ -107,6 +112,37 @@ test("the mobile bottom bar labels five links on one line and widens the current
   await page.setViewportSize({ width: 1280, height: 780 });
   expect((await visibleText())[0]).toBe("Veranstaltungen");
 });
+
+for (const locale of ["ar", "fa"]) {
+  test(`${locale} mirrors the bottom bar and directional icons, not the logo`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(`/${locale}/poems`);
+    const links = page.locator(".site-header nav a");
+    const [events, shop] = [
+      (await links.first().boundingBox())!,
+      (await links.last().boundingBox())!,
+    ];
+    expect(events.x).toBeGreaterThan(shop.x);
+    const mirrored = "matrix(-1, 0, 0, 1, 0, 0)";
+    await expect(links.nth(1).locator("svg")).toHaveCSS("transform", mirrored);
+    for (const index of [0, 2, 3, 4])
+      await expect(links.nth(index).locator("svg")).toHaveCSS(
+        "transform",
+        "none",
+      );
+    await expect(page.locator(".site-header .brand-logo")).toHaveCSS(
+      "transform",
+      "none",
+    );
+    await page.goto(`/${locale}/poems/test-poem`);
+    await expect(page.locator(".back-link svg")).toHaveCSS(
+      "transform",
+      mirrored,
+    );
+  });
+}
 
 test("primary navigation targets render collection indexes", async ({
   page,

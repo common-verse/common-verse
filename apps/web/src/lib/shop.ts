@@ -1,6 +1,6 @@
 import type { Locale } from "@poetry/i18n";
 import type { Product, ShopSettings } from "@poetry/types";
-import { eventFormatLocale } from "./event-date";
+import { shopFormatLocale } from "./event-date";
 import { contentDirection, mediaObject } from "./homepage";
 import * as m from "../paraglide/messages.js";
 
@@ -29,12 +29,12 @@ export interface CartLine {
 }
 
 export const formatNumber = (value: number, locale: Locale) =>
-  new Intl.NumberFormat(eventFormatLocale(locale), {
+  new Intl.NumberFormat(shopFormatLocale(locale), {
     useGrouping: false,
   }).format(value);
 
 export function formatPrice(cents: number, locale: Locale): string {
-  return new Intl.NumberFormat(eventFormatLocale(locale), {
+  return new Intl.NumberFormat(shopFormatLocale(locale), {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100);

@@ -4,7 +4,7 @@ import { rateLimiter } from "./address";
 import { type } from "arktype";
 import { email } from "./checkout";
 import { normalizeCode } from "./order-code";
-import { eventFormatLocale } from "./event-date";
+import { shopFormatLocale } from "./event-date";
 import type { PaymentFacts } from "./payment";
 import * as m from "../paraglide/messages.js";
 
@@ -12,7 +12,7 @@ import * as m from "../paraglide/messages.js";
 export const shopEmail = "shop@thepoetryproject.de";
 
 export const formatOrderDate = (date: string, locale: Locale) =>
-  new Intl.DateTimeFormat(eventFormatLocale(locale), {
+  new Intl.DateTimeFormat(shopFormatLocale(locale), {
     dateStyle: "long",
     timeZone: "Europe/Berlin",
   }).format(new Date(date));

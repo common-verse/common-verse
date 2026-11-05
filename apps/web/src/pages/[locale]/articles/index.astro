@@ -4,6 +4,7 @@ import { Link } from '$lib/components/ui/link'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
 import { getArticles } from '../../../lib/cms'
+import { eventFormatLocale } from '../../../lib/event-date'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
@@ -21,7 +22,7 @@ const title = m.nav_articles({}, { locale })
         <li><article>
           <Heading level={2}><Link variant="heading" href={localizedPath(locale, `articles/${article.slug}`)}>{article.title}</Link></Heading>
           {article.description && <p>{article.description}</p>}
-          {article.publishedAt && <time datetime={article.publishedAt}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(article.publishedAt))}</time>}
+          {article.publishedAt && <bdi><time datetime={article.publishedAt}>{new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long' }).format(new Date(article.publishedAt))}</time></bdi>}
         </article></li>
       ))}
     </ul>

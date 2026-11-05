@@ -6,7 +6,7 @@ import {
   formatEventDate,
   formatEventDay,
   formatEventWeekdayTime,
-  eventFormatLocale,
+  shopFormatLocale,
 } from "./event-date";
 
 it("keeps events active for their entire Berlin calendar day", () => {
@@ -62,12 +62,12 @@ it("omits the current Berlin year while retaining other years and the time", () 
 it.each([
   ["de", "9.1.2027", "Sa., 19:00 Uhr"],
   ["en", "1/9/2027", "Sat 07:00 PM"],
-  ["ar", "٩\u200f/١\u200f/٢٠٢٧", "السبت ٠٧:٠٠ م"],
-  ["fa", "۱۴۰۵/۱۰/۱۹", "شنبه ۱۹:۰۰"],
+  ["ar", "9\u200f/1\u200f/2027", "السبت 07:00 م"],
+  ["fa", "1405/10/19", "شنبه 19:00"],
   ["uk", "09.01.2027", "сб 19:00"],
   ["ku", "09.01.2027", "şem 19:00"],
 ] as const)(
-  "formats %s dates and weekday/time using the locale",
+  "formats %s dates and weekday/time using the locale with Latin digits",
   (locale, day, time) => {
     const date = "2027-01-09T18:00:00Z";
     const now = new Date("2026-03-01T12:00:00Z");
@@ -79,17 +79,17 @@ it.each([
 it("compares Persian calendar years at Nowruz rather than January", () => {
   const now = new Date("2026-12-31T12:00:00Z");
   expect(formatEventDay("2027-01-09T18:00:00Z", "fa", now)).not.toContain(
-    "۱۴۰۵",
+    "1405",
   );
   expect(formatEventDate("2027-01-09T18:00:00Z", "fa", now)).not.toContain(
-    "۱۴۰۵",
+    "1405",
   );
   const beforeNowruz = new Date("2027-03-19T12:00:00Z");
   expect(formatEventDay("2027-03-23T18:00:00Z", "fa", beforeNowruz)).toContain(
-    "۱۴۰۶",
+    "1406",
   );
   expect(formatEventDate("2027-03-23T18:00:00Z", "fa", beforeNowruz)).toContain(
-    "۱۴۰۶",
+    "1406",
   );
 });
 
@@ -103,9 +103,9 @@ it.each([
   ["ar", "١"],
   ["fa", "۱"],
 ] as const)(
-  "keeps %s counters in the native numeral system",
+  "keeps %s shop numbers in the native numeral system",
   (locale, expected) => {
-    expect(new Intl.NumberFormat(eventFormatLocale(locale)).format(1)).toBe(
+    expect(new Intl.NumberFormat(shopFormatLocale(locale)).format(1)).toBe(
       expected,
     );
   },

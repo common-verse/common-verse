@@ -353,18 +353,18 @@ html {
     opacity: 0;
   }
 }
-/* Physical sides: the header is always LTR, even when the menu content is RTL. */
+/* Opens toward the start edge from the trigger at the header's end. */
 @supports (anchor-name: --a) {
   .language-popover {
     position-anchor: --language-trigger;
-    position-area: bottom span-left;
+    position-area: block-end span-inline-start;
     margin-block-start: var(--space-3xs);
   }
 }
 @supports not (anchor-name: --a) {
   .language-popover {
-    top: 4.5rem;
-    right: var(--header-gutter);
+    inset-block-start: 4.5rem;
+    inset-inline-end: var(--header-gutter);
   }
 }
 .language-title {

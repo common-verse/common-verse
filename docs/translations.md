@@ -106,13 +106,24 @@ must not require a database migration or rewrite editorial records.
 
 Use central locale metadata: Arabic and Persian are RTL; German, English,
 Ukrainian, and Kurmanji are LTR. Interface direction follows the effective
-interface language. The Events header keeps its introduction on the left and
-featured event on the right in every locale. The site header also keeps its logo,
-navigation links, and controls in the same physical order; individual labels keep
-their language direction. Text follows the locale direction. Carousel controls keep previous on the left,
-next on the right, and the same arrow and slide directions in every language. Date/time strings and the feature counter use bidi
-isolation to preserve their internal order. Content fields and embedded text follow their content
-language, including when it differs from the interface.
+interface language. In Arabic and Persian the whole layout mirrors through
+logical CSS properties; the DOM order stays, so the tab order follows the reading
+direction. Content fields and embedded text follow their content language,
+including when it differs from the interface.
+
+| Mirrors in RTL                                                                                 | Does not mirror                                                                    |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Layout order and alignment: header (logo, navigation, language and theme), bottom bar, columns | Logo artwork                                                                       |
+| Events header (introduction first, featured event after it), carousel controls and slides      | Non-directional icons: info, pin, search, globe, close, theme, people, bag, quotes |
+| Reading-direction icons: back/forward, chevrons, pagination, "more" arrows, the article icon   | Media controls and checkmarks                                                      |
+| List and grid flow: cards, pagination, version and language switchers                          | Photos and illustrations                                                           |
+|                                                                                                | Numbers and dates (isolated with `<bdi>`), Latin names, URLs                       |
+
+Years, counts and event dates (poem and award years, poem and author counts,
+page numbers, the featured-event counter, event and article dates) use Latin digits
+in every locale (`numberingSystem: "latn"`), as stored in the CMS. The shop keeps
+each locale's own digits. Embedded content
+keeps its own direction: a German poem card on an Arabic page stays LTR.
 
 Declare the correct `lang` and `dir` for mixed-language content and the preview
 banner. Verify keyboard behavior, narrow layouts, long translations, mixed writing
@@ -197,9 +208,8 @@ locale controls their punctuation and clock format. German appends “Uhr” thr
 the UI catalog; other languages retain their native time patterns.
 
 All event times use `Europe/Berlin`, including daylight saving. Calendars and
-numerals follow locale conventions: Persian uses the Solar Hijri calendar and
-Persian digits. Arabic explicitly uses Arabic-Indic digits, and Persian explicitly
-uses Persian digits, consistently for dates, times, and featured-event counters. The list omits the year only when the event and today share the
+month names follow locale conventions: Persian uses the Solar Hijri calendar.
+Digits are Latin in every locale (`eventFormatLocale`). The list omits the year only when the event and today share the
 same year in the displayed calendar, so Persian year changes follow Nowruz.
 English follows the generic `en` locale (month/day numeric dates and a 12-hour
 clock). A regional English variant would be a separate product decision.

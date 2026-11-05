@@ -1,5 +1,6 @@
 <script lang="ts">
   import { locationText } from "../../location";
+  import { eventFormatLocale } from "../../event-date";
   import { localizedPath, recordPath, type Locale } from "@poetry/i18n";
   import type { Event } from "@poetry/types";
   import { Heading } from "$lib/components/ui/heading";
@@ -8,7 +9,7 @@
 
   let { event, locale }: { event: Event; locale: Locale } = $props();
   const dateFormat = $derived(
-    new Intl.DateTimeFormat(locale, {
+    new Intl.DateTimeFormat(eventFormatLocale(locale), {
       dateStyle: "long",
       timeStyle: "short",
       timeZone: "Europe/Berlin",
