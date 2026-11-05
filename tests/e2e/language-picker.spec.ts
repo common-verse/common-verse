@@ -88,6 +88,46 @@ test("language links preserve the content path, query, and anchor when returning
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 });
 
+test("event language links use each locale's slug and fall back to the overview", async ({
+  page,
+  baseURL,
+}) => {
+  expect(
+    (await page.request.get("/veranstaltungen/river-reading")).status(),
+  ).toBe(404);
+  expect((await page.request.get("/ar/events/fluss-lesung")).status()).toBe(
+    404,
+  );
+  await page.goto("/veranstaltungen/fluss-lesung?ref=invite#main");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    `${baseURL}/veranstaltungen/fluss-lesung`,
+  );
+  await expect(page.locator('link[hreflang="ar"]')).toHaveAttribute(
+    "href",
+    `${baseURL}/ar/events/river-reading`,
+  );
+  await expect(page.locator('link[hreflang="fa"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
+  const popup = page.getByRole("dialog", { name: "Sprache" });
+  await expect(popup.getByRole("link")).toHaveCount(6);
+  await expect(popup.locator('a[hreflang="fa"]')).toHaveAttribute(
+    "href",
+    "/fa/events?ref=invite",
+  );
+  await popup.getByRole("link", { name: /^العربية/ }).click();
+  await expect(page).toHaveURL(/\/ar\/events\/river-reading\?ref=invite#main$/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    `${baseURL}/ar/events/river-reading`,
+  );
+  await page.getByRole("button", { name: /العربية$/ }).click();
+  await page.getByRole("link", { name: /^Deutsch/ }).click();
+  await expect(page).toHaveURL(
+    /\/veranstaltungen\/fluss-lesung\?ref=invite#main$/,
+  );
+});
+
 test("language selection remains available without JavaScript", async ({
   browser,
   baseURL,

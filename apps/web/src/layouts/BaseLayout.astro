@@ -16,6 +16,8 @@ interface Props {
   description?: string
   image?: string | null
   canonicalPath?: string
+  /** Path of this page in another locale, when it differs per locale (record slugs). */
+  localePath?: (locale: Locale) => string
   noIndex?: boolean
   preview?: boolean
   contentType?: 'website' | 'article'
@@ -34,6 +36,7 @@ const {
   description = m.site_description({}, { locale }),
   image,
   canonicalPath = '',
+  localePath,
   noIndex = false,
   preview = false,
   contentType = 'website',
@@ -54,6 +57,7 @@ const editorLanguage = editorLocale(suppliedEditorLanguage)
 const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321'
 const canonical = new URL(localizedPath(locale, canonicalPath), siteUrl)
 const socialImage = image ? new URL(image, siteUrl) : undefined
+const alternatePath = (alternative: Locale) => localePath?.(alternative) ?? canonicalPath
 const xDefaultLocale = alternateLocales.includes('de') ? 'de' : (alternateLocales[0] ?? locale)
 const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
 ---
@@ -69,9 +73,9 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
     <meta name="robots" content={noIndex || preview ? 'noindex,nofollow' : 'index,follow'} />
     <link rel="canonical" href={canonical} />
     {alternateLocales.map((alternative) => (
-      <link rel="alternate" hreflang={alternative} href={new URL(localizedPath(alternative, canonicalPath), siteUrl)} />
+      <link rel="alternate" hreflang={alternative} href={new URL(localizedPath(alternative, alternatePath(alternative)), siteUrl)} />
     ))}
-    {alternateLocales.length > 0 && <link rel="alternate" hreflang="x-default" href={new URL(localizedPath(xDefaultLocale, canonicalPath), siteUrl)} />}
+    {alternateLocales.length > 0 && <link rel="alternate" hreflang="x-default" href={new URL(localizedPath(xDefaultLocale, alternatePath(xDefaultLocale)), siteUrl)} />}
     <meta property="og:type" content={contentType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -89,7 +93,7 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
   </head>
   <body>
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>
-    <Header {locale} themePreference={theme} {notice} {noticeFocus} {noticeCloseHref} />
+    <Header {locale} {localePath} themePreference={theme} {notice} {noticeFocus} {noticeCloseHref} />
     {preview && <p class="preview-banner" role="status" lang={editorLanguage} dir={getLocaleMetadata(editorLanguage).direction}>{message('draft_preview', editorLanguage)}</p>}
     {preview && <div id="payload-live-preview" data-server-url={import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'} />}
     <main id="main" tabindex="-1" class={mainClass}><slot /></main>

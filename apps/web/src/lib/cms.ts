@@ -15,6 +15,7 @@ import type {
   Article,
   Event,
   EventsPage,
+  LocalizedSlug,
   OrderLookup,
   Product,
   ShopSettings,
@@ -214,13 +215,13 @@ export async function getEventsPage(
 }
 
 export async function getEventLocales(
-  slug: string,
+  slug: LocalizedSlug,
   previewSecret?: string,
 ): Promise<Locale[]> {
   const localized = await Promise.all(
     locales.map(async (locale) => ({
       locale,
-      event: await getEvent(slug, locale, previewSecret),
+      event: await getEvent(slug[slugLocale(locale)], locale, previewSecret),
     })),
   );
   return localized

@@ -10,7 +10,7 @@ import { mediaCredit } from '../../../lib/media-credit'
 import { Text } from '$lib/components/ui/text'
 import * as Card from '$lib/components/ui/card'
 import { getSecret } from 'astro:env/server'
-import { isLocale, localizedPath } from '@poetry/i18n'
+import { isLocale, localizedPath, recordPath, type Locale } from '@poetry/i18n'
 import { Button } from '$lib/components/ui/button'
 import { getEvent, getEventLocales } from '../../../lib/cms'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
@@ -45,10 +45,11 @@ const html = eventContentHTML(event.content, cmsUrl)
 const date = new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))
 const registrationUrl = registrationHref(event.registrationUrl, locale)
 const credit = mediaCredit(eventMedia?.credit)
-const alternateLocales = await getEventLocales(slug, preview ? suppliedSecret : undefined)
+const alternateLocales = await getEventLocales(event.slug, preview ? suppliedSecret : undefined)
+const localePath = (target: Locale) => recordPath('events', event.slug, target, alternateLocales)
 ---
 
-<BaseLayout {locale} {title} {description} {image} {structuredData} {alternateLocales} canonicalPath={`events/${slug}`} {preview} contentType="article" mainClass="events-page">
+<BaseLayout {locale} {title} {description} {image} {structuredData} {alternateLocales} canonicalPath={localePath(locale)} {localePath} {preview} contentType="article" mainClass="events-page">
   <article class="event-page">
     <Link variant="standalone" class="back-link" href={localizedPath(locale, 'events')}>{m.home_all_events({}, { locale })}</Link>
     <header class="event-heading event-summary">

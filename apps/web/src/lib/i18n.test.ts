@@ -3,6 +3,7 @@ import {
   getLocaleMetadata,
   isLocale,
   localizedPath,
+  recordPath,
   unlocalizedPath,
 } from "@poetry/i18n";
 
@@ -29,6 +30,20 @@ describe("locale metadata", () => {
     expect(unlocalizedPath("/ar/events/test")).toBe("/events/test");
     expect(unlocalizedPath("/events/test")).toBe("/events/test");
     expect(unlocalizedPath("/en")).toBe("/");
+  });
+  it("uses the German record slug for German and the English one elsewhere", () => {
+    const slug = { de: "lesung", en: "reading" };
+    expect(localizedPath("de", recordPath("events", slug, "de"))).toBe(
+      "/veranstaltungen/lesung",
+    );
+    for (const locale of ["en", "ar", "fa", "uk", "ku"] as const)
+      expect(localizedPath(locale, recordPath("events", slug, locale))).toBe(
+        `/${locale}/events/reading`,
+      );
+    expect(recordPath("events", slug, "fa", ["de", "en"])).toBe("events");
+    expect(recordPath("events", slug, "en", ["de", "en"])).toBe(
+      "events/reading",
+    );
   });
   it("maps page identities without changing record slugs", () => {
     expect(localizedPath("de", "articles/project-news")).toBe(

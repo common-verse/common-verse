@@ -6,10 +6,11 @@ interface Props {
   currentLocale: Locale
   label: string
   path: string
+  localePath?: (locale: Locale) => string
   search: string
 }
 
-const { currentLocale, label, path, search } = Astro.props
+const { currentLocale, label, path, localePath = () => path, search } = Astro.props
 const current = localeMetadata[currentLocale]
 const displayNames = new Intl.DisplayNames([currentLocale], { type: 'language' })
 // Each language also appears in the reader's current language, unless that repeats the native name.
@@ -30,7 +31,7 @@ const translatedName = (locale: Locale) => {
   <ul class="language-options">
     {locales.map((locale) => (
       <li>
-        <a href={`${localizedPath(locale, path)}${search}`} hreflang={locale} aria-current={locale === currentLocale ? 'page' : undefined}>
+        <a href={`${localizedPath(locale, localePath(locale))}${search}`} hreflang={locale} aria-current={locale === currentLocale ? 'page' : undefined}>
           <span class="language-native" lang={locale} dir={localeMetadata[locale].direction}>{localeMetadata[locale].label}</span>
           {translatedName(locale) && <span class="language-translated">{translatedName(locale)}</span>}
           {locale === currentLocale && <Check size={18} aria-hidden="true" class="language-check" />}

@@ -11,13 +11,14 @@ import type { ThemePreference } from '../lib/theme'
 
 interface Props {
   locale: Locale
+  localePath?: (locale: Locale) => string
   themePreference: ThemePreference
   notice?: Notice
   noticeFocus?: boolean
   noticeCloseHref?: string
 }
 
-const { locale, themePreference, notice, noticeFocus, noticeCloseHref } = Astro.props
+const { locale, localePath, themePreference, notice, noticeFocus, noticeCloseHref } = Astro.props
 const messageOptions = { locale }
 const { direction } = getLocaleMetadata(locale)
 const path = unlocalizedPath(Astro.originPathname)
@@ -41,7 +42,7 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
     ))}
   </nav>
   <div class="header-controls">
-    <LanguageSwitcher currentLocale={locale} label={m.language_label({}, messageOptions)} path={path} search={Astro.url.search} />
+    <LanguageSwitcher currentLocale={locale} label={m.language_label({}, messageOptions)} {localePath} path={path} search={Astro.url.search} />
     <ThemeSwitcher client:load preference={themePreference} {locale} />
   </div>
   <PageNotification client:load {locale} {notice} focus={noticeFocus} closeHref={noticeCloseHref} />
