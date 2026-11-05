@@ -610,11 +610,17 @@ function rebuiltList(collection, params, locale) {
   const author = params.get("where[author][equals]");
   const slugDe = params.get("where[slug.de][equals]");
   const slugEn = params.get("where[slug.en][equals]");
+  // Preview lookups send only the slug; a draft matches either slot.
+  const previewSlug = params.get("slug");
   const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
     .filter((entry) => !ids || ids.includes(String(entry.id)))
     .filter((entry) => !author || String(entry.author) === author)
     .filter((entry) => !slugDe || entry.slug.de === slugDe)
     .filter((entry) => !slugEn || entry.slug.en === slugEn)
+    .filter(
+      (entry) =>
+        !previewSlug || [entry.slug.de, entry.slug.en].includes(previewSlug),
+    )
     .map((entry) =>
       collection === "poems"
         ? localizedPoem(entry, locale, depth)
@@ -798,8 +804,10 @@ const server = http.createServer((request, response) => {
       document.sections.reverse();
     return response.end(JSON.stringify(document));
   }
-  const rebuiltCollection = url.pathname.match(/^\/api\/(poems|authors)$/)?.[1];
-  if (rebuiltCollection && isRebuiltQuery(url.searchParams))
+  const rebuiltCollection = url.pathname.match(
+    /^\/api\/(poems|authors)(\/preview)?$/,
+  )?.[1];
+  if (rebuiltCollection && (isPreview || isRebuiltQuery(url.searchParams)))
     return response.end(
       JSON.stringify(rebuiltList(rebuiltCollection, url.searchParams, locale)),
     );

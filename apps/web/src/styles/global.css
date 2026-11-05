@@ -1179,3 +1179,7 @@ html[data-cart-transition] .book-card {
 .page-title {
   color: var(--primary);
 }
+/* Only icons that point along the reading direction mirror. */
+.flip-rtl:dir(rtl) {
+  transform: scaleX(-1);
+}

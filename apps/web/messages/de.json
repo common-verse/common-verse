@@ -7,7 +7,6 @@
   "language_label": "Sprache",
   "skip_to_content": "Zum Inhalt springen",
   "poem_original": "Original",
-  "poem_translations": "Übersetzungen",
   "translated_by": "Übersetzt von {name}",
   "registration": "Jetzt anmelden",
   "home_welcome": "Ein Ort der Begegnung durch Poesie",
@@ -220,5 +219,17 @@
   "poem_not_available": "Nicht auf Deutsch verfügbar",
   "pagination_label": "Seiten",
   "pagination_page": "Seite {page}",
-  "back_home": "Zur Startseite"
+  "back_home": "Zur Startseite",
+  "poems_all": "Alle Gedichte",
+  "poem_read_in": "Lesen auf",
+  "poem_about": "Über das Gedicht",
+  "poem_author": "Autor:in",
+  "poem_written": "Geschrieben",
+  "poem_place": "Ort",
+  "poem_description": "Beschreibung",
+  "place": "{city}, {country}",
+  "author_about": "Über {name}",
+  "author_profile": "Zum Profil von {name}",
+  "poems_more_by": "Weitere Gedichte von {name}",
+  "poems_all_by": "Alle Gedichte von {name}"
 }

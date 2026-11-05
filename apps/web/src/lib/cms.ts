@@ -1,5 +1,11 @@
 import { berlinDayStart } from "./event-date";
-import { displayName, hasVersion, type AuthorName } from "./poems";
+import {
+  byYear,
+  displayName,
+  hasVersion,
+  poemTeaser,
+  type AuthorName,
+} from "./poems";
 import {
   locales,
   slugLocale,
@@ -71,6 +77,8 @@ async function fetchDocument<T>(
   locale: Locale,
   previewSecret?: string,
   field: "slug" | "slug.de" | "slug.en" | "id" = "slug",
+  /** Public lookups ask for published records rather than rely on CMS access alone. */
+  publishedOnly = false,
 ): Promise<T | null> {
   const preview = Boolean(previewSecret);
   const path = preview ? `/api/${collection}/preview` : `/api/${collection}`;
@@ -80,6 +88,8 @@ async function fetchDocument<T>(
   url.searchParams.set("depth", "2");
   if (preview) url.searchParams.set("slug", slug);
   else url.searchParams.set(`where[${field}][equals]`, slug);
+  if (!preview && publishedOnly)
+    url.searchParams.set("where[_status][equals]", "published");
   url.searchParams.set("limit", "1");
   const response = await fetch(url, {
     headers: previewSecret ? { "x-preview-secret": previewSecret } : {},
@@ -105,8 +115,38 @@ export const getEvent = (
     `slug.${slugLocale(locale)}`,
   );
 
-export const getPoem = (slug: string, locale: Locale, previewSecret?: string) =>
-  fetchDocument<LegacyPoem>("poems", slug, locale, previewSecret);
+/**
+ * The poem served at `slug` in `locale`, with every language it has a version in.
+ * Null when the slug does not serve this locale.
+ */
+export async function getPoem(
+  slug: string,
+  locale: Locale,
+  previewSecret?: string,
+): Promise<{ poem: Poem; versions: Partial<Record<Locale, Poem>> } | null> {
+  const documents = await Promise.all(
+    locales.map((language) =>
+      fetchDocument<Poem>(
+        "poems",
+        slug,
+        language,
+        previewSecret,
+        `slug.${slugLocale(locale)}`,
+        true,
+      ),
+    ),
+  );
+  const poem = documents[locales.indexOf(locale)];
+  if (!poem) return null;
+  return {
+    poem,
+    versions: Object.fromEntries(
+      locales.flatMap((language, index) =>
+        hasVersion(documents[index]) ? [[language, documents[index]]] : [],
+      ),
+    ),
+  };
+}
 
 export const getEvents = (locale: Locale) =>
   fetchCollection<Event>("events", locale);
@@ -235,6 +275,21 @@ export async function poemVersions(
         ]
       : [];
   });
+}
+
+/** An author's published poems as cards without the name, newest year first. */
+export async function getAuthorPoemTeasers(
+  author: number,
+  locale: Locale,
+  { except, limit }: { except?: number; limit?: number } = {},
+) {
+  const poems = (await getPublishedPoems(locale, author))
+    .filter((poem) => poem.id !== except)
+    .sort(byYear)
+    .slice(0, limit);
+  return (await poemVersions(poems, locale)).map(({ poem, language }) =>
+    poemTeaser(poem, language, locale),
+  );
 }
 
 /** Display names by author ID: the name in `locale`, else the German name. */

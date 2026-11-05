@@ -7,7 +7,6 @@
   "language_label": "Мова",
   "skip_to_content": "Перейти до вмісту",
   "poem_original": "Оригінал",
-  "poem_translations": "Переклади",
   "translated_by": "Переклад: {name}",
   "registration": "Зареєструватися зараз",
   "home_welcome": "Місце зустрічі через поезію",
@@ -221,5 +220,17 @@
   "poem_not_available": "Немає українською",
   "pagination_label": "Сторінки",
   "pagination_page": "Сторінка {page}",
-  "back_home": "На головну"
+  "back_home": "На головну",
+  "poems_all": "Усі вірші",
+  "poem_read_in": "Читати",
+  "poem_about": "Про вірш",
+  "poem_author": "Автор",
+  "poem_written": "Написано",
+  "poem_place": "Місце",
+  "poem_description": "Опис",
+  "place": "{city}, {country}",
+  "author_about": "Про {name}",
+  "author_profile": "Профіль: {name}",
+  "poems_more_by": "Інші вірші: {name}",
+  "poems_all_by": "Усі вірші: {name}"
 }

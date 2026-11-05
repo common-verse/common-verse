@@ -1,54 +1,145 @@
 ---
-import { authorDisplayName } from '../../../lib/editorial'
-import { Eyebrow } from '$lib/components/ui/eyebrow'
+import { ArrowLeft, ArrowRight, Info } from 'lucide-svelte'
+import { Heading } from '$lib/components/ui/heading'
+import { Link } from '$lib/components/ui/link'
+import { Button } from '$lib/components/ui/button'
+import * as Card from '$lib/components/ui/card'
+import { PoemCard } from '$lib/components/sections'
 import { getSecret } from 'astro:env/server'
-import { getLocaleMetadata, isLocale, localeMetadata, localizedPath } from '@poetry/i18n'
-import { getPoem } from '../../../lib/cms'
+import { getLocaleMetadata, isLocale, localizedPath, recordPath, type Locale } from '@poetry/i18n'
+import type { Author } from '@poetry/types'
+import { authorNames, getAuthorPoemTeasers, getPoem } from '../../../lib/cms'
+import { authorPlace, excerptLines, languageName, selectVersion, versionOrder } from '../../../lib/poems'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale, slug } = Astro.params
 if (!isLocale(rawLocale) || !slug) return new Response('Not found', { status: 404 })
 const locale = rawLocale
+const o = { locale }
 const suppliedSecret = Astro.url.searchParams.get('previewSecret') ?? undefined
 const previewSecret = getSecret('PREVIEW_SECRET')
 const preview = Boolean(suppliedSecret && previewSecret && suppliedSecret === previewSecret)
 if (suppliedSecret && !preview) return new Response('Invalid preview link', { status: 401 })
-const poem = await getPoem(slug, locale, preview ? suppliedSecret : undefined)
-if (!poem) return new Response('Not found', { status: 404 })
-const originalDirection = poem.originalLanguage === 'other' ? 'ltr' : getLocaleMetadata(poem.originalLanguage).direction
-const originalLabel = poem.originalLanguage === 'other' ? poem.originalLanguageLabel : localeMetadata[poem.originalLanguage].label
+const found = await getPoem(slug, locale, preview ? suppliedSecret : undefined)
+if (!found) return new Response('Not found', { status: 404 })
+const { poem, versions } = found
+const languages = versionOrder(poem.originalLanguage, Object.keys(versions) as Locale[])
+const language = selectVersion(languages, Astro.url.searchParams.get('fassung'), locale, poem.originalLanguage)
+if (!language) return new Response('Not found', { status: 404 })
+const shown = versions[language]!
+// Keeps other parameters, such as a preview secret, when switching versions.
+const versionHref = (version: Locale) => {
+  const query = new URLSearchParams(Astro.url.search)
+  query.set('fassung', version)
+  return `?${query}`
+}
+const direction = getLocaleMetadata(language).direction
+const author = typeof poem.author === 'object' ? (poem.author as Author) : null
+const authorName = author ? (await authorNames([author], locale)).get(author.id) : undefined
+const name = authorName?.name
+const authorHref = author ? localizedPath(locale, recordPath('authors', author.slug, locale)) : undefined
+const morePoems = author ? await getAuthorPoemTeasers(author.id, locale, { except: poem.id, limit: 4 }) : []
+const title = `${shown.title} · ${m.site_title({}, o)}`
+const description = poem.description || excerptLines(shown.snippet, shown.content).join(' / ')
+const localePath = (target: Locale) => recordPath('poems', poem.slug, target)
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CreativeWork',
-  name: poem.title,
-  inLanguage: poem.originalLanguage === 'other' ? poem.originalLanguageLabel : poem.originalLanguage,
-  ...(typeof poem.author === 'object' && poem.author ? { author: { '@type': 'Person', name: authorDisplayName(poem.author.name) } } : {}),
-  url: new URL(localizedPath(locale, `poems/${slug}`), import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321').href,
+  name: shown.title,
+  inLanguage: language,
+  ...(poem.year ? { dateCreated: String(poem.year) } : {}),
+  ...(name ? { author: { '@type': 'Person', name } } : {}),
+  url: new URL(localizedPath(locale, localePath(locale)), import.meta.env.PUBLIC_SITE_URL ?? 'http://localhost:4321').href,
 }
 ---
 
-<BaseLayout {locale} title={`${poem.title} · ${m.site_title({}, { locale })}`} {structuredData} canonicalPath={`poems/${slug}`} {preview} contentType="article">
-  <article>
-    <Eyebrow>{m.poem_original({}, { locale })} · {originalLabel}</Eyebrow>
-    <h1>{poem.title}</h1>
-    <div class="prose" lang={poem.originalLanguage === 'other' ? undefined : poem.originalLanguage} dir={originalDirection}>{poem.originalText}</div>
-    {poem.translations && poem.translations.length > 0 && (
-      <section aria-labelledby="translations-heading">
-        <h2 id="translations-heading">{m.poem_translations({}, { locale })}</h2>
-        {poem.translations.map((translation) => {
-          const direction = translation.language === 'other' ? 'ltr' : getLocaleMetadata(translation.language).direction
-          const label = translation.language === 'other' ? translation.languageLabel : localeMetadata[translation.language].label
-          return (
-            <article class="translation" lang={translation.language === 'other' ? undefined : translation.language} dir={direction}>
-              <Eyebrow>{label}</Eyebrow>
-              <h3>{translation.title}</h3>
-              <div class="prose">{translation.text}</div>
-              {translation.translator && <p>{m.translated_by({ name: translation.translator }, { locale })}</p>}
-            </article>
-          )
-        })}
-      </section>
-    )}
-  </article>
+<BaseLayout {locale} {title} {description} {structuredData} canonicalPath={localePath(locale)} {localePath} {preview} contentType="article">
+  <Link variant="standalone" class="back-link" href={localizedPath(locale, 'poems')}><ArrowLeft class="flip-rtl" aria-hidden="true" />{m.poems_all({}, o)}</Link>
+  <div class="poem-layout">
+    <article class="poem">
+      {/* Read before the switcher and the poem; it sits where the poem's lines start. */}
+      {!languages.includes(locale) && (
+        <p class="poem-note" dir={direction}><Info aria-hidden="true" /><bdi lang={locale}>{m.poem_not_available({}, o)}</bdi></p>
+      )}
+      <div class="versions">
+        <span id="versions-label">{m.poem_read_in({}, o)}</span>
+        <ul aria-labelledby="versions-label">
+          {languages.map((version) => (
+            <li><a href={versionHref(version)} aria-current={version === language ? 'true' : undefined}>{languageName(version, locale)}</a></li>
+          ))}
+        </ul>
+      </div>
+      <div lang={language} dir={direction}>
+        <Heading level={1} class="poem-title">{shown.title}</Heading>
+        {(name || poem.year) && (
+          <p class="poem-byline">
+            {name && <bdi lang={authorName!.lang}>{name}</bdi>}{name && poem.year && ' · '}{poem.year && <span class="poem-year"><bdi>{poem.year}</bdi></span>}
+          </p>
+        )}
+        <p class="poem-verse">{shown.content!.split(/\r?\n/).map((line) => (line.trim() ? <span>{line}</span> : <span class="stanza-break" />))}</p>
+        {language !== poem.originalLanguage && shown.translator && <p class="poem-credit">{m.translated_by({ name: shown.translator }, { locale: language })}</p>}
+      </div>
+    </article>
+    <aside class="poem-facts">
+      <Card.Root as="section" size="sm" aria-labelledby="poem-about">
+        <Card.Header><Card.Title id="poem-about" level={2}>{m.poem_about({}, o)}</Card.Title></Card.Header>
+        <Card.Content>
+          <dl class="facts">
+            {author && name && <div><dt>{m.poem_author({}, o)}</dt><dd><a href={authorHref} lang={authorName!.lang}>{name}</a></dd></div>}
+            {poem.year && <div><dt>{m.poem_written({}, o)}</dt><dd><bdi>{poem.year}</bdi></dd></div>}
+            {author && <div><dt>{m.poem_place({}, o)}</dt><dd>{authorPlace(author, locale)}</dd></div>}
+            <div><dt>{m.poem_original({}, o)}</dt><dd>{languageName(poem.originalLanguage, locale)}</dd></div>
+            {poem.description && <div class="wide"><dt>{m.poem_description({}, o)}</dt><dd class="description">{poem.description}</dd></div>}
+          </dl>
+        </Card.Content>
+      </Card.Root>
+    </aside>
+  </div>
+  {author && name && author.biography && (
+    <section class="poem-author" aria-labelledby="poem-author">
+      <Heading level={2} variant="subtitle" id="poem-author">{m.author_about({ name }, o)}</Heading>
+      <p class="author-bio">{author.biography}</p>
+      <Link variant="standalone" href={authorHref!}>{m.author_profile({ name }, o)}<ArrowRight class="flip-rtl" aria-hidden="true" /></Link>
+    </section>
+  )}
+  {name && morePoems.length > 0 && (
+    <section aria-labelledby="poem-more">
+      <Heading level={2} variant="title" class="section-title" id="poem-more">{m.poems_more_by({ name }, o)}</Heading>
+      <ul class="poem-cards compact">{morePoems.map((teaser) => <li><PoemCard poem={teaser} {locale} level={3} /></li>)}</ul>
+      <Button variant="secondary" href={authorHref}>{m.poems_all_by({ name }, o)}<ArrowRight class="flip-rtl" aria-hidden="true" /></Button>
+    </section>
+  )}
 </BaseLayout>
+
+<style>
+  .poem-layout { display: grid; gap: var(--space-lg); margin-block-start: var(--space-sm); overflow-wrap: anywhere; }
+  .poem-layout .poem-note { margin-block-end: var(--space-2xs); }
+  .versions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs) var(--space-xs); margin-block-end: var(--space-md); font-size: var(--font-size-sm); }
+  .versions > span { color: var(--muted-foreground); }
+  .versions ul { display: flex; flex-wrap: wrap; gap: var(--space-3xs); margin: 0; padding: 0; list-style: none; }
+  .versions a { display: inline-grid; place-items: center; min-block-size: 2.75rem; padding: var(--space-3xs) var(--space-sm); border-radius: 999px; background: var(--muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .versions a:hover { background: var(--accent); }
+  .versions a[aria-current] { background: var(--primary); color: var(--primary-foreground); }
+  .versions a:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  .poem :global(.poem-title) { margin: 0; color: var(--primary); font-size: var(--font-size-xxl); font-weight: 500; line-height: 1.15; }
+  .poem-byline { margin-block: var(--space-2xs) var(--space-md); font-size: var(--font-size-sm); font-weight: 600; }
+  .poem-year { color: var(--muted-foreground); font-weight: 400; }
+  .poem-verse { margin: 0; max-inline-size: 32em; padding-inline-start: var(--space-sm); font-size: var(--font-size-md); line-height: var(--verse-line-height); }
+  .stanza-break { block-size: 0.85em; }
+  .poem-credit { margin-block: var(--space-md) 0; font-size: var(--font-size-sm); color: var(--muted-foreground); }
+  .facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3xs) var(--space-sm); margin: 0; font-size: var(--font-size-sm); }
+  .facts > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
+  .facts dt { color: var(--muted-foreground); }
+  .facts dd { margin: 0; font-weight: 600; }
+  .facts > .wide { grid-template-columns: minmax(0, 1fr); gap: var(--space-3xs); margin-block-start: var(--space-2xs); padding-block-start: var(--space-xs); border-block-start: 1px solid var(--border); }
+  .facts .description { font-family: var(--font-serif); font-size: var(--font-size-base); font-weight: 400; line-height: var(--verse-line-height); }
+  .poem-author { display: grid; justify-items: start; gap: var(--space-xs); max-inline-size: 52rem; margin-block-start: var(--space-xl); padding: var(--space-md); background: var(--accent); border-radius: var(--panel-radius); corner-shape: squircle; }
+  .poem-author :global(h2) { margin: 0; }
+  .author-bio { margin: 0; max-inline-size: 36em; font-family: var(--font-serif); font-size: var(--font-size-md); line-height: var(--verse-line-height); white-space: pre-line; }
+  .section-title, :global(.section-title) { margin-block: var(--space-xl) var(--space-sm); }
+  @media (min-width: 52rem) {
+    .poem-layout { grid-template-columns: minmax(0, 1fr) 20rem; column-gap: var(--space-xl); align-items: start; }
+    .poem-facts { position: sticky; inset-block-start: 8rem; }
+  }
+</style>

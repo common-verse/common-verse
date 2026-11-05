@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Author, Poem } from "@poetry/types";
-import { authorNames, poemVersions } from "./cms";
-import { byYear, displayName, excerptLines } from "./poems";
+import { authorNames, getPoem, poemVersions } from "./cms";
+import {
+  byYear,
+  displayName,
+  excerptLines,
+  selectVersion,
+  versionOrder,
+} from "./poems";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -39,6 +45,25 @@ it("sorts the newest year first and poems without a year last", () => {
     poem(3, { year: 2024 }),
   ];
   expect(poems.sort(byYear).map(({ id }) => id)).toEqual([3, 2, 1]);
+});
+
+describe("poem versions", () => {
+  it("lists the original first, then the site locales in order", () => {
+    expect(versionOrder("fa", ["en", "de", "fa"])).toEqual(["fa", "de", "en"]);
+  });
+
+  it("selects the requested version, else the page language, else the original", () => {
+    const versions = versionOrder("ar", ["ar", "de"]);
+    expect(selectVersion(versions, "ar", "de", "ar")).toBe("ar");
+    expect(selectVersion(versions, "en", "de", "ar")).toBe("de");
+    expect(selectVersion(versions, null, "fa", "ar")).toBe("ar");
+  });
+
+  it("never defaults to a third language", () => {
+    // The original is missing: only an explicit request shows English.
+    expect(selectVersion(["en"], null, "de", "ar")).toBeUndefined();
+    expect(selectVersion(["en"], "en", "de", "ar")).toBe("en");
+  });
 });
 
 it("shows the German name when the page language has none", () => {
@@ -94,4 +119,15 @@ it("requests German names only for authors without a local name", async () => {
     [1, { name: "نور", lang: "ar" }],
     [2, { name: "Nachtfalter", lang: "de" }],
   ]);
+});
+
+it("finds public poems among published records only, previews among drafts", async () => {
+  const fetch = vi.fn(async (_url: URL) => Response.json({ docs: [] }));
+  vi.stubGlobal("fetch", fetch);
+  await getPoem("lesung", "de");
+  await getPoem("lesung", "de", "secret");
+  const status = (call: number) =>
+    fetch.mock.calls[call][0].searchParams.get("where[_status][equals]");
+  expect(status(0)).toBe("published");
+  expect(status(6)).toBeNull();
 });

@@ -160,21 +160,6 @@ test("draft preview rejects a bad secret and renders an authorized draft", async
   );
 });
 
-test("poem keeps the Persian original visible with explicit translations", async ({
-  page,
-}) => {
-  await page.goto("/en/poems/test-poem");
-  await expect(page.locator('.prose[lang="fa"][dir="rtl"]')).toContainText(
-    "صبح از میان پنجره‌های ما",
-  );
-  await expect(
-    page.getByRole("heading", { name: "A Shared Morning" }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Translated by Prototype translation").first(),
-  ).toBeVisible();
-});
-
 test("Arabic home has no console or page errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (message) => {
