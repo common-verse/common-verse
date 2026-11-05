@@ -205,5 +205,20 @@
   "order_status_payment_failed": "Payment failed",
   "order_status_cancelled_text": "You do not need to do anything. If you have already paid, you will get your money back.",
   "order_status_failed_text": "The payment did not go through. Write to us at {email}.",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "Young people write about arrival, memory and everyday life – in the original and in translation.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} poem",
+        "countPlural=*": "{count} poems"
+      }
+    }
+  ],
+  "poem_not_available": "Not available in English",
+  "pagination_label": "Pages",
+  "pagination_page": "Page {page}",
+  "back_home": "Go to the homepage"
 }

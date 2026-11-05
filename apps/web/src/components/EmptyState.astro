@@ -1,0 +1,31 @@
+---
+import type { Locale } from '@poetry/i18n'
+import { localizedPath } from '@poetry/i18n'
+import { Button } from '$lib/components/ui/button'
+import * as m from '../paraglide/messages.js'
+
+interface Props { locale: Locale; message: string; illustration: 'book' | 'stage' }
+const { locale, message, illustration } = Astro.props
+---
+<!-- The illustrations are symmetric, so they never need mirroring. -->
+<div class="empty-state">
+  <svg viewBox="0 0 240 170" aria-hidden="true" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    {illustration === 'book' ? (
+      <>
+        <path d="M120 42c-24-13-58-15-92-7v112c34-8 68-6 92 7 24-13 58-15 92-7V35c-34-8-68-6-92 7z" fill="var(--background)" stroke="var(--foreground)" />
+        <path d="M120 42v112" stroke="var(--foreground)" />
+        <path d="M44 66c20-4 40-3 60 3M44 86c20-4 40-3 60 3M44 106c20-4 40-3 60 3M136 69c20-6 40-7 60-3M136 89c20-6 40-7 60-3M136 109c20-6 40-7 60-3" stroke="var(--border)" />
+        <path d="M112 20h16v62l-8-7-8 7z" fill="var(--primary)" stroke="none" />
+      </>
+    ) : (
+      <>
+        <path d="M120 14 64 140h112z" fill="var(--accent)" stroke="none" />
+        <path d="M120 60v80M104 140h32" stroke="var(--foreground)" />
+        <rect x="111" y="40" width="18" height="26" rx="9" fill="var(--primary)" stroke="var(--foreground)" />
+        <path d="M30 140h180M42 140v18M198 140v18" stroke="var(--foreground)" />
+      </>
+    )}
+  </svg>
+  <p>{message}</p>
+  <Button href={localizedPath(locale)}>{m.back_home({}, { locale })}</Button>
+</div>

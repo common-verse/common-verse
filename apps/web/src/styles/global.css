@@ -1059,3 +1059,123 @@ footer {
 html[data-cart-transition] .book-card {
   view-transition-name: var(--card-transition);
 }
+
+/* Poems and authors: the pink bar of the logo's indent marks where a poem starts. */
+:root {
+  --verse-line-height: 1.65;
+}
+:lang(ar),
+:lang(fa) {
+  --verse-line-height: 2;
+}
+:is(.excerpt, .poem-verse) {
+  font-family: var(--font-serif);
+  border-inline-start: 3px solid var(--primary);
+}
+/* One block per line; wrapped lines hang like in print. */
+:is(.excerpt, .poem-verse) > span {
+  display: block;
+  padding-inline-start: 1.25em;
+  text-indent: -1.25em;
+}
+.poem-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+.poem-note svg {
+  flex: none;
+  inline-size: 1.15em;
+  block-size: 1.15em;
+}
+.collection-intro {
+  max-inline-size: 36ch;
+  font-family: var(--font-serif);
+  font-size: var(--font-size-md);
+  line-height: 1.45;
+}
+.collection-count {
+  margin-block: var(--space-md) var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+/* Cards in a row share title, byline, excerpt and note rows. */
+.poem-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.poem-cards > li {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 0;
+  min-inline-size: 0;
+  padding-block-end: var(--space-sm);
+}
+@media (min-width: 40rem) {
+  .poem-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 62rem) {
+  .poem-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .poem-cards.compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.pagination ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3xs);
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pagination a {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+  padding-inline: var(--space-2xs);
+  border-radius: var(--control-radius);
+  corner-shape: squircle;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pagination a:hover {
+  background: var(--accent);
+}
+.pagination a[aria-current] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+  padding: var(--space-xl) var(--space-sm);
+  text-align: center;
+  background: var(--muted);
+  border-radius: var(--panel-radius);
+  corner-shape: squircle;
+}
+.empty-state svg {
+  inline-size: min(14rem, 70%);
+  block-size: auto;
+}
+.empty-state p {
+  max-inline-size: 34ch;
+}
+.page-title {
+  color: var(--primary);
+}

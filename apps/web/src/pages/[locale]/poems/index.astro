@@ -1,33 +1,54 @@
 ---
-import { authorDisplayName } from '../../../lib/editorial'
 import { Heading } from '$lib/components/ui/heading'
-import { Eyebrow } from '$lib/components/ui/eyebrow'
-import { Link } from '$lib/components/ui/link'
+import { PoemCard } from '$lib/components/sections'
 import { isLocale, localizedPath } from '@poetry/i18n'
 import BaseLayout from '../../../layouts/BaseLayout.astro'
-import { getPoems } from '../../../lib/cms'
+import EmptyState from '../../../components/EmptyState.astro'
+import { authorNames, getPublishedPoems, poemVersions } from '../../../lib/cms'
+import { byYear, poemsPerPage, poemTeaser } from '../../../lib/poems'
+import type { Author } from '@poetry/types'
 import * as m from '../../../paraglide/messages.js'
 
 const { locale: rawLocale } = Astro.params
 if (!isLocale(rawLocale)) return new Response('Not found', { status: 404 })
 const locale = rawLocale
-const poems = await getPoems(locale)
-const title = m.nav_poems({}, { locale })
+const o = { locale }
+const rawPage = Astro.url.searchParams.get('page') ?? '1'
+const page = /^[1-9]\d{0,5}$/.test(rawPage) ? Number(rawPage) : 0
+// Poems without a version to show are left out before counting, so count and pages agree.
+const poems = await poemVersions((await getPublishedPoems(locale)).sort(byYear), locale)
+const pageCount = Math.max(1, Math.ceil(poems.length / poemsPerPage))
+if (!page || page > pageCount) return new Response('Not found', { status: 404 })
+const shown = poems.slice((page - 1) * poemsPerPage, page * poemsPerPage)
+const names = await authorNames(shown.flatMap(({ poem }) => (typeof poem.author === 'object' ? [poem.author as Author] : [])), locale)
+const teasers = shown.map(({ poem, language }) => poemTeaser(poem, language, locale, typeof poem.author === 'object' ? names.get(poem.author.id) : undefined))
+const title = m.nav_poems({}, o)
+const description = m.poems_intro({}, o)
+const pagePath = (number: number) => (number === 1 ? 'poems' : `poems?page=${number}`)
 ---
 
-<BaseLayout {locale} {title} canonicalPath="poems">
+<BaseLayout {locale} title={`${title} · ${m.site_title({}, o)}`} {description} canonicalPath={pagePath(page)}>
   <section>
-    <Eyebrow>{m.site_title({}, { locale })}</Eyebrow>
-    <Heading level={1}>{title}</Heading>
-    <ul class="content-list">
-      {poems.map((poem) => (
-        <li>
-          <article>
-            <Heading level={2}><Link variant="heading" href={localizedPath(locale, `poems/${poem.slug}`)}>{poem.title}</Link></Heading>
-            {typeof poem.author === 'object' && poem.author && <p>{authorDisplayName(poem.author.name)}</p>}
-          </article>
-        </li>
-      ))}
-    </ul>
+    <Heading level={1} class="page-title">{title}</Heading>
+    {poems.length ? (
+      <>
+        <p class="collection-intro">{description}</p>
+        <p class="collection-count">{m.poems_count({ count: poems.length }, o)}</p>
+        <ul class="poem-cards">
+          {teasers.map((poem) => <li><PoemCard {poem} {locale} /></li>)}
+        </ul>
+        {pageCount > 1 && (
+          <nav class="pagination" aria-label={m.pagination_label({}, o)}>
+            <ul>
+              {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
+                <li><a href={localizedPath(locale, pagePath(number))} aria-label={m.pagination_page({ page: number }, o)} aria-current={number === page ? 'page' : undefined}>{number}</a></li>
+              ))}
+            </ul>
+          </nav>
+        )}
+      </>
+    ) : (
+      <EmptyState {locale} message={m.home_no_poems({}, o)} illustration="book" />
+    )}
   </section>
 </BaseLayout>

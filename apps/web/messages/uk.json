@@ -205,5 +205,21 @@
   "order_status_payment_failed": "Оплата не вдалася",
   "order_status_cancelled_text": "Вам нічого не потрібно робити. Якщо ви вже оплатили, гроші повернуться.",
   "order_status_failed_text": "Платіж не пройшов. Напишіть нам на {email}.",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "Молоді люди пишуть про прибуття, пам’ять і повсякдення – в оригіналі та в перекладі.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} вірш",
+        "countPlural=few": "{count} вірші",
+        "countPlural=*": "{count} віршів"
+      }
+    }
+  ],
+  "poem_not_available": "Немає українською",
+  "pagination_label": "Сторінки",
+  "pagination_page": "Сторінка {page}",
+  "back_home": "На головну"
 }

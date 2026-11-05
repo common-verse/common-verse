@@ -1,6 +1,6 @@
 ---
 import { Heading } from '$lib/components/ui/heading'
-import { Section, AuthorCard, PoemCard, EventItem } from '$lib/components/sections'
+import { Section, AuthorCard, LegacyPoemCard, EventItem } from '$lib/components/sections'
 import { localizedPath, type Locale } from '@poetry/i18n'
 import type { LegacyAuthor, HomepageSection, LegacyPoem, Event } from '@poetry/types'
 import { mediaObject, safeHref, upcomingEvents, sectionItems, featuredItem } from '../lib/homepage'
@@ -34,7 +34,7 @@ const o = { locale }
       <Fragment slot="headerAction">{collection && <a class="text-link" href={localizedPath(locale, collection)}>{archiveLabel}</a>}</Fragment>
       {section.blockType === 'featured' && (featuredItem(section, preview) ? <FeaturedContent {section} {locale} {preview} /> : <p class="empty-message">{m.home_translation_missing({}, o)}</p>)}
       {section.blockType === 'authors' && (selectedAuthors.length ? <ul class="author-grid">{selectedAuthors.map((author) => <li><AuthorCard {author} poem={poems.find((entry) => typeof entry.author === 'object' && String(entry.author?.id) === String(author.id))} {locale} /></li>)}</ul> : <p class="empty-message">{m.home_no_authors({}, o)}</p>)}
-      {section.blockType === 'poems' && (selectedPoems.length ? <ul class="poem-grid">{selectedPoems.map((poem) => <li><PoemCard {poem} {locale} /></li>)}</ul> : <p class="empty-message">{m.home_no_poems({}, o)}</p>)}
+      {section.blockType === 'poems' && (selectedPoems.length ? <ul class="poem-grid">{selectedPoems.map((poem) => <li><LegacyPoemCard {poem} {locale} /></li>)}</ul> : <p class="empty-message">{m.home_no_poems({}, o)}</p>)}
       {section.blockType === 'events' && (upcoming.length ? <ul class="event-list">{upcoming.map((event) => <li><EventItem {event} {locale} /></li>)}</ul> : <p class="empty-message">{m.home_no_events({}, o)}</p>)}
       {section.blockType === 'participation' && <ul class="participation-grid">{links.map((link) => <li><Heading level={3}><a href={safeHref(link.url, locale)}>{link.title}</a></Heading>{link.description && <p>{link.description}</p>}</li>)}</ul>}
     </Section>}

@@ -1,4 +1,5 @@
 import { berlinDayStart } from "./event-date";
+import { displayName, hasVersion, type AuthorName } from "./poems";
 import {
   locales,
   slugLocale,
@@ -16,6 +17,8 @@ import type {
   Event,
   EventsPage,
   LocalizedSlug,
+  Author,
+  Poem,
   OrderLookup,
   Product,
   ShopSettings,
@@ -142,6 +145,123 @@ export async function getAuthorPoems(
     page += 1;
   } while (hasNextPage);
   return poems;
+}
+
+/** All published records matching the `where[…]` query, across every page. */
+async function fetchPublished<T>(
+  collection: "poems" | "authors",
+  locale: Locale,
+  query: Record<string, string> = {},
+  depth = 1,
+): Promise<T[]> {
+  const url = new URL(`/api/${collection}`, cmsUrl);
+  url.searchParams.set("locale", locale);
+  url.searchParams.set("fallback-locale", "none");
+  url.searchParams.set("depth", String(depth));
+  url.searchParams.set("limit", "100");
+  url.searchParams.set("sort", collection === "poems" ? "-year" : "name");
+  url.searchParams.set("where[_status][equals]", "published");
+  for (const [field, value] of Object.entries(query))
+    url.searchParams.set(field, value);
+  const documents: T[] = [];
+  let page = 1;
+  let hasNextPage: boolean;
+  do {
+    url.searchParams.set("page", String(page));
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Payload request failed with ${response.status}`);
+    const data = (await response.json()) as PayloadListResponse<T>;
+    documents.push(...data.docs);
+    hasNextPage = data.hasNextPage;
+    page += 1;
+  } while (hasNextPage);
+  return documents;
+}
+
+/** Published poems in `locale`, optionally of one author; sort them with `byYear`. */
+export const getPublishedPoems = (locale: Locale, author?: number) =>
+  fetchPublished<Poem>(
+    "poems",
+    locale,
+    author ? { "where[author][equals]": String(author) } : {},
+  );
+
+export const getPublishedAuthors = (locale: Locale) =>
+  fetchPublished<Author>("authors", locale);
+
+/**
+ * Pairs each poem with its version in `locale`, else its original; poems with
+ * neither are left out. Never another language (no editorial fallback).
+ */
+export async function poemVersions(
+  poems: Poem[],
+  locale: Locale,
+): Promise<{ poem: Poem; language: Locale }[]> {
+  const missing = poems.filter(
+    (poem) => !hasVersion(poem) && poem.originalLanguage !== locale,
+  );
+  const languages = [...new Set(missing.map((poem) => poem.originalLanguage))];
+  const originals = new Map(
+    (
+      await Promise.all(
+        languages.map((language) =>
+          fetchPublished<Poem>(
+            "poems",
+            language,
+            {
+              "where[id][in]": missing
+                .filter((poem) => poem.originalLanguage === language)
+                .map((poem) => poem.id)
+                .join(","),
+            },
+            0,
+          ),
+        ),
+      )
+    )
+      .flat()
+      .map((poem) => [poem.id, poem]),
+  );
+  return poems.flatMap((poem) => {
+    if (hasVersion(poem)) return [{ poem, language: locale }];
+    const original = originals.get(poem.id);
+    return original
+      ? [
+          {
+            poem: { ...original, author: poem.author },
+            language: poem.originalLanguage,
+          },
+        ]
+      : [];
+  });
+}
+
+/** Display names by author ID: the name in `locale`, else the German name. */
+export async function authorNames(
+  authors: Author[],
+  locale: Locale,
+): Promise<Map<number, AuthorName>> {
+  const missing = authors.filter((author) => !author.name?.trim());
+  const german =
+    locale !== "de" && missing.length
+      ? await fetchPublished<Author>(
+          "authors",
+          "de",
+          { "where[id][in]": missing.map((author) => author.id).join(",") },
+          0,
+        )
+      : [];
+  return new Map(
+    authors.map((author) => [
+      author.id,
+      displayName(
+        author.name,
+        german.find((entry) => entry.id === author.id)?.name,
+        locale,
+      ),
+    ]),
+  );
 }
 
 export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {

@@ -205,5 +205,20 @@
   "order_status_payment_failed": "Zahlung fehlgeschlagen",
   "order_status_cancelled_text": "Du musst nichts tun. Falls du schon bezahlt hast, bekommst du das Geld zurück.",
   "order_status_failed_text": "Die Zahlung ist nicht durchgegangen. Schreib uns an {email}.",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "Junge Menschen schreiben über Ankunft, Erinnerung und Alltag – im Original und in Übersetzung.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} Gedicht",
+        "countPlural=*": "{count} Gedichte"
+      }
+    }
+  ],
+  "poem_not_available": "Nicht auf Deutsch verfügbar",
+  "pagination_label": "Seiten",
+  "pagination_page": "Seite {page}",
+  "back_home": "Zur Startseite"
 }

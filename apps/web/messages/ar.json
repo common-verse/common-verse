@@ -205,5 +205,22 @@
   "order_status_payment_failed": "فشل الدفع",
   "order_status_cancelled_text": "لا تحتاج إلى فعل شيء. إن كنت قد دفعت، فستسترد المبلغ.",
   "order_status_failed_text": "لم يتم الدفع. راسلنا على {email}.",
-  "shop_payment_iban": "IBAN •••• {last4}"
+  "shop_payment_iban": "IBAN •••• {last4}",
+  "poems_intro": "شباب يكتبون عن الوصول والذاكرة والحياة اليومية، بلغتهم الأصلية وفي الترجمة.",
+  "poems_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "قصيدة واحدة",
+        "countPlural=two": "قصيدتان",
+        "countPlural=few": "{count} قصائد",
+        "countPlural=*": "{count} قصيدة"
+      }
+    }
+  ],
+  "poem_not_available": "غير متوفرة بالعربية",
+  "pagination_label": "الصفحات",
+  "pagination_page": "الصفحة {page}",
+  "back_home": "إلى الصفحة الرئيسية"
 }
