@@ -56,3 +56,15 @@ it("finds a draft by ID, so other locales load the record their slug found", asy
     }),
   );
 });
+
+it("rejects a non-numeric preview ID before querying", async () => {
+  vi.stubEnv("PREVIEW_SECRET", "secret");
+  const find = vi.fn();
+  const response = await previewEndpoint("events").handler!({
+    headers: new Headers({ "x-preview-secret": "secret" }),
+    url: "http://localhost/api/events/preview?id=7x&locale=de",
+    payload: { find },
+  } as never);
+  expect(response.status).toBe(400);
+  expect(find).not.toHaveBeenCalled();
+});

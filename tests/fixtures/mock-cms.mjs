@@ -773,7 +773,7 @@ const server = http.createServer((request, response) => {
 
   // Payload reads a locale code in a query path as a locale suffix and rejects the path.
   const localeSuffixPath = [...url.searchParams.keys()].find((key) =>
-    /^where\[[^\]]*\.(de|en|ar|fa|uk|ku)(\.|\])/.test(key),
+    /\[[^\]]*\.(de|en|ar|fa|uk|ku)(\.[^\]]*)?\]/.test(key),
   );
   if (localeSuffixPath) {
     response.statusCode = 400;

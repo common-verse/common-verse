@@ -48,6 +48,8 @@ export function previewEndpoint(collection: PreviewCollection): Endpoint {
         return Response.json({ error: "Invalid locale" }, { status: 400 });
       if (!slug && !id)
         return Response.json({ error: "Missing slug" }, { status: 400 });
+      if (id && !/^\d+$/.test(id))
+        return Response.json({ error: "Invalid id" }, { status: 400 });
 
       const result = await req.payload.find({
         collection,
