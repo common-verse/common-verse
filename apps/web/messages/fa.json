@@ -7,7 +7,6 @@
   "language_label": "زبان",
   "skip_to_content": "رفتن به محتوا",
   "poem_original": "اصل",
-  "poem_translations": "ترجمه‌ها",
   "translated_by": "ترجمهٔ {name}",
   "registration": "همین حالا ثبت‌نام کنید",
   "home_welcome": "جایی برای دیدار از راه شعر",
@@ -219,5 +218,17 @@
   "poem_not_available": "به فارسی موجود نیست",
   "pagination_label": "صفحه‌ها",
   "pagination_page": "صفحهٔ {page}",
-  "back_home": "رفتن به صفحهٔ اصلی"
+  "back_home": "رفتن به صفحهٔ اصلی",
+  "poems_all": "همهٔ شعرها",
+  "poem_read_in": "زبان:",
+  "poem_about": "دربارهٔ شعر",
+  "poem_author": "نویسنده",
+  "poem_written": "سال نگارش",
+  "poem_place": "مکان",
+  "poem_description": "توضیح",
+  "place": "{city}، {country}",
+  "author_about": "دربارهٔ {name}",
+  "author_profile": "صفحهٔ {name}",
+  "poems_more_by": "شعرهای دیگر {name}",
+  "poems_all_by": "همهٔ شعرهای {name}"
 }

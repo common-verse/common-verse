@@ -7,7 +7,6 @@
   "language_label": "Language",
   "skip_to_content": "Skip to content",
   "poem_original": "Original",
-  "poem_translations": "Translations",
   "translated_by": "Translated by {name}",
   "registration": "Register now",
   "home_welcome": "A meeting place through poetry",
@@ -220,5 +219,17 @@
   "poem_not_available": "Not available in English",
   "pagination_label": "Pages",
   "pagination_page": "Page {page}",
-  "back_home": "Go to the homepage"
+  "back_home": "Go to the homepage",
+  "poems_all": "All poems",
+  "poem_read_in": "Read in",
+  "poem_about": "About the poem",
+  "poem_author": "Author",
+  "poem_written": "Written",
+  "poem_place": "Place",
+  "poem_description": "Description",
+  "place": "{city}, {country}",
+  "author_about": "About {name}",
+  "author_profile": "Go to {name}’s profile",
+  "poems_more_by": "More poems by {name}",
+  "poems_all_by": "All poems by {name}"
 }

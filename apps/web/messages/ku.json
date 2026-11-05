@@ -7,7 +7,6 @@
   "language_label": "Ziman",
   "skip_to_content": "Biçe naverokê",
   "poem_original": "Orîjînal",
-  "poem_translations": "Werger",
   "translated_by": "Wergêr: {name}",
   "registration": "Niha qeyd bibe",
   "home_welcome": "Cihekî hevdîtinê bi helbestê",
@@ -219,5 +218,17 @@
   "poem_not_available": "Bi kurdî tune ye",
   "pagination_label": "Rûpel",
   "pagination_page": "Rûpel {page}",
-  "back_home": "Biçe rûpela sereke"
+  "back_home": "Biçe rûpela sereke",
+  "poems_all": "Hemû helbest",
+  "poem_read_in": "Bixwîne bi",
+  "poem_about": "Derbarê helbestê de",
+  "poem_author": "Nivîskar",
+  "poem_written": "Hatiye nivîsîn",
+  "poem_place": "Cih",
+  "poem_description": "Danasîn",
+  "place": "{city}, {country}",
+  "author_about": "Derbarê {name} de",
+  "author_profile": "Profîla {name}",
+  "poems_more_by": "Helbestên din ên {name}",
+  "poems_all_by": "Hemû helbestên {name}"
 }

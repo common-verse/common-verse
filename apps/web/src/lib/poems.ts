@@ -1,11 +1,31 @@
-import { localizedPath, recordPath, type Locale } from "@poetry/i18n";
-import type { Poem } from "@poetry/types";
+import { locales, localizedPath, recordPath, type Locale } from "@poetry/i18n";
+import type { Author, Poem } from "@poetry/types";
+import * as m from "../paraglide/messages.js";
 
 export const poemsPerPage = 24;
 
 /** A poem exists in a language when that locale has its title and text. */
 export const hasVersion = (poem?: Pick<Poem, "title" | "content"> | null) =>
   Boolean(poem?.title?.trim() && poem.content?.trim());
+
+/** Available versions, the original first, then the site locales in order. */
+export const versionOrder = (original: Locale, available: readonly Locale[]) =>
+  [original, ...locales.filter((language) => language !== original)].filter(
+    (language) => available.includes(language),
+  );
+
+/**
+ * The requested version, else the page language, else the original; never
+ * another language by default. Undefined when neither exists.
+ */
+export const selectVersion = (
+  versions: readonly Locale[],
+  requested: string | null,
+  locale: Locale,
+  original: Locale,
+): Locale | undefined =>
+  versions.find((language) => language === requested) ??
+  [locale, original].find((language) => versions.includes(language));
 
 /** The editor's snippet, else the first four lines; a line is never cut. */
 export function excerptLines(snippet?: string | null, content?: string | null) {
@@ -47,6 +67,14 @@ export const regionName = (country: string, locale: Locale) =>
 export const languageName = (language: Locale, locale: Locale) =>
   new Intl.DisplayNames([locale], { type: "language" }).of(language) ??
   language;
+
+/** "City, Country" in the page language; only the country without a city. */
+export function authorPlace(author: Author, locale: Locale) {
+  const country = regionName(author.country, locale);
+  const city =
+    typeof author.city === "object" ? author.city?.names[locale] : null;
+  return city ? m.place({ city, country }, { locale }) : country;
+}
 
 export interface PoemTeaser {
   id: number;

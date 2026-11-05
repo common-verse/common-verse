@@ -7,7 +7,6 @@
   "language_label": "اللغة",
   "skip_to_content": "الانتقال إلى المحتوى",
   "poem_original": "النص الأصلي",
-  "poem_translations": "الترجمات",
   "translated_by": "ترجمة {name}",
   "registration": "سجّل الآن",
   "home_welcome": "مكان للقاء عبر الشعر",
@@ -222,5 +221,17 @@
   "poem_not_available": "غير متوفرة بالعربية",
   "pagination_label": "الصفحات",
   "pagination_page": "الصفحة {page}",
-  "back_home": "إلى الصفحة الرئيسية"
+  "back_home": "إلى الصفحة الرئيسية",
+  "poems_all": "كل القصائد",
+  "poem_read_in": "اللغة:",
+  "poem_about": "عن القصيدة",
+  "poem_author": "الكاتب",
+  "poem_written": "سنة الكتابة",
+  "poem_place": "المكان",
+  "poem_description": "الوصف",
+  "place": "{city}، {country}",
+  "author_about": "عن {name}",
+  "author_profile": "الصفحة الشخصية لـ{name}",
+  "poems_more_by": "قصائد أخرى لـ{name}",
+  "poems_all_by": "كل قصائد {name}"
 }
