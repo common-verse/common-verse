@@ -1,33 +1,39 @@
 # Images for the website (target "web") and the CMS (target "cms").
-# Both keep the full pnpm workspace: the CMS needs tsx and its sources at startup
-# to push the prototype schema and seed demo content (see docs/deployment.md).
+# Each build installs only its own app and the workspace packages it depends on.
 
 FROM node:26.10.0-bookworm-slim AS base
 RUN npm install -g pnpm@12.3.4
 WORKDIR /app
 
-FROM base AS workspace
+FROM base AS web-build
 COPY . .
-RUN pnpm install --frozen-lockfile
-
-FROM workspace AS web-build
+RUN --mount=type=cache,target=/pnpm/store \
+  pnpm install --frozen-lockfile --store-dir /pnpm/store --filter "@poetry/web..."
 # Astro inlines these at build time.
 ARG PUBLIC_SITE_URL
 ARG PUBLIC_CMS_URL
 ARG TRUST_PROXY=true
 RUN pnpm --filter @poetry/web build
 
-FROM base AS web
+# Astro bundles every package into dist (vite.ssr.noExternal), so no node_modules.
+FROM node:26.10.0-bookworm-slim AS web
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=4321
-COPY --from=web-build /app /app
-WORKDIR /app/apps/web
+WORKDIR /app
+COPY --from=web-build /app/apps/web/dist dist
 USER node
 EXPOSE 4321
 CMD ["node", "dist/server/entry.mjs"]
 
-FROM workspace AS cms-build
-RUN pnpm --filter @poetry/cms generate:types && pnpm --filter @poetry/cms build
+FROM base AS cms-build
+COPY . .
+RUN --mount=type=cache,target=/pnpm/store \
+  pnpm install --frozen-lockfile --store-dir /pnpm/store --filter "@poetry/cms..."
+RUN pnpm --filter @poetry/cms generate:types \
+  && pnpm --filter @poetry/cms build \
+  && rm -rf apps/cms/.next/cache
 
+# Keeps development dependencies: the CMS needs tsx and its sources at startup
+# to push the prototype schema and seed demo content (see docs/deployment.md).
 FROM base AS cms
 ENV NODE_ENV=production
 COPY --from=cms-build --chown=node:node /app /app

@@ -27,8 +27,13 @@ are never in Git or CI and must be kept when changing the server.
 
 ## Images
 
-The root `Dockerfile` builds `web` and `cms` targets from the full pnpm workspace.
-Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL` and `TRUST_PROXY` at build time,
+The root `Dockerfile` builds `web` and `cms` targets. Each build installs only its
+app and the workspace packages it uses; the pnpm store stays in a build cache.
+Astro bundles every package into `dist` (`vite.ssr.noExternal`), so the web image
+holds only Node and `dist` (about 85 MB). The CMS image (about 2 GB) keeps
+development dependencies and sources for the startup
+seed below, so Next's standalone output is not used until the CMS has production
+migrations. Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL` and `TRUST_PROXY` at build time,
 so each environment needs its own web image. CI pushes
 `ghcr.io/veridynn/common-verse-{web,cms}` tagged `staging` and with the commit SHA.
 
