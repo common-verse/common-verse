@@ -320,16 +320,21 @@ for (const locale of ["en", "ar"]) {
     const previous = controls.getByRole("button").first();
     const next = controls.getByRole("button").last();
     await expect(previous).toBeDisabled();
-    expect((await previous.boundingBox())!.x).toBeLessThan(
-      (await next.boundingBox())!.x,
+    // Previous sits at the reading start and its arrow points back in Arabic too.
+    const rtl = locale === "ar";
+    const [previousBox, nextBox] = [
+      (await previous.boundingBox())!,
+      (await next.boundingBox())!,
+    ];
+    expect(rtl ? previousBox.x > nextBox.x : previousBox.x < nextBox.x).toBe(
+      true,
     );
-    await expect(previous.locator("svg")).toHaveCSS("transform", "none");
-    await expect(next.locator("svg")).toHaveCSS("transform", "none");
+    const flipped = rtl ? "matrix(-1, 0, 0, 1, 0, 0)" : "none";
+    await expect(previous.locator("svg")).toHaveCSS("transform", flipped);
+    await expect(next.locator("svg")).toHaveCSS("transform", flipped);
     await next.focus();
     await page.keyboard.press("Enter");
-    await expect(page.locator(".hero-position")).toContainText(
-      locale === "ar" ? "٢" : "2",
-    );
+    await expect(page.locator(".hero-position")).toContainText("2");
     await expect(previous).toBeEnabled();
     await expect(track.locator("article").nth(1)).toBeInViewport();
     await previous.focus();
@@ -337,9 +342,7 @@ for (const locale of ["en", "ar"]) {
     await expect(previous).toBeDisabled();
     for (let i = 0; i < 4; i++) await next.click();
     await expect(next).toBeDisabled();
-    await expect(page.locator(".hero-position")).toContainText(
-      locale === "ar" ? "٥" : "5",
-    );
+    await expect(page.locator(".hero-position")).toContainText("5");
     await page.setViewportSize({ width: 320, height: 844 });
     await expect(page.locator(".events-section img")).toHaveCount(0);
     expect(
@@ -356,20 +359,26 @@ for (const locale of ["de", "en", "ar", "fa", "uk", "ku"]) {
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(locale === "de" ? "/veranstaltungen" : `/${locale}/events`);
-    const introduction = await page.locator(".hero-introduction").boundingBox();
-    const feature = await page.locator(".hero-track").boundingBox();
-    expect(feature!.x).toBeGreaterThanOrEqual(
-      introduction!.x + introduction!.width,
-    );
+    const rtl = ["ar", "fa"].includes(locale);
+    const introduction = (await page
+      .locator(".hero-introduction")
+      .boundingBox())!;
+    const feature = (await page.locator(".hero-track").boundingBox())!;
+    // The introduction comes first in reading order, the featured event after it.
+    if (rtl)
+      expect(introduction.x).toBeGreaterThanOrEqual(feature.x + feature.width);
+    else
+      expect(feature.x).toBeGreaterThanOrEqual(
+        introduction.x + introduction.width,
+      );
     await expect(page.locator(".hero-introduction")).toHaveCSS(
       "direction",
-      ["ar", "fa"].includes(locale) ? "rtl" : "ltr",
+      rtl ? "rtl" : "ltr",
     );
     const counter = page.locator(".hero-position bdi");
     if (await counter.count()) {
-      await expect(counter).toHaveText(
-        locale === "ar" ? "١/٥" : locale === "fa" ? "۱/۵" : "1/5",
-      );
+      // Counts keep Latin digits in every locale.
+      await expect(counter).toHaveText("1/5");
       await expect(counter).toHaveCSS("direction", "ltr");
       const counterParts = counter.locator("span");
       expect((await counterParts.first().boundingBox())!.x).toBeLessThan(
@@ -388,19 +397,13 @@ for (const locale of ["de", "en", "ar", "fa", "uk", "ku"]) {
     const date = await facts.getAttribute("datetime");
     const expected = await page.evaluate(
       ({ locale, date }) => {
-        const time = new Intl.DateTimeFormat(
-          locale === "ar"
-            ? "ar-u-nu-arab"
-            : locale === "fa"
-              ? "fa-u-nu-arabext"
-              : locale,
-          {
-            weekday: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Europe/Berlin",
-          },
-        ).format(new Date(date!));
+        // Latin digits in every locale.
+        const time = new Intl.DateTimeFormat(`${locale}-u-nu-latn`, {
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Berlin",
+        }).format(new Date(date!));
         return locale === "de" ? `${time} Uhr` : time;
       },
       { locale, date },

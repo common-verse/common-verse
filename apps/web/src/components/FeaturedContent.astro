@@ -5,6 +5,7 @@ import { Heading } from '$lib/components/ui/heading'
 import { Link } from '$lib/components/ui/link'
 import { AuthorCard, PoemCard } from '$lib/components/sections'
 import EditorialImage from './EditorialImage.astro'
+import { eventFormatLocale } from '../lib/event-date'
 import type { AuthorCardData } from '../lib/cms'
 import type { PoemTeaser } from '../lib/poems'
 import { featuredItem } from '../lib/homepage'
@@ -22,6 +23,6 @@ const author = item?.kind === 'author' ? cards.get(item.value.id) : undefined
 {item?.kind === 'event' && <article class="featured-layout">
   <EditorialImage image={item.value.image} {locale} />
   <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, recordPath('events', item.value, locale))}>{item.value.title}</Link></Heading>
-  <p><time datetime={item.value.startDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(item.value.startDate))}</time></p>
+  <p><bdi><time datetime={item.value.startDate}>{new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(item.value.startDate))}</time></bdi></p>
   {item.value.description && <p class="section-prose">{item.value.description}</p>}</div>
 </article>}

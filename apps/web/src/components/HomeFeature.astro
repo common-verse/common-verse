@@ -10,6 +10,7 @@ import type { Homepage } from '@poetry/types'
 import { Button } from '$lib/components/ui/button'
 import { safeHref } from '../lib/homepage'
 import EditorialImage from './EditorialImage.astro'
+import { eventFormatLocale } from '../lib/event-date'
 import * as m from '../paraglide/messages.js'
 interface Props { feature?: Homepage['feature']; poem?: PoemTeaser; locale: Locale; preview?: boolean; hasUpcoming?: boolean }
 const { feature, poem, locale, preview = false, hasUpcoming = true } = Astro.props
@@ -39,7 +40,7 @@ const o = { locale }
   {event && <article class="featured-event">
     <EditorialImage image={event.image} {locale} eager />
     <Heading level={2}>{event.title}</Heading>
-    <p><time datetime={event.startDate}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))}</time></p>
+    <p><bdi><time datetime={event.startDate}>{new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Berlin' }).format(new Date(event.startDate))}</time></bdi></p>
     {locationText(event.location) && <p>{locationText(event.location)}</p>}
     <Link variant="standalone" href={localizedPath(locale, recordPath('events', event, locale))}>{m.home_event_details({}, o)}</Link>
   </article>}

@@ -1,5 +1,5 @@
 ---
-import { getLocaleMetadata, localizedPath, unlocalizedPath, type Locale } from '@poetry/i18n'
+import { localizedPath, unlocalizedPath, type Locale } from '@poetry/i18n'
 import { MicVocal, Newspaper, Quote, ShoppingBag, Users } from 'lucide-svelte'
 import * as m from '../paraglide/messages.js'
 import LanguageSwitcher from './LanguageSwitcher.astro'
@@ -20,12 +20,12 @@ interface Props {
 
 const { locale, localePath, themePreference, notice, noticeFocus, noticeCloseHref } = Astro.props
 const messageOptions = { locale }
-const { direction } = getLocaleMetadata(locale)
 const path = unlocalizedPath(Astro.originPathname)
 const links = [
   // The bottom bar shows `short` instead of `label` where one is set.
   { route: 'events', label: m.nav_events({}, messageOptions), short: m.nav_events_short({}, messageOptions), Icon: MicVocal },
-  { route: 'articles', label: m.nav_articles({}, messageOptions), Icon: Newspaper },
+  // Text lines read in the page direction, so the article icon mirrors.
+  { route: 'articles', label: m.nav_articles({}, messageOptions), Icon: Newspaper, flip: true },
   { route: 'poems', label: m.nav_poems({}, messageOptions), Icon: Quote },
   { route: 'authors', label: m.authors_title({}, messageOptions), Icon: Users },
   { route: 'shop', label: m.nav_shop({}, messageOptions), Icon: ShoppingBag },
@@ -33,12 +33,12 @@ const links = [
 const current = (route: string) => (path === `/${route}` ? 'page' : path.startsWith(`/${route}/`) ? 'true' : undefined)
 ---
 
-<header class="site-header" dir="ltr" style="view-transition-name: site-header">
+<header class="site-header" style="view-transition-name: site-header">
   <a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, messageOptions) !== 'The Poetry Project' ? ` — ${m.site_title({}, messageOptions)}` : ''}</span></a>
   <nav aria-label={m.nav_primary({}, messageOptions)}>
-    {links.map(({ route, label, short, Icon }) => (
-      <a dir={direction} href={localizedPath(locale, route)} aria-current={current(route)}>
-        <Icon class="nav-icon" size={24} aria-hidden="true" />
+    {links.map(({ route, label, short, Icon, flip }) => (
+      <a href={localizedPath(locale, route)} aria-current={current(route)}>
+        <Icon class:list={["nav-icon", { "flip-rtl": flip }]} size={24} aria-hidden="true" />
         <span class="nav-label">{label}</span>
         {short && <span class="nav-label-short">{short}</span>}
       </a>

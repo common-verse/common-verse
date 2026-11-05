@@ -1,5 +1,6 @@
 ---
 import { Heading } from '$lib/components/ui/heading'
+import { eventFormatLocale } from '../../../lib/event-date'
 import { getSecret } from 'astro:env/server'
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import { convertLexicalToPlaintext } from '@payloadcms/richtext-lexical/plaintext'
@@ -29,7 +30,7 @@ const html = convertLexicalToHTML({ data: article.content!, disableContainer: tr
 <BaseLayout {locale} {title} {description} {image} {alternateLocales} canonicalPath={`articles/${slug}`} {preview} noIndex={article.seo?.noIndex ?? false} contentType="article">
   <article>
     <Heading level={1}>{article.title}</Heading>
-    {article.publishedAt && <p><time datetime={article.publishedAt}>{new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(article.publishedAt))}</time></p>}
+    {article.publishedAt && <p><bdi><time datetime={article.publishedAt}>{new Intl.DateTimeFormat(eventFormatLocale(locale), { dateStyle: 'long' }).format(new Date(article.publishedAt))}</time></bdi></p>}
     {image && media?.alt && <figure class="hero-figure"><img class="hero-image" src={image} alt={media.alt} width={media.width ?? 1200} height={media.height ?? 800} /></figure>}
     {article.description && <p class="lede">{article.description}</p>}
     <div class="prose rich-text" set:html={html} />

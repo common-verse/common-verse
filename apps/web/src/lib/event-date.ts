@@ -94,7 +94,11 @@ export function formatEventWeekdayTime(date: string, locale: Locale) {
   return m.events_time({ time }, { locale });
 }
 
-export function eventFormatLocale(locale: Locale) {
+/** Event and article dates use Latin digits in every locale, like years and counts. */
+export const eventFormatLocale = (locale: Locale) => `${locale}-u-nu-latn`;
+
+/** The shop keeps each locale's own digits. */
+export function shopFormatLocale(locale: Locale) {
   return locale === "ar"
     ? "ar-u-nu-arab"
     : locale === "fa"

@@ -2,12 +2,13 @@
   import { onMount } from 'svelte';
   import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-svelte';
   import { getLocaleMetadata, localizedPath, recordPath, type Locale } from '@poetry/i18n';
+  import { formatNumber } from '$lib/poems';
   import type { Event } from '@poetry/types';
   import { Heading } from '$lib/components/ui/heading';
   import { Link } from '$lib/components/ui/link';
   import { Button } from '$lib/components/ui/button';
   import { mediaObject } from '$lib/homepage';
-  import { eventRelativeDate, eventFormatLocale } from '$lib/event-date';
+  import { eventRelativeDate } from '$lib/event-date';
   import EventFacts from './EventFacts.svelte';
   import * as m from '../../../paraglide/messages.js';
 
@@ -16,7 +17,6 @@
   } = $props();
   let track = $state<HTMLDivElement>();
   let active = $state(0);
-  const numbers = $derived(new Intl.NumberFormat(eventFormatLocale(locale), { useGrouping: false }));
   let ready = $state(false);
   onMount(() => { ready = true; });
 
@@ -25,21 +25,23 @@
   }
   function goTo(index: number) {
     if (!track) return;
-    track.scrollTo({ left: index * track.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    // RTL scroll offsets run negative from the start edge.
+    const sign = getLocaleMetadata(locale).direction === 'rtl' ? -1 : 1;
+    track.scrollTo({ left: sign * index * track.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   }
 </script>
 
-<section dir="ltr" class="events-hero" class:without-features={!events.length} aria-labelledby="events-heading">
-  <header class="hero-introduction" dir={getLocaleMetadata(locale).direction}>
+<section class="events-hero" class:without-features={!events.length} aria-labelledby="events-heading">
+  <header class="hero-introduction">
     <Heading level={1} variant="display" id="events-heading">{title}</Heading>
     <p>{introduction}</p>
   </header>
   {#if events.length}
-    <div dir="ltr" class="hero-track" id="featured-events" bind:this={track} onscroll={syncActive} role="region" aria-label={m.events_featured({}, { locale })} tabindex="0">
+    <div class="hero-track" id="featured-events" bind:this={track} onscroll={syncActive} role="region" aria-label={m.events_featured({}, { locale })} tabindex="0">
       {#each events as event, index (event.id)}
         {@const media = mediaObject(event.image)}
         {@const status = eventRelativeDate(event.startDate, locale, now)}
-        <article dir={getLocaleMetadata(locale).direction} class="hero-slide" class:without-image={!media?.url} aria-labelledby={`feature-title-${event.id}`}>
+        <article class="hero-slide" class:without-image={!media?.url} aria-labelledby={`feature-title-${event.id}`}>
           {#if media?.url}
             <img src={new URL(media.url, cmsUrl).href} alt={media.alt} width={media.width ?? 1200} height={media.height ?? 800} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" style={`view-transition-name: ${index === active ? `event-image-${event.id}` : "none"}`} />
           {/if}
@@ -57,10 +59,10 @@
       {/each}
     </div>
     {#if ready && events.length > 1}
-      <div class="hero-controls" dir="ltr">
-        <Button variant="ghost" size="icon" aria-label={m.events_previous({}, { locale })} disabled={active === 0} aria-controls="featured-events" onclick={() => goTo(active - 1)}><ChevronLeftIcon aria-hidden="true" /></Button>
-        <span class="hero-position" aria-live="polite" aria-atomic="true"><bdi dir="ltr" aria-hidden="true"><span>{numbers.format(active + 1)}</span><span> / </span><span>{numbers.format(events.length)}</span></bdi><span class="sr-only">{m.events_position({ current: numbers.format(active + 1), total: numbers.format(events.length) }, { locale })}</span></span>
-        <Button variant="ghost" size="icon" aria-label={m.events_next({}, { locale })} disabled={active === events.length - 1} aria-controls="featured-events" onclick={() => goTo(active + 1)}><ChevronRightIcon aria-hidden="true" /></Button>
+      <div class="hero-controls">
+        <Button variant="ghost" size="icon" aria-label={m.events_previous({}, { locale })} disabled={active === 0} aria-controls="featured-events" onclick={() => goTo(active - 1)}><ChevronLeftIcon class="flip-rtl" aria-hidden="true" /></Button>
+        <span class="hero-position" aria-live="polite" aria-atomic="true"><bdi dir="ltr" aria-hidden="true"><span>{formatNumber(active + 1, locale)}</span><span> / </span><span>{formatNumber(events.length, locale)}</span></bdi><span class="sr-only">{m.events_position({ current: formatNumber(active + 1, locale), total: formatNumber(events.length, locale) }, { locale })}</span></span>
+        <Button variant="ghost" size="icon" aria-label={m.events_next({}, { locale })} disabled={active === events.length - 1} aria-controls="featured-events" onclick={() => goTo(active + 1)}><ChevronRightIcon class="flip-rtl" aria-hidden="true" /></Button>
       </div>
     {/if}
   {/if}
