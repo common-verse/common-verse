@@ -230,5 +230,10 @@
   "author_about": "دربارهٔ {name}",
   "author_profile": "صفحهٔ {name}",
   "poems_more_by": "شعرهای دیگر {name}",
-  "poems_all_by": "همهٔ شعرهای {name}"
+  "poems_all_by": "همهٔ شعرهای {name}",
+  "authors_all": "همهٔ نویسندگان",
+  "author_awards": "جایزه‌ها",
+  "author_poems": "شعرها",
+  "author_no_poems": "هنوز شعری از {name} منتشر نشده است.",
+  "poems_discover": "همهٔ شعرها را ببینید"
 }

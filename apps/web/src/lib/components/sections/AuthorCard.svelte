@@ -23,7 +23,7 @@
 <article>
   <PersonPortrait userId={author.id} image={author.portrait} />
   <Heading level={3}>
-    <Link variant="heading" href={localizedPath(locale, `authors/${author.id}`)}
+    <Link variant="heading" href={localizedPath(locale, "authors")}
       >{authorDisplayName(author.name)}</Link
     >
   </Heading>

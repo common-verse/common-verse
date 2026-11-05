@@ -231,5 +231,10 @@
   "author_about": "About {name}",
   "author_profile": "Go to {name}’s profile",
   "poems_more_by": "More poems by {name}",
-  "poems_all_by": "All poems by {name}"
+  "poems_all_by": "All poems by {name}",
+  "authors_all": "All authors",
+  "author_awards": "Awards",
+  "author_poems": "Poems",
+  "author_no_poems": "No poems by {name} have been published yet.",
+  "poems_discover": "Discover all poems"
 }

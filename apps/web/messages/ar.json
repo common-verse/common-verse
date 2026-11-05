@@ -233,5 +233,10 @@
   "author_about": "عن {name}",
   "author_profile": "الصفحة الشخصية لـ{name}",
   "poems_more_by": "قصائد أخرى لـ{name}",
-  "poems_all_by": "كل قصائد {name}"
+  "poems_all_by": "كل قصائد {name}",
+  "authors_all": "كل الكتّاب",
+  "author_awards": "الجوائز",
+  "author_poems": "القصائد",
+  "author_no_poems": "لم تُنشر قصائد لـ{name} بعد.",
+  "poems_discover": "اكتشف كل القصائد"
 }

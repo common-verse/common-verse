@@ -337,19 +337,15 @@ export async function getUpcomingEvents(locale: Locale): Promise<Event[]> {
   return data.docs;
 }
 
-export async function getAuthor(
-  id: string,
-  locale: Locale,
-): Promise<LegacyAuthor | null> {
-  const url = new URL(`/api/authors/${encodeURIComponent(id)}`, cmsUrl);
-  url.searchParams.set("locale", locale);
-  url.searchParams.set("fallback-locale", "none");
-  const response = await fetch(url);
-  if (response.status === 404) return null;
-  if (!response.ok)
-    throw new Error(`Payload request failed with ${response.status}`);
-  return response.json();
-}
+export const getAuthor = (slug: string, locale: Locale) =>
+  fetchDocument<Author>(
+    "authors",
+    slug,
+    locale,
+    undefined,
+    `slug.${slugLocale(locale)}`,
+    true,
+  );
 
 export async function getHomepage(
   locale: Locale,

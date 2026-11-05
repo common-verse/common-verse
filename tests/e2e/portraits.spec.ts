@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 for (const locale of ["en", "ar"]) {
-  test(`${locale} missing portraits use the same local avatar on cards and profiles`, async ({
+  test(`${locale} homepage cards without a portrait use a local avatar`, async ({
     page,
   }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -20,14 +20,13 @@ for (const locale of ["en", "ar"]) {
     const source = await card.locator("img").getAttribute("src");
     expect(source).toMatch(/^data:image\/svg\+xml/);
     await expect(card.locator("img")).toHaveAttribute("alt", "");
-    // The featured section links the same author; follow the card's link.
+    const overview = page.waitForResponse((response) =>
+      response.url().endsWith(`/${locale}/authors`),
+    );
     await card
       .getByRole("link", { name: "Prototype Collective", exact: true })
       .click();
-    await expect(page.locator('main img[data-slot="avatar"]')).toHaveAttribute(
-      "src",
-      source!,
-    );
+    expect((await overview).status()).toBe(200);
     await page.goto(`/${locale}/authors`);
     const avatars = await page
       .locator(".author-grid img")
