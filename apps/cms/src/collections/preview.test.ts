@@ -2,6 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { Homepage } from "../globals/Homepage";
 import { Poems } from "./Poems";
 import { Events } from "./Events";
+import { previewEndpoint } from "./preview";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -38,3 +39,20 @@ it.each([Homepage, Poems, Events])(
     }
   },
 );
+
+it("finds a draft by ID, so other locales load the record their slug found", async () => {
+  vi.stubEnv("PREVIEW_SECRET", "secret");
+  const find = vi.fn().mockResolvedValue({ docs: [] });
+  await previewEndpoint("events").handler!({
+    headers: new Headers({ "x-preview-secret": "secret" }),
+    url: "http://localhost/api/events/preview?id=7&locale=de",
+    payload: { find },
+  } as never);
+  expect(find).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { id: { equals: "7" } },
+      locale: "de",
+      draft: true,
+    }),
+  );
+});

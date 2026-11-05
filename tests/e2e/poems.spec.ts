@@ -115,3 +115,18 @@ test("a poem without the page language shows its original with a note first", as
   for (const path of ["/en/poems/regeln-des-ankommens", "/gedichte/missing"])
     expect((await page.request.get(path)).status()).toBe(404);
 });
+
+test("a poem preview shows the same versions in every locale", async ({
+  page,
+}) => {
+  expect((await page.request.get("/gedichte/entwurf-gedicht")).status()).toBe(
+    404,
+  );
+  for (const path of ["/gedichte/entwurf-gedicht", "/ar/poems/draft-poem"]) {
+    const response = await page.goto(`${path}?previewSecret=test-preview`);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator(".poem h1")).toHaveText("مسودة");
+    await expect(page.locator(".versions a")).toHaveCount(2);
+    await expect(page.locator(".preview-banner")).toBeVisible();
+  }
+});

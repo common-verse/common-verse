@@ -566,6 +566,22 @@ const rebuiltPoems = [
       ),
     },
   },
+  // A draft with different slugs and no German version: only previews show it.
+  {
+    id: 204,
+    slugDe: "entwurf-gedicht",
+    slugEn: "draft-poem",
+    originalLanguage: "ar",
+    year: 2026,
+    author: 14,
+    draft: true,
+    versions: {
+      ar: version("مسودة", "سطر أول\nسطر ثانٍ"),
+      en: version("Draft", "First line\nSecond line", {
+        translator: "Workshop",
+      }),
+    },
+  },
   // Enough poems for a second page; years run from 2013 down to 1990.
   ...Array.from({ length: 24 }, (_, index) => ({
     id: 233 - index,
@@ -614,22 +630,31 @@ const localizedPoem = (poem, locale, depth) => {
     year: poem.year,
     snippet: text.snippet ?? null,
     author: depth > 0 ? localizedAuthor(author, locale, depth - 1) : author.id,
-    _status: "published",
+    _status: poem.draft ? "draft" : "published",
   };
 };
 const isRebuiltQuery = (params) =>
   ["-year", "name"].includes(params.get("sort")) ||
-  ["where[id][in]", "where[slugDe][equals]", "where[slugEn][equals]"].some(
-    (key) => params.has(key),
-  );
+  [
+    "where[id][in]",
+    "where[id][equals]",
+    "where[slugDe][equals]",
+    "where[slugEn][equals]",
+  ].some((key) => params.has(key));
 function rebuiltList(collection, params, locale) {
   const depth = Number(params.get("depth") ?? 0);
-  const ids = params.get("where[id][in]")?.split(",");
+  const ids = (
+    params.get("where[id][in]") ??
+    params.get("where[id][equals]") ??
+    params.get("id")
+  )?.split(",");
   const author = params.get("where[author][equals]");
-  const slugDe = params.get("where[slugDe][equals]");
-  const slugEn = params.get("where[slugEn][equals]");
-  // Preview lookups send only the slug; a draft matches either slot.
-  const previewSlug = params.get("slug");
+  // Like the CMS preview endpoint, `slug` is looked up in the locale's own slot.
+  const slugParam = params.get("slug");
+  const slugDe =
+    params.get("where[slugDe][equals]") ?? (locale === "de" ? slugParam : null);
+  const slugEn =
+    params.get("where[slugEn][equals]") ?? (locale === "de" ? null : slugParam);
   const publishedOnly = params.get("where[_status][equals]") === "published";
   const docs = (collection === "poems" ? rebuiltPoems : rebuiltAuthors)
     .filter((entry) => !publishedOnly || !entry.draft)
@@ -637,10 +662,6 @@ function rebuiltList(collection, params, locale) {
     .filter((entry) => !author || String(entry.author) === author)
     .filter((entry) => !slugDe || entry.slugDe === slugDe)
     .filter((entry) => !slugEn || entry.slugEn === slugEn)
-    .filter(
-      (entry) =>
-        !previewSlug || [entry.slugDe, entry.slugEn].includes(previewSlug),
-    )
     .map((entry) =>
       collection === "poems"
         ? localizedPoem(entry, locale, depth)

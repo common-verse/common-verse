@@ -84,7 +84,7 @@ async function fetchDocument<T>(
   url.searchParams.set("locale", locale);
   url.searchParams.set("fallback-locale", "none");
   url.searchParams.set("depth", "2");
-  if (preview) url.searchParams.set("slug", slug);
+  if (preview) url.searchParams.set(field === "id" ? "id" : "slug", slug);
   else url.searchParams.set(`where[${field}][equals]`, slug);
   if (!preview && publishedOnly)
     url.searchParams.set("where[_status][equals]", "published");
@@ -122,20 +122,30 @@ export async function getPoem(
   locale: Locale,
   previewSecret?: string,
 ): Promise<{ poem: Poem; versions: Partial<Record<Locale, Poem>> } | null> {
+  const poem = await fetchDocument<Poem>(
+    "poems",
+    slug,
+    locale,
+    previewSecret,
+    slugField(locale),
+    true,
+  );
+  if (!poem) return null;
+  // By ID, because a preview looks up the slug in each locale's own slot.
   const documents = await Promise.all(
     locales.map((language) =>
-      fetchDocument<Poem>(
-        "poems",
-        slug,
-        language,
-        previewSecret,
-        slugField(locale),
-        true,
-      ),
+      language === locale
+        ? poem
+        : fetchDocument<Poem>(
+            "poems",
+            String(poem.id),
+            language,
+            previewSecret,
+            "id",
+            true,
+          ),
     ),
   );
-  const poem = documents[locales.indexOf(locale)];
-  if (!poem) return null;
   return {
     poem,
     versions: Object.fromEntries(

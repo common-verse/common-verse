@@ -41,19 +41,23 @@ export function previewEndpoint(collection: PreviewCollection): Endpoint {
 
       const url = new URL(req.url ?? "", "http://localhost");
       const slug = url.searchParams.get("slug");
+      // By ID, a record found by one locale's slug loads in the other locales.
+      const id = url.searchParams.get("id");
       const locale = url.searchParams.get("locale") ?? "de";
       if (!isLocale(locale))
         return Response.json({ error: "Invalid locale" }, { status: 400 });
-      if (!slug)
+      if (!slug && !id)
         return Response.json({ error: "Missing slug" }, { status: 400 });
 
       const result = await req.payload.find({
         collection,
-        where: {
-          [localeSlugCollections.includes(collection)
-            ? slugField(locale)
-            : "slug"]: { equals: slug },
-        },
+        where: id
+          ? { id: { equals: id } }
+          : {
+              [localeSlugCollections.includes(collection)
+                ? slugField(locale)
+                : "slug"]: { equals: slug },
+            },
         locale,
         fallbackLocale: false,
         draft: true,
