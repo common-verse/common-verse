@@ -1,0 +1,16 @@
+(not_indexed) {
+	header X-Robots-Tag "noindex, nofollow"
+}
+
+common-verse.weimer.pro {
+	import not_indexed
+	basic_auth {
+		{$STAGING_USER} {$STAGING_PASSWORD_HASH}
+	}
+	reverse_proxy staging-web:4321
+}
+
+cms.common-verse.weimer.pro {
+	import not_indexed
+	reverse_proxy staging-cms:3001
+}
