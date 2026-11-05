@@ -1,4 +1,4 @@
-// Staging only: creates the shared test accounts from the server's .env. The
+// Dev only: creates the shared test accounts from the server's .env. The
 // regular seeds deliberately never create credentials (docs/demo-data.md).
 import { getPayload } from "payload";
 import config from "../src/payload.config";
@@ -6,15 +6,15 @@ import config from "../src/payload.config";
 const accounts = [
   {
     role: "admin",
-    name: "Staging Admin",
-    email: process.env.STAGING_ADMIN_EMAIL,
-    password: process.env.STAGING_ADMIN_PASSWORD,
+    name: "Dev Admin",
+    email: process.env.DEV_ADMIN_EMAIL,
+    password: process.env.DEV_ADMIN_PASSWORD,
   },
   {
     role: "editor",
-    name: "Staging Editor",
-    email: process.env.STAGING_EDITOR_EMAIL,
-    password: process.env.STAGING_EDITOR_PASSWORD,
+    name: "Dev Editor",
+    email: process.env.DEV_EDITOR_EMAIL,
+    password: process.env.DEV_EDITOR_PASSWORD,
   },
 ] as const;
 

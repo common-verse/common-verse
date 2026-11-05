@@ -1,4 +1,4 @@
-name: Staging
+name: Deploy dev
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: staging
+  group: dev
   cancel-in-progress: false
 
 env:
@@ -38,7 +38,7 @@ jobs:
             PUBLIC_SITE_URL=https://common-verse.weimer.pro
             PUBLIC_CMS_URL=https://cms.common-verse.weimer.pro
           tags: |
-            ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:staging
+            ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:dev
             ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.target }}
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
@@ -46,7 +46,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: staging
+    environment: dev
     permissions:
       contents: read
       packages: read
@@ -54,9 +54,9 @@ jobs:
       # The key can only run deploy/deploy.sh on the server, with this commit SHA.
       - name: Deploy
         env:
-          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
-          KNOWN_HOSTS: ${{ vars.STAGING_KNOWN_HOSTS }}
-          HOST: ${{ vars.STAGING_HOST }}
+          SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
+          KNOWN_HOSTS: ${{ vars.DEV_KNOWN_HOSTS }}
+          HOST: ${{ vars.DEV_HOST }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           install -m 700 -d ~/.ssh
