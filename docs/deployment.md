@@ -39,15 +39,28 @@ so each environment needs its own web image. CI pushes
 
 The project has no production migrations yet ([migrations](migrations.md)). On
 start, the CMS container runs the seed CLI in development mode: Payload pushes the
-schema and seeds demo content into an empty database. A schema change that
-would lose data stops at Payload's confirmation prompt and is not applied; the
-CMS then starts with the old schema and the log shows the warning.
+schema and seeds demo content into an empty database.
+
+## Staging data
+
+Staging starts fresh on every deploy: `deploy.sh` removes the staging database
+and media volumes, then `deploy/staging/seed.sh` runs every demo seed from
+[demo data](demo-data.md) (poems, bulk workshops with photos, programme, shop,
+fixed pages, homepage) and creates one admin and one editor account. Anything
+created on staging is lost with the next deploy; the site is down for about two
+minutes while it reseeds.
+
+The seed runs in a one-off CMS container that shares the database container's
+network, so the database is `localhost` there, as the bulk, programme and shop
+seeds require. The accounts come from `STAGING_ADMIN_*` and `STAGING_EDITOR_*`
+in the staging `.env`; `deploy/staging/seed-accounts.ts` is staging-only, the
+regular seeds never create credentials. When production exists, staging should
+load a sanitized copy of production data instead of the demo seeds.
 
 ## Staging access
 
-The site is behind basic auth and sends `X-Robots-Tag: noindex`. The credentials
-are not in Git. The CMS admin has its own accounts: the first account created at
-`/admin` becomes the Administrator.
+The site is behind basic auth and sends `X-Robots-Tag: noindex`. The basic-auth
+and CMS account credentials are not in Git.
 
 ## CI setup
 
