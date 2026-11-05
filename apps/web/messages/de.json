@@ -231,5 +231,10 @@
   "author_about": "Über {name}",
   "author_profile": "Zum Profil von {name}",
   "poems_more_by": "Weitere Gedichte von {name}",
-  "poems_all_by": "Alle Gedichte von {name}"
+  "poems_all_by": "Alle Gedichte von {name}",
+  "authors_all": "Alle Autor:innen",
+  "author_awards": "Auszeichnungen",
+  "author_poems": "Gedichte",
+  "author_no_poems": "Von {name} sind noch keine Gedichte veröffentlicht.",
+  "poems_discover": "Alle Gedichte entdecken"
 }

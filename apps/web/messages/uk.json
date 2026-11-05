@@ -232,5 +232,10 @@
   "author_about": "Про {name}",
   "author_profile": "Профіль: {name}",
   "poems_more_by": "Інші вірші: {name}",
-  "poems_all_by": "Усі вірші: {name}"
+  "poems_all_by": "Усі вірші: {name}",
+  "authors_all": "Усі автори",
+  "author_awards": "Нагороди",
+  "author_poems": "Вірші",
+  "author_no_poems": "Віршів автора {name} ще не опубліковано.",
+  "poems_discover": "Переглянути всі вірші"
 }

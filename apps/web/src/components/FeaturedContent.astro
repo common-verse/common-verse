@@ -18,7 +18,7 @@ const item = featuredItem(section, preview)
 </div>}
 {item?.kind === 'poet' && <article class="featured-layout featured-poet">
   <PersonPortrait userId={item.value.id} image={item.value.portrait} />
-  <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, `authors/${item.value.id}`)}>{authorDisplayName(item.value.name)}</Link></Heading>
+  <div><Heading level={3}><Link variant="heading" href={localizedPath(locale, 'authors')}>{authorDisplayName(item.value.name)}</Link></Heading>
   {item.value.biography && <p class="section-prose">{item.value.biography}</p>}</div>
 </article>}
 {item?.kind === 'event' && <article class="featured-layout">

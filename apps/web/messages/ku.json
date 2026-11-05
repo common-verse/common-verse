@@ -230,5 +230,10 @@
   "author_about": "Derbarê {name} de",
   "author_profile": "Profîla {name}",
   "poems_more_by": "Helbestên din ên {name}",
-  "poems_all_by": "Hemû helbestên {name}"
+  "poems_all_by": "Hemû helbestên {name}",
+  "authors_all": "Hemû nivîskar",
+  "author_awards": "Xelat",
+  "author_poems": "Helbest",
+  "author_no_poems": "Hîn tu helbestên {name} nehatine weşandin.",
+  "poems_discover": "Hemû helbestan keşf bike"
 }
