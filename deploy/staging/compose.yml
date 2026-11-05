@@ -1,0 +1,57 @@
+# Staging: deployed from the dev branch. Secrets live in .env next to this file
+# on the server (see docs/deployment.md).
+name: staging
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: poetry
+      POSTGRES_USER: poetry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poetry -d poetry"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  cms:
+    image: ghcr.io/veridynn/common-verse-cms:${IMAGE_TAG:-staging}
+    container_name: staging-cms
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://poetry:${POSTGRES_PASSWORD}@postgres:5432/poetry
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?}
+      PREVIEW_SECRET: ${PREVIEW_SECRET:?}
+      ORDER_LOOKUP_SECRET: ${ORDER_LOOKUP_SECRET:?}
+      PAYLOAD_PUBLIC_SERVER_URL: https://cms.common-verse.weimer.pro
+      PUBLIC_SITE_URL: https://common-verse.weimer.pro
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOKS_SIGNING_SECRET: ${STRIPE_WEBHOOKS_SIGNING_SECRET:-}
+    volumes:
+      - media:/app/apps/cms/media
+    networks: [default, edge]
+
+  web:
+    image: ghcr.io/veridynn/common-verse-web:${IMAGE_TAG:-staging}
+    container_name: staging-web
+    restart: unless-stopped
+    environment:
+      PREVIEW_SECRET: ${PREVIEW_SECRET:?}
+      ORDER_LOOKUP_SECRET: ${ORDER_LOOKUP_SECRET:?}
+      PUBLIC_STRIPE_PUBLISHABLE_KEY: ${PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
+
+volumes:
+  postgres:
+  media:
