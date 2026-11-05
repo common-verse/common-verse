@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectFocusNeverObscured } from "./focus";
 
 test("poems list pages newest first and shows originals with a note", async ({
   page,
@@ -129,4 +130,59 @@ test("a poem preview shows the same versions in every locale", async ({
     await expect(page.locator(".versions a")).toHaveCount(2);
     await expect(page.locator(".preview-banner")).toBeVisible();
   }
+});
+
+test("the language switch keeps the poem across different German and English slugs", async ({
+  page,
+}) => {
+  await page.goto("/gedichte/regeln-des-ankommens");
+  await page.getByRole("button", { name: "Sprache: Deutsch" }).click();
+  await page.getByRole("link", { name: /^العربية/ }).click();
+  await expect(page).toHaveURL(/\/ar\/poems\/rules-of-arrival$/);
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  // Arabic is the original here: no note, the poem runs right to left.
+  await expect(page.locator(".poem .poem-note")).toHaveCount(0);
+  await expect(page.locator(".poem [lang=ar][dir=rtl] h1")).toHaveText(
+    "قواعد الوصول",
+  );
+  await page.getByRole("button", { name: /العربية$/ }).click();
+  await page.getByRole("link", { name: /^Deutsch/ }).click();
+  await expect(page).toHaveURL(/\/gedichte\/regeln-des-ankommens$/);
+});
+
+test("Persian poem page works at 375 px", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/fa/poems/test-poem");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator(".versions [aria-current]")).toHaveText("فارسی");
+  await expect(page.locator(".poem .poem-note")).toHaveCount(0);
+  await expect(page.locator(".poem h1")).toHaveText("صبح مشترک");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("versions and pages can be chosen with the keyboard", async ({ page }) => {
+  await page.goto("/gedichte/test-poem");
+  await expectFocusNeverObscured(page, '.versions a[href="?fassung=en"]');
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\?fassung=en$/);
+  await expect(page.locator(".versions [aria-current]")).toHaveText("Englisch");
+  await expect(page.locator(".poem h1")).toHaveText("A Shared Morning");
+
+  await page.goto("/gedichte");
+  await expectFocusNeverObscured(page, ".poem-cards > li:first-child a");
+  // The focus ring surrounds the whole card, not only its title link.
+  await expect(page.locator(".poem-card").first()).toHaveCSS(
+    "outline-style",
+    "solid",
+  );
+  await expectFocusNeverObscured(
+    page,
+    '.pagination a[href="/gedichte?page=2"]',
+  );
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/gedichte\?page=2$/);
 });
