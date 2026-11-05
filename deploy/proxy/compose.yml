@@ -1,21 +1,26 @@
-# Shared reverse proxy for every environment on the server. Environment stacks
-# join the external "edge" network so Caddy reaches them by container name.
+# Shared entry point for every environment on the server. Cloudflare Tunnel
+# brings requests in (TLS and Cloudflare Access login happen at Cloudflare), so no
+# ports are published. Environment stacks join the external "edge" network so
+# Caddy reaches them by container name.
 name: proxy
 
 services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?}
+    depends_on: [caddy]
+
   caddy:
     image: caddy:2.10-alpine
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    env_file: .env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-    networks: [edge]
+    networks: [default, edge]
 
 networks:
   edge:

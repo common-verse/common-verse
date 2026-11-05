@@ -6,19 +6,21 @@ sanitized copy of production data) and production follow later.
 
 | Environment | Site                              | CMS                                   | Deployed by               |
 | ----------- | --------------------------------- | ------------------------------------- | ------------------------- |
-| Dev         | `https://common-verse.weimer.pro` | `https://cms.common-verse.weimer.pro` | push to `dev` (GitHub CI) |
+| Dev         | `https://common-verse.weimer.pro` | `https://cms-common-verse.weimer.pro` | push to `dev` (GitHub CI) |
 
-DNS for `common-verse.weimer.pro` and `*.common-verse.weimer.pro` points to the
-server without the Cloudflare proxy; Caddy obtains the TLS certificates.
+Both hostnames are Cloudflare Tunnel routes (tunnel `common-verse`): requests
+reach the server through `cloudflared`, and Cloudflare handles TLS. Hostnames stay
+one level below `weimer.pro` (hence `cms-common-verse`) because Cloudflare's free
+certificate covers only `*.weimer.pro`.
 
 ## Server
 
 - Login: `ssh deploy@45.95.53.107` with a registered key. Root and password
   logins are disabled; `deploy` has sudo and Docker access.
-- Firewall (ufw) allows 22, 80 and 443 only. fail2ban bans IPs after repeated
+- Firewall (ufw) allows only SSH (22); web traffic arrives through the tunnel. fail2ban bans IPs after repeated
   failed SSH connections for 10 minutes; automatic security updates are enabled.
-- `/srv/common-verse/proxy`: shared Caddy proxy (`deploy/proxy`). Its `.env`
-  holds the dev basic-auth user and password hash.
+- `/srv/common-verse/proxy`: `cloudflared` and Caddy (`deploy/proxy`). Its `.env`
+  holds `TUNNEL_TOKEN`; Caddy routes by hostname over plain HTTP.
 - `/srv/common-verse/dev`: dev stack (`deploy/dev`). Its `.env`
   holds the database password and app secrets, generated once on the server.
   Stripe keys are empty, so shop payments fail on dev.
@@ -59,8 +61,14 @@ regular seeds never create credentials.
 
 ## Dev access
 
-The site is behind basic auth and sends `X-Robots-Tag: noindex`. The basic-auth
-and CMS account credentials are not in Git.
+Cloudflare Access (Zero Trust team `weimer`, application `common-verse`) protects
+the whole site and `cms-common-verse.weimer.pro/admin`. The CMS API and media stay
+public, because the website and browsers load them; the CMS admin keeps its own
+Payload login. Policy `Common Verse team` allows every `@thepoetryproject.de`
+address plus individually added addresses; logins last one month and cover both
+hostnames. Login methods: one-time PIN by email, Google and GitHub. To admit
+someone, add their address to the policy under Access controls, Policies. Both
+hostnames send `X-Robots-Tag: noindex`.
 
 ## CI setup
 
