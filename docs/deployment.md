@@ -65,9 +65,10 @@ Cloudflare Access (Zero Trust team `weimer`, application `common-verse`) protect
 the whole site and `cms-common-verse.weimer.pro/admin`. The CMS API and media stay
 public, because the website and browsers load them; the CMS admin keeps its own
 Payload login. Policy `Common Verse team` allows every `@thepoetryproject.de`
-address plus individually added addresses; logins last one month and cover both
-hostnames. Login methods: one-time PIN by email, Google and GitHub. To admit
-someone, add their address to the policy under Access controls, Policies. Both
+and `@weimer.pro` address. Login is a one-time code by email or GitHub (OAuth app `common-verse Access`,
+which only confirms the address); it lasts one month
+(Cloudflare's maximum) and covers both hostnames. To admit someone else, add their
+address to the policy under Access controls, Policies. Both
 hostnames send `X-Robots-Tag: noindex`.
 
 ## CI setup
