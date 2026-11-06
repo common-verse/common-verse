@@ -1,4 +1,4 @@
-# Dev environment: deployed from the dev branch and reseeded on every deploy.
+# Dev environment: deployed from the dev branch; demo data is reseeded on request.
 # Secrets live in .env next to this file on the server (see docs/deployment.md).
 name: dev
 

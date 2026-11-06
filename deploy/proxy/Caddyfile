@@ -11,12 +11,24 @@
 	header X-Robots-Tag "noindex, nofollow"
 }
 
-http://common-verse.weimer.pro {
+# Containers restart during deploys (the CMS takes about 15 seconds): requests wait
+# for them instead of failing. Longer outages, such as a data reset, get a notice.
+(dev_app) {
 	import not_indexed
-	reverse_proxy dev-web:4321
+	reverse_proxy {args[0]} {
+		lb_try_duration 30s
+	}
+	handle_errors 502 503 504 {
+		header Content-Type "text/html; charset=utf-8"
+		header Retry-After 15
+		respond `<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="15"><title>Dev</title><p style="font:1.1rem system-ui;margin:3rem auto;max-width:32rem">Dev wird gerade aktualisiert und ist gleich wieder da. Die Seite lädt sich von selbst neu.</p>` 503
+	}
+}
+
+http://common-verse.weimer.pro {
+	import dev_app dev-web:4321
 }
 
 http://cms-common-verse.weimer.pro {
-	import not_indexed
-	reverse_proxy dev-cms:3001
+	import dev_app dev-cms:3001
 }

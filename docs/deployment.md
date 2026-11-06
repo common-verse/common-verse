@@ -49,12 +49,18 @@ schema and seeds demo content into an empty database.
 
 ## Dev data
 
-Dev starts fresh on every deploy: `deploy.sh` removes the dev database
-and media volumes, then `deploy/dev/seed.sh` runs every demo seed from
-[demo data](demo-data.md) (poems, bulk workshops with photos, programme, shop,
-fixed pages, homepage) and creates one admin and one editor account. Anything
-created on dev is lost with the next deploy; the site is down for about two
-minutes while it reseeds.
+Deploys keep dev's database and media and only replace the containers. While
+they restart (the CMS takes about 15 seconds), Caddy holds requests for up to 30
+seconds instead of failing; longer outages show a notice that reloads itself.
+Payload pushes schema changes into the existing database on start; if a change
+cannot be applied to the data, reset dev.
+
+To reset, run the "Deploy dev" workflow on `dev` with "Reset dev data" checked.
+It skips the image build, removes the dev database and media volumes, then
+`deploy/dev/seed.sh` runs every demo seed from [demo data](demo-data.md) (poems,
+bulk workshops with photos, programme, shop, fixed pages, homepage) and creates
+one admin and one editor account. Dev shows the notice for about two minutes.
+A server without a dev database is seeded the same way on its first deploy.
 
 The seed runs in a one-off CMS container that shares the database container's
 network, so the database is `localhost` there, as the bulk, programme and shop

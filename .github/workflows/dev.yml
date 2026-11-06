@@ -4,6 +4,11 @@ on:
   push:
     branches: [dev]
   workflow_dispatch:
+    inputs:
+      reset:
+        description: Reset dev data (all demo data and accounts are recreated)
+        type: boolean
+        default: false
 
 concurrency:
   group: dev
@@ -14,6 +19,7 @@ env:
 
 jobs:
   build:
+    if: ${{ !inputs.reset }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,6 +51,7 @@ jobs:
 
   deploy:
     needs: build
+    if: ${{ !cancelled() && (needs.build.result == 'success' || inputs.reset) }}
     runs-on: ubuntu-latest
     environment: dev
     permissions:
@@ -58,8 +65,9 @@ jobs:
           KNOWN_HOSTS: ${{ vars.DEV_KNOWN_HOSTS }}
           HOST: ${{ vars.DEV_HOST }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMAND: ${{ inputs.reset && format('reset {0}', github.sha) || github.sha }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          printf '%s\n' "$TOKEN" | ssh "deploy@$HOST" "$GITHUB_SHA"
+          printf '%s\n' "$TOKEN" | ssh "deploy@$HOST" "$COMMAND"

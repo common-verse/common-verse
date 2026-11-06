@@ -1,9 +1,13 @@
 #!/bin/sh
 # Forced command of the CI deploy key (see docs/deployment.md): the SSH command is
-# the commit SHA to deploy, stdin is a short-lived GitHub token for ghcr.io.
+# the commit SHA to deploy, optionally preceded by "reset" to reseed the demo data;
+# stdin is a short-lived GitHub token for ghcr.io.
 set -eu
 
-sha=$(printf %s "${SSH_ORIGINAL_COMMAND:-}" | tr -cd '0-9a-f')
+command=${SSH_ORIGINAL_COMMAND:-}
+reset=
+[ "${command%% *}" = reset ] && reset=1
+sha=$(printf %s "${command##* }" | tr -cd '0-9a-f')
 [ ${#sha} -eq 40 ] || { echo "expected a 40-character commit SHA" >&2; exit 2; }
 read -r token
 
@@ -41,10 +45,13 @@ docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
 cd "$root/dev"
 export IMAGE_TAG="$sha"
 retry docker compose pull -q
-# Dev starts from a fresh, fully seeded database on every deploy.
-docker compose down -v --remove-orphans
-docker compose up -d --wait postgres
-retry sh seed.sh
+# Deploys keep dev's data; a reset (or a server without data yet) reseeds it.
+docker volume inspect dev_postgres >/dev/null 2>&1 || reset=1
+if [ -n "$reset" ]; then
+  docker compose down -v --remove-orphans
+  docker compose up -d --wait postgres
+  retry sh seed.sh
+fi
 docker compose up -d --remove-orphans
 # Removes every image no container uses, including earlier deploys.
 docker image prune -af >/dev/null
