@@ -128,7 +128,7 @@ test("a poem preview shows the same versions in every locale", async ({
     expect(response?.status()).toBe(200);
     await expect(page.locator(".poem h1")).toHaveText("مسودة");
     await expect(page.locator(".versions a")).toHaveCount(2);
-    await expect(page.locator(".preview-banner")).toBeVisible();
+    await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toBeVisible();
   }
 });
 

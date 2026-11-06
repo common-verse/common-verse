@@ -130,7 +130,7 @@ test("author drafts render only in an authorized preview", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Draft Author",
   );
-  await expect(page.locator(".preview-banner")).toHaveAttribute("lang", "uk");
+  await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toHaveAttribute("lang", "uk");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     "noindex,nofollow",

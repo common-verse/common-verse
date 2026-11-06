@@ -15,6 +15,7 @@ require it. They use the existing semantic tokens in `src/styles/token.css`.
 | `Card.Root` | `as`: div, article, section, aside; `variant`: default, accent; `size`: default, sm                         | Neutral card surface                                              |
 | `Badge`     | `variant`: default, secondary, outline, destructive; optional `href`                                        | Primary badge rendered as a span                                  |
 | `Field`     | Required `id`, `label`; optional `hint`, `messages`, `error`, `control` snippet                             | Label, input and one reserved line for hint or error              |
+| `Banner`    | `tone`: info, success, warning, error; optional `action` (`icon`, `label`), `animate`, `locale`             | Info, static, in the page language                                |
 
 Native HTML attributes, including `id`, `lang`, `dir`, ARIA attributes and event
 handlers, are forwarded. Use `class` for layout; use component props for typography
@@ -77,6 +78,21 @@ On narrow screens `scroll-padding-block-end` keeps focused fields clear of the
 bottom bar. Anchor links scroll smoothly, keyboard focus instantly: a smooth scroll
 still running would drop the next one and leave a quickly tabbed-to control
 below the bar.
+
+## Banners
+
+`Banner` is one short line of text under the sticky header, for states that
+concern the whole page: the draft preview (`warning`, in the editor's language
+via `locale`) and a newly deployed version (`info`, with a reload `action`).
+Keep the text short enough to stay on one line on phones. `action` is an icon
+button inside the sentence; it is as tall as the text, so every banner has the
+same height, and its tap area extends to 44px. `error` uses `role="alert"`, the
+other tones `role="status"`. Banners that appear later start `hidden` and take
+`animate`: they slide down from under the header when shown, or fade with
+reduced motion. `BaseLayout` places them in `.page-banners`, which is anchored to
+the header's bottom edge with CSS anchor positioning; outside the header their
+background can blur the content behind it. While a banner shows, the top scroll
+padding grows so focused elements stay clear of it.
 
 ## Notifications
 

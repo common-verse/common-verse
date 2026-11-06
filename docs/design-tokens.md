@@ -16,6 +16,8 @@ Only these HEX inputs define the palette:
 | `pink`  | #FF3D5E | Primary brand colour                    |
 | `green` | #00C853 | Success                                 |
 | `red`   | #D70000 | Error fills, field borders, error icons |
+| `blue`  | #2F74E0 | Info banners                            |
+| `yellow`| #F2B705 | Warning banners                         |
 
 The system is monochrome: surfaces, text, borders and the header are mixes of
 black and white without a brand tint. Pink is the only brand colour. Semantic
@@ -70,7 +72,14 @@ apart from the pink: it fills icons and destructive controls with white labels
 and marks invalid field borders; it is never a button fill for actions. Text
 uses `error-text`, which is the same red in light mode and 65% red mixed into
 white in dark mode (#EE7969, at least 5:1 on three nested cards).
-`success` is green with black labels. Info and warning are not statuses.
+`success` is green with black labels.
+
+Banners have four tones (`info`, `success`, `warning`, `error`), each with
+`{tone}-banner-background`, `-foreground` and `-hover`. The background is the tone's
+colour mixed into white (light) or black (dark) at 90% opacity, so the banner can
+blur what scrolls behind it; the text is a deep (light mode) or light (dark mode)
+shade of the same colour, at least 6:1 on its background; hover is one stronger
+step. These tokens are for banners only.
 
 Use semantic Tailwind utilities such as `bg-primary text-primary-foreground`,
 or semantic variables in project CSS. Compatibility aliases `paper`, `ink`,

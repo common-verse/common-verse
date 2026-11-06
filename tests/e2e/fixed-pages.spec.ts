@@ -98,5 +98,5 @@ test("fixed page previews require the runtime secret and remain unindexed", asyn
     "content",
     "noindex,nofollow",
   );
-  await expect(page.locator(".preview-banner")).toBeVisible();
+  await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toBeVisible();
 });

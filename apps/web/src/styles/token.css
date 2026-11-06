@@ -102,6 +102,8 @@
   --pink: #ff3d5e;
   --green: #00c853;
   --red: #d70000;
+  --blue: #2f74e0;
+  --yellow: #f2b705;
 
   /* Dark elevation: white at low alpha, so nested cards accumulate light. */
   --surface-overlay: oklch(from var(--white) l c h / 5%);
@@ -156,6 +158,58 @@
   --error-text: light-dark(
     var(--red),
     color-mix(in oklch, var(--red) 65%, var(--white))
+  );
+
+  /* Banners: the tone's colour mixed into the page colour at 90% opacity (the
+     banner blurs what scrolls behind it), text in a deep or light shade of the
+     same colour, and one stronger step for the action's hover. */
+  --info-banner-background: light-dark(
+    oklch(from color-mix(in oklch, var(--blue) 14%, var(--white)) l c h / 90%),
+    oklch(from color-mix(in oklch, var(--blue) 32%, var(--black)) l c h / 90%)
+  );
+  --info-banner-foreground: light-dark(
+    color-mix(in oklch, var(--blue) 60%, var(--black)),
+    color-mix(in oklch, var(--blue) 30%, var(--white))
+  );
+  --info-banner-hover: light-dark(
+    color-mix(in oklch, var(--blue) 26%, var(--white)),
+    color-mix(in oklch, var(--blue) 46%, var(--black))
+  );
+  --success-banner-background: light-dark(
+    oklch(from color-mix(in oklch, var(--green) 14%, var(--white)) l c h / 90%),
+    oklch(from color-mix(in oklch, var(--green) 26%, var(--black)) l c h / 90%)
+  );
+  --success-banner-foreground: light-dark(
+    color-mix(in oklch, var(--green) 50%, var(--black)),
+    color-mix(in oklch, var(--green) 35%, var(--white))
+  );
+  --success-banner-hover: light-dark(
+    color-mix(in oklch, var(--green) 26%, var(--white)),
+    color-mix(in oklch, var(--green) 40%, var(--black))
+  );
+  --warning-banner-background: light-dark(
+    oklch(from color-mix(in oklch, var(--yellow) 24%, var(--white)) l c h / 90%),
+    oklch(from color-mix(in oklch, var(--yellow) 24%, var(--black)) l c h / 90%)
+  );
+  --warning-banner-foreground: light-dark(
+    color-mix(in oklch, var(--yellow) 40%, var(--black)),
+    color-mix(in oklch, var(--yellow) 45%, var(--white))
+  );
+  --warning-banner-hover: light-dark(
+    color-mix(in oklch, var(--yellow) 40%, var(--white)),
+    color-mix(in oklch, var(--yellow) 38%, var(--black))
+  );
+  --error-banner-background: light-dark(
+    oklch(from color-mix(in oklch, var(--red) 12%, var(--white)) l c h / 90%),
+    oklch(from color-mix(in oklch, var(--red) 30%, var(--black)) l c h / 90%)
+  );
+  --error-banner-foreground: light-dark(
+    color-mix(in oklch, var(--red) 75%, var(--black)),
+    color-mix(in oklch, var(--red) 30%, var(--white))
+  );
+  --error-banner-hover: light-dark(
+    color-mix(in oklch, var(--red) 22%, var(--white)),
+    color-mix(in oklch, var(--red) 44%, var(--black))
   );
 
   /* Opaque in both modes so scrolling content cannot show through. */

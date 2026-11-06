@@ -47,6 +47,9 @@ for (const locale of ["en", "ar"] as const) {
       })
       .toBeLessThanOrEqual(1);
 
+    await expect(banner.getByRole("button")).toHaveAccessibleName(
+      locale === "ar" ? /.+/ : "Reload",
+    );
     await banner.getByRole("button").click();
     await page.waitForLoadState("load");
     await expect(banner).toBeHidden();

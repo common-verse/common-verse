@@ -232,7 +232,7 @@ test("events page copy is previewable only with the runtime secret", async ({
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Events programme en — draft",
   );
-  await expect(page.locator(".preview-banner")).toHaveAttribute("lang", "uk");
+  await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toHaveAttribute("lang", "uk");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     "noindex,nofollow",

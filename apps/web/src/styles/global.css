@@ -459,31 +459,20 @@ h5,
 h6 {
   font-size: var(--font-size-base);
 }
-.preview-banner {
-  margin: 0;
-  background: var(--muted);
-  color: var(--foreground);
-  padding: var(--space-2xs) var(--space-sm-md);
-  text-align: center;
-  font-weight: 700;
+/* Banners hang below the sticky header and follow it as it compacts; they sit
+   outside the header so their background can blur the content behind them. */
+.site-header {
+  anchor-name: --site-header;
 }
-/* Lies over the content below the sticky header, so it stays in view while scrolling. */
-.update-banner {
-  position: absolute;
-  inset: 100% 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2xs) var(--space-sm);
-  margin: 0;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  padding: var(--space-2xs) var(--space-sm-md);
-  font-weight: 700;
+.page-banners {
+  position: fixed;
+  position-anchor: --site-header;
+  inset-block-start: anchor(bottom);
+  inset-inline: 0;
+  z-index: 19;
 }
-.update-banner[hidden] {
-  display: none;
+html:has(.page-banners > :not([hidden])) {
+  scroll-padding-block-start: calc(8rem + 2.5rem);
 }
 .content-grid {
   display: grid;

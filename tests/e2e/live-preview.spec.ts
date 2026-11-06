@@ -11,7 +11,7 @@ for (const [contentLocale, editorLanguage, notice, direction] of [
       await page.goto(
         `/${contentLocale}${suffix}?previewSecret=test-preview&editorLanguage=${editorLanguage}`,
       );
-      const banner = page.locator(".preview-banner");
+      const banner = page.locator(`[data-slot="banner"]:not([data-update-banner])`);
       await expect(banner).toHaveText(notice);
       await expect(banner).toHaveAttribute("lang", editorLanguage);
       await expect(banner).toHaveAttribute("dir", direction);
@@ -31,11 +31,11 @@ test("preview notice falls back to English without a supported editor language",
     "&editorLanguage=ku",
   ]) {
     await page.goto(`/ar?previewSecret=test-preview${editorQuery}`);
-    await expect(page.locator(".preview-banner")).toHaveText("Draft preview");
-    await expect(page.locator(".preview-banner")).toHaveAttribute("lang", "en");
+    await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toHaveText("Draft preview");
+    await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toHaveAttribute("lang", "en");
   }
   await page.goto("/ar?editorLanguage=en");
-  await expect(page.locator(".preview-banner")).toHaveCount(0);
+  await expect(page.locator(`[data-slot="banner"]:not([data-update-banner])`)).toHaveCount(0);
 });
 
 for (const locale of ["en", "ar"]) {
