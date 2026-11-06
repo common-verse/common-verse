@@ -1,8 +1,8 @@
 # Deployment
 
-One LUMASERV cloud server (`lx51`: 8 vCPU, 32 GiB RAM, 160 GiB, Ubuntu 24.04 LTS)
-runs every environment. Only the dev environment exists so far; staging (with a
-sanitized copy of production data) and production follow later.
+One LUMASERV cloud server (`lpx31`: 4 vCPU, 8 GiB RAM, 160 GiB, Ubuntu 24.04 LTS)
+runs the dev environment. Staging (with a sanitized copy of production data) follows
+later; production gets its own server (#72).
 
 | Environment | Site                              | CMS                                   | Deployed by               |
 | ----------- | --------------------------------- | ------------------------------------- | ------------------------- |
@@ -17,6 +17,9 @@ certificate covers only `*.weimer.pro`.
 
 - Login: `ssh deploy@45.95.53.107` with a registered key. Root and password
   logins are disabled; `deploy` has sudo and Docker access.
+- IPv4 only: the IPv6 interface (`eth1`) is removed from `/etc/netplan/50-cloud-init.yaml`
+  because its first setup dropped all traffic every few minutes, and cloud-init no longer
+  rewrites the network configuration. Cloudflare still serves visitors over IPv6.
 - Firewall (ufw) allows only SSH (22); web traffic arrives through the tunnel. fail2ban bans IPs after repeated
   failed SSH connections for 10 minutes; automatic security updates are enabled.
 - `/srv/common-verse/proxy`: `cloudflared` and Caddy (`deploy/proxy`). Its `.env`
