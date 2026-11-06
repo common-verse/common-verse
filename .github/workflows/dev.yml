@@ -18,8 +18,42 @@ env:
   REGISTRY: ghcr.io/common-verse
 
 jobs:
-  build:
+  # Compares with the last successful deploy, so runs that were cancelled or failed
+  # in between are covered. Without one, both apps build.
+  changes:
     if: ${{ !inputs.reset }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      base: ${{ steps.diff.outputs.base }}
+      web: ${{ steps.diff.outputs.web }}
+      cms: ${{ steps.diff.outputs.cms }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base=$(gh run list -w dev.yml -b dev -s success -L 1 --json headSha -q '.[0].headSha')
+          if [ -n "$base" ] && files=$(git diff --name-only "$base" HEAD); then
+            # Anything outside the two apps, docs, deploy files and tests rebuilds both.
+            shared=$(printf '%s\n' "$files" | grep -Ev '^(apps/(web|cms)|docs|deploy|tests)/|\.md$' || true)
+            for app in web cms; do
+              changed=false
+              { [ -n "$shared" ] || printf '%s\n' "$files" | grep -q "^apps/$app/"; } && changed=true
+              echo "$app=$changed" >> "$GITHUB_OUTPUT"
+            done
+            echo "base=$base" >> "$GITHUB_OUTPUT"
+          else
+            printf 'web=true\ncms=true\n' >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: changes
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -35,7 +69,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v7
+      - if: ${{ needs.changes.outputs[matrix.target] == 'true' }}
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: ${{ matrix.target }}
@@ -49,6 +84,12 @@ jobs:
             ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.target }}
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+      # Unchanged app: the deployed image gets this commit's tag, deploy.sh stays as is.
+      - if: ${{ needs.changes.outputs[matrix.target] != 'true' }}
+        run: >-
+          docker buildx imagetools create
+          -t ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/common-verse-${{ matrix.target }}:${{ needs.changes.outputs.base }}
 
   deploy:
     needs: build
