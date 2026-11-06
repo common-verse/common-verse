@@ -1,6 +1,7 @@
 {
   "name": "the-poetry-project",
   "private": true,
+  "license": "MIT",
   "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=26 <27",
