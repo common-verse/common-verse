@@ -39,8 +39,10 @@ Astro bundles every package into `dist` (`vite.ssr.noExternal`), so the web imag
 holds only Node and `dist` (about 85 MB). The CMS image (about 2 GB) keeps
 development dependencies and sources for the startup
 seed below, so Next's standalone output is not used until the CMS has production
-migrations. Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL` and `TRUST_PROXY` at build time,
-so each environment needs its own web image. CI pushes
+migrations. Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL`, `TRUST_PROXY` and
+`PUBLIC_COMMIT_SHA` at build time, so each environment needs its own web image.
+With a commit set, the footer links it, and open pages poll `/api/version` every
+minute while visible and offer a reload once a newer version runs. CI pushes
 `ghcr.io/veridynn/common-verse-{web,cms}` tagged `dev` and with the commit SHA.
 
 The project has no production migrations yet ([migrations](migrations.md)). On
