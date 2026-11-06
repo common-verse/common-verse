@@ -43,7 +43,7 @@ migrations. Astro inlines `PUBLIC_SITE_URL`, `PUBLIC_CMS_URL`, `TRUST_PROXY` and
 `PUBLIC_COMMIT_SHA` at build time, so each environment needs its own web image.
 With a commit set, the footer links it, and open pages poll `/api/version` every
 minute while visible and offer a reload once a newer version runs. CI pushes
-`ghcr.io/veridynn/common-verse-{web,cms}` tagged `dev` and with the commit SHA.
+`ghcr.io/common-verse/common-verse-{web,cms}` tagged `dev` and with the commit SHA.
 
 The project has no production migrations yet ([migrations](migrations.md)). On
 start, the CMS container runs the seed CLI in development mode: Payload pushes the

@@ -8,7 +8,7 @@ test("footer shows the deployed commit", async ({ page }) => {
     page.locator(".site-footer").getByRole("link", { name: "dev · 0123456" }),
   ).toHaveAttribute(
     "href",
-    `https://github.com/veridynn/common-verse/commit/${commit}`,
+    `https://github.com/common-verse/common-verse/commit/${commit}`,
   );
   const response = await page.request.get("/api/version");
   expect(await response.json()).toEqual({ version: commit });

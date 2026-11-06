@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGISTRY: ghcr.io/veridynn
+  REGISTRY: ghcr.io/common-verse
 
 jobs:
   build:

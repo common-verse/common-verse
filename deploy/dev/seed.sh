@@ -5,7 +5,7 @@
 set -eu
 
 set -a; . ./.env; set +a
-image=ghcr.io/veridynn/common-verse-cms:$IMAGE_TAG
+image=ghcr.io/common-verse/common-verse-cms:$IMAGE_TAG
 
 # Sharing the database container's network makes it reachable as localhost,
 # which the bulk, programme and shop seeds require.

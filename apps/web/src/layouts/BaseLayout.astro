@@ -118,7 +118,7 @@ const commit = import.meta.env.PUBLIC_COMMIT_SHA
         <a href={localizedPath(locale, "terms")}>{m.home_terms({}, { locale })}</a>
         <a href={localizedPath(locale, "order-status")}>{m.home_order_status({}, { locale })}</a>
       </nav>
-      <p>© {new Date().getFullYear()} The Poetry Project e.V.{commit && <> · <a href={`https://github.com/veridynn/common-verse/commit/${commit}`} dir="ltr">dev · {commit.slice(0, 7)}</a></>}</p>
+      <p>© {new Date().getFullYear()} The Poetry Project e.V.{commit && <> · <a href={`https://github.com/common-verse/common-verse/commit/${commit}`} dir="ltr">dev · {commit.slice(0, 7)}</a></>}</p>
     </footer>
   </body>
 </html>

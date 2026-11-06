@@ -29,7 +29,7 @@ do not have it.
 
 ## GitHub workflow
 
-Work is tracked on the project board of `veridynn/common-verse`.
+Work is tracked on the project board of `common-verse/common-verse`.
 
 1. The manager creates a milestone per deliverable and one issue per reviewable
    change; the spec refines their acceptance criteria.

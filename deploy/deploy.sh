@@ -25,7 +25,7 @@ retry() {
 login() { printf %s "$token" | docker login ghcr.io -u ci --password-stdin >/dev/null; }
 
 root=/srv/common-verse
-base=https://raw.githubusercontent.com/veridynn/common-verse/$sha/deploy
+base=https://raw.githubusercontent.com/common-verse/common-verse/$sha/deploy
 # This script itself is not updated here: sh reads it while running. Changes to it
 # are installed by hand (docs/deployment.md).
 for file in proxy/compose.yml proxy/Caddyfile dev/compose.yml dev/seed.sh dev/seed-accounts.ts; do

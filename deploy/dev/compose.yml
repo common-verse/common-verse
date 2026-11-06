@@ -19,7 +19,7 @@ services:
       retries: 20
 
   cms:
-    image: ghcr.io/veridynn/common-verse-cms:${IMAGE_TAG:-dev}
+    image: ghcr.io/common-verse/common-verse-cms:${IMAGE_TAG:-dev}
     container_name: dev-cms
     restart: unless-stopped
     depends_on:
@@ -39,7 +39,7 @@ services:
     networks: [default, edge]
 
   web:
-    image: ghcr.io/veridynn/common-verse-web:${IMAGE_TAG:-dev}
+    image: ghcr.io/common-verse/common-verse-web:${IMAGE_TAG:-dev}
     container_name: dev-web
     restart: unless-stopped
     environment:
