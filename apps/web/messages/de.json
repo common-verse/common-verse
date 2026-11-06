@@ -6,6 +6,8 @@
   "nav_primary": "Hauptnavigation",
   "language_label": "Sprache",
   "skip_to_content": "Zum Inhalt springen",
+  "update_available": "Eine neue Version ist verfügbar.",
+  "update_reload": "Neu laden",
   "poem_original": "Original",
   "translated_by": "Übersetzt von {name}",
   "registration": "Jetzt anmelden",

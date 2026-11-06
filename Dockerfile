@@ -13,6 +13,7 @@ RUN --mount=type=cache,target=/pnpm/store \
 ARG PUBLIC_SITE_URL
 ARG PUBLIC_CMS_URL
 ARG TRUST_PROXY=true
+ARG PUBLIC_COMMIT_SHA
 RUN pnpm --filter @poetry/web build
 
 # Astro bundles every package into dist (vite.ssr.noExternal), so no node_modules.

@@ -6,6 +6,8 @@
   "nav_primary": "Основна навігація",
   "language_label": "Мова",
   "skip_to_content": "Перейти до вмісту",
+  "update_available": "Доступна нова версія.",
+  "update_reload": "Перезавантажити",
   "poem_original": "Оригінал",
   "translated_by": "Переклад: {name}",
   "registration": "Зареєструватися зараз",

@@ -467,6 +467,21 @@ h6 {
   text-align: center;
   font-weight: 700;
 }
+.update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs) var(--space-sm);
+  margin: 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: var(--space-2xs) var(--space-sm-md);
+  font-weight: 700;
+}
+.update-banner[hidden] {
+  display: none;
+}
 .content-grid {
   display: grid;
   gap: var(--space-lg);

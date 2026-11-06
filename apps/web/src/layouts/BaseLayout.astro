@@ -6,6 +6,7 @@ import EventTransitions from '../components/EventTransitions.astro'
 import ShopTransitions from '../components/ShopTransitions.astro'
 import BrandLogo from '../components/BrandLogo.astro'
 import * as m from '../paraglide/messages.js'
+import { Button } from '$lib/components/ui/button'
 import '../styles/global.css'
 import { themePreference } from '../lib/theme'
 import type { Notice } from '../lib/notifications'
@@ -60,6 +61,7 @@ const socialImage = image ? new URL(image, siteUrl) : undefined
 const alternatePath = (alternative: Locale) => localePath?.(alternative) ?? canonicalPath
 const xDefaultLocale = alternateLocales.includes('de') ? 'de' : (alternateLocales[0] ?? locale)
 const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
+const commit = import.meta.env.PUBLIC_COMMIT_SHA
 ---
 
 <!doctype html>
@@ -95,6 +97,12 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>
     <Header {locale} {localePath} themePreference={theme} {notice} {noticeFocus} {noticeCloseHref} />
     {preview && <p class="preview-banner" role="status" lang={editorLanguage} dir={getLocaleMetadata(editorLanguage).direction}>{message('draft_preview', editorLanguage)}</p>}
+    {commit && (
+      <p class="update-banner" role="status" hidden data-update-banner data-version={commit}>
+        {m.update_available({}, { locale })}
+        <Button variant="outline" size="sm" data-update-reload>{m.update_reload({}, { locale })}</Button>
+      </p>
+    )}
     {preview && <div id="payload-live-preview" data-server-url={import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'} />}
     <main id="main" tabindex="-1" class={mainClass}><slot /></main>
     <footer class="site-footer"><a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, { locale }) !== 'The Poetry Project' ? ` — ${m.site_title({}, { locale })}` : ''}</span></a>
@@ -106,10 +114,28 @@ const theme = themePreference(Astro.cookies.get('poetry-theme')?.value)
         <a href={localizedPath(locale, "terms")}>{m.home_terms({}, { locale })}</a>
         <a href={localizedPath(locale, "order-status")}>{m.home_order_status({}, { locale })}</a>
       </nav>
-      <p>© {new Date().getFullYear()} The Poetry Project e.V.</p>
+      <p>© {new Date().getFullYear()} The Poetry Project e.V.{commit && <> · <a href={`https://github.com/veridynn/common-verse/commit/${commit}`} dir="ltr">dev · {commit.slice(0, 7)}</a></>}</p>
     </footer>
   </body>
 </html>
+
+<script>
+  // Polls only while the tab is visible: about one tiny request a minute per open page.
+  const banner = document.querySelector<HTMLElement>('[data-update-banner]')
+  if (banner) {
+    const check = async () => {
+      if (document.visibilityState !== 'visible' || !banner.hidden) return
+      try {
+        const response = await fetch('/api/version', { cache: 'no-store' })
+        const { version } = response.ok ? await response.json() : {}
+        if (version && version !== banner.dataset.version) banner.hidden = false
+      } catch { /* Offline or mid-deploy: the next check tries again. */ }
+    }
+    setInterval(check, 60_000)
+    document.addEventListener('visibilitychange', check)
+    banner.querySelector('[data-update-reload]')?.addEventListener('click', () => location.reload())
+  }
+</script>
 
 <script>
   import { isDocumentEvent, ready } from '@payloadcms/live-preview'

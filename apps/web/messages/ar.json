@@ -6,6 +6,8 @@
   "nav_primary": "التنقل الرئيسي",
   "language_label": "اللغة",
   "skip_to_content": "الانتقال إلى المحتوى",
+  "update_available": "يتوفر إصدار جديد.",
+  "update_reload": "إعادة التحميل",
   "poem_original": "النص الأصلي",
   "translated_by": "ترجمة {name}",
   "registration": "سجّل الآن",

@@ -6,6 +6,8 @@
   "nav_primary": "Primary navigation",
   "language_label": "Language",
   "skip_to_content": "Skip to content",
+  "update_available": "A new version is available.",
+  "update_reload": "Reload",
   "poem_original": "Original",
   "translated_by": "Translated by {name}",
   "registration": "Register now",
