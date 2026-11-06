@@ -37,6 +37,16 @@ for (const locale of ["en", "ar"] as const) {
       locale === "ar" ? "rtl" : "ltr",
     );
 
+    // Stays right below the sticky header while scrolling.
+    await page.evaluate(() => scrollTo({ top: 2000, behavior: "instant" }));
+    await expect
+      .poll(async () => {
+        const header = (await page.locator(".site-header").boundingBox())!;
+        // The banner covers the header's 1px bottom border.
+        return Math.abs((await banner.boundingBox())!.y - (header.y + header.height));
+      })
+      .toBeLessThanOrEqual(1);
+
     await banner.getByRole("button").click();
     await page.waitForLoadState("load");
     await expect(banner).toBeHidden();

@@ -6,7 +6,6 @@ import EventTransitions from '../components/EventTransitions.astro'
 import ShopTransitions from '../components/ShopTransitions.astro'
 import BrandLogo from '../components/BrandLogo.astro'
 import * as m from '../paraglide/messages.js'
-import { Button } from '$lib/components/ui/button'
 import '../styles/global.css'
 import { themePreference } from '../lib/theme'
 import type { Notice } from '../lib/notifications'
@@ -97,12 +96,6 @@ const commit = import.meta.env.PUBLIC_COMMIT_SHA
     <a class="skip-link" href="#main">{m.skip_to_content({}, { locale })}</a>
     <Header {locale} {localePath} themePreference={theme} {notice} {noticeFocus} {noticeCloseHref} />
     {preview && <p class="preview-banner" role="status" lang={editorLanguage} dir={getLocaleMetadata(editorLanguage).direction}>{message('draft_preview', editorLanguage)}</p>}
-    {commit && (
-      <p class="update-banner" role="status" hidden data-update-banner data-version={commit}>
-        {m.update_available({}, { locale })}
-        <Button variant="outline" size="sm" data-update-reload>{m.update_reload({}, { locale })}</Button>
-      </p>
-    )}
     {preview && <div id="payload-live-preview" data-server-url={import.meta.env.PUBLIC_CMS_URL ?? 'http://localhost:3001'} />}
     <main id="main" tabindex="-1" class={mainClass}><slot /></main>
     <footer class="site-footer"><a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, { locale }) !== 'The Poetry Project' ? ` — ${m.site_title({}, { locale })}` : ''}</span></a>

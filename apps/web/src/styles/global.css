@@ -467,7 +467,10 @@ h6 {
   text-align: center;
   font-weight: 700;
 }
+/* Lies over the content below the sticky header, so it stays in view while scrolling. */
 .update-banner {
+  position: absolute;
+  inset: 100% 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

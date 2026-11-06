@@ -6,6 +6,7 @@ import LanguageSwitcher from './LanguageSwitcher.astro'
 import ThemeSwitcher from './ThemeSwitcher.svelte'
 import BrandLogo from './BrandLogo.astro'
 import PageNotification from './PageNotification.svelte'
+import { Button } from '$lib/components/ui/button'
 import type { Notice } from '../lib/notifications'
 import type { ThemePreference } from '../lib/theme'
 
@@ -31,6 +32,7 @@ const links = [
   { route: 'shop', label: m.nav_shop({}, messageOptions), Icon: ShoppingBag },
 ]
 const current = (route: string) => (path === `/${route}` ? 'page' : path.startsWith(`/${route}/`) ? 'true' : undefined)
+const commit = import.meta.env.PUBLIC_COMMIT_SHA
 ---
 
 <header class="site-header" style="view-transition-name: site-header">
@@ -49,4 +51,10 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
     <ThemeSwitcher client:load preference={themePreference} {locale} />
   </div>
   <PageNotification client:load {locale} {notice} focus={noticeFocus} closeHref={noticeCloseHref} />
+  {commit && (
+    <p class="update-banner" role="status" hidden data-update-banner data-version={commit}>
+      {m.update_available({}, messageOptions)}
+      <Button variant="outline" size="sm" data-update-reload>{m.update_reload({}, messageOptions)}</Button>
+    </p>
+  )}
 </header>
