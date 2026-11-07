@@ -202,17 +202,6 @@ html {
     background: var(--header-background);
     transition: translate var(--motion-page) var(--motion-ease);
   }
-  /* Handle that stays visible while the bar is tucked away. */
-  .site-header nav::before {
-    content: "";
-    position: absolute;
-    inset-block-start: 0.25rem;
-    inset-inline-start: calc(50% - 1rem);
-    inline-size: 2rem;
-    block-size: 0.25rem;
-    border-radius: 0.125rem;
-    background: var(--border);
-  }
   .site-header nav a {
     flex: 1 1 0;
     min-inline-size: 0;
