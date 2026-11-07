@@ -1,7 +1,7 @@
 <!--
   Shop pages opt into cross-document view transitions, but run one only for the way into checkout and back:
   checkout slides in from the right while the header stays, and on wide screens the cart lines
-  travel into the order summary. Every other navigation skips the transition.
+  travel into the order summary. Every other navigation within the shop skips the transition.
 -->
 <script is:inline>
   {
@@ -29,6 +29,8 @@
       if (!transition) return
       quiet(transition)
       const from = window.navigation?.activation?.from?.url
+      // Arriving from outside the shop keeps the site-wide navigation transition.
+      if (from && !/\/shop(\/|$)/.test(new URL(from).pathname)) return
       const here = isCheckout(location.href)
       if (!from || isCheckout(from) === here || isConfirmation(from) || isConfirmation(location.href))
         return transition.skipTransition()
