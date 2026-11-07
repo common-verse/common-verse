@@ -169,7 +169,8 @@ nav {
   text-underline-offset: 6px;
 }
 .nav-icon,
-.nav-label-short {
+.nav-label-short,
+.nav-pill {
   display: none;
 }
 /* Narrow screens: the same nav becomes an icon bar at the bottom. */
@@ -186,8 +187,7 @@ html {
       4.75rem + var(--space-xs) + env(safe-area-inset-bottom, 0px)
     );
   }
-  /* Five equal items, the current one 1.5 times as wide; condensed labels
-     shrink with the bar and never wrap or hide. */
+  /* Five equal items; condensed labels shrink with the bar and never wrap or hide. */
   .site-header nav {
     position: fixed;
     inset: auto 0 0;
@@ -201,17 +201,6 @@ html {
     border-block-start: 1px solid var(--header-border);
     background: var(--header-background);
     transition: translate var(--motion-page) var(--motion-ease);
-  }
-  /* Handle that stays visible while the bar is tucked away. */
-  .site-header nav::before {
-    content: "";
-    position: absolute;
-    inset-block-start: 0.25rem;
-    inset-inline-start: calc(50% - 1rem);
-    inline-size: 2rem;
-    block-size: 0.25rem;
-    border-radius: 0.125rem;
-    background: var(--border);
   }
   .site-header nav a {
     flex: 1 1 0;
@@ -229,12 +218,25 @@ html {
     line-height: 1.15;
     letter-spacing: -0.01em;
     text-decoration: none;
+    position: relative;
+    isolation: isolate;
+    /* Items keep their place between pages; only the pill below travels. */
+    view-transition-name: var(--nav-name);
+    view-transition-class: nav-item;
   }
   .site-header nav a[aria-current] {
-    flex-grow: 1.5;
-    background: var(--primary);
     color: var(--primary-foreground);
     text-decoration: none;
+  }
+  .site-header .nav-pill {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: squircle;
+    background: var(--primary);
+    view-transition-name: nav-pill;
   }
   .site-header nav a:focus-visible {
     outline-offset: -3px;

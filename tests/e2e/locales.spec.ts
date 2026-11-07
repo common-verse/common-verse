@@ -70,7 +70,7 @@ test("primary navigation is keyboard accessible", async ({ page }) => {
   await expect(page.getByRole("link", { name: /zum inhalt/i })).toBeFocused();
 });
 
-test("the mobile bottom bar labels five links on one line and widens the current one", async ({
+test("the mobile bottom bar labels five equally wide links on one line", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 780 });
@@ -92,7 +92,7 @@ test("the mobile bottom bar labels five links on one line and widens the current
   const widths: number[] = [];
   for (const link of await links.all()) {
     await expect(link.locator("svg")).toBeVisible();
-    const label = link.locator("span:visible");
+    const label = link.locator(":is(.nav-label, .nav-label-short):visible");
     // One line that fits inside its item.
     expect(
       await label.evaluate(
@@ -106,7 +106,7 @@ test("the mobile bottom bar labels five links on one line and widens the current
   const current = nav.locator("[aria-current]");
   await expect(current).toHaveCount(1);
   await expect(current).toHaveText("Autor:innen");
-  expect(widths[3] / widths[0]).toBeCloseTo(1.5, 1);
+  expect(widths[3]).toBeCloseTo(widths[0], 0);
   const bar = (await nav.boundingBox())!;
   expect(bar.y + bar.height).toBeCloseTo(780, 0);
   await page.setViewportSize({ width: 1280, height: 780 });
