@@ -107,10 +107,8 @@ const commit = import.meta.env.PUBLIC_COMMIT_SHA
           animation-duration: var(--motion-page);
           animation-timing-function: var(--motion-ease);
         }
-        /* Labels and icons stay above the pill and keep their size while their item resizes. */
+        /* Labels and icons stay above the pill. */
         ::view-transition-group(*.nav-item) { z-index: 1; }
-        ::view-transition-old(*.nav-item),
-        ::view-transition-new(*.nav-item) { block-size: 100%; object-fit: none; }
         /* From or to a page without a current item, the pill fades in place. */
         ::view-transition-old(nav-pill):only-child { animation: nav-pill-fade var(--motion-page) var(--motion-ease) reverse both; }
         ::view-transition-new(nav-pill):only-child { animation: nav-pill-fade var(--motion-page) var(--motion-ease) both; }

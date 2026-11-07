@@ -187,8 +187,7 @@ html {
       4.75rem + var(--space-xs) + env(safe-area-inset-bottom, 0px)
     );
   }
-  /* Five equal items, the current one 1.5 times as wide; condensed labels
-     shrink with the bar and never wrap or hide. */
+  /* Five equal items; condensed labels shrink with the bar and never wrap or hide. */
   .site-header nav {
     position: fixed;
     inset: auto 0 0;
@@ -226,7 +225,6 @@ html {
     view-transition-class: nav-item;
   }
   .site-header nav a[aria-current] {
-    flex-grow: 1.5;
     color: var(--primary-foreground);
     text-decoration: none;
   }
