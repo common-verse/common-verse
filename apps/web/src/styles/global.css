@@ -169,7 +169,8 @@ nav {
   text-underline-offset: 6px;
 }
 .nav-icon,
-.nav-label-short {
+.nav-label-short,
+.nav-pill {
   display: none;
 }
 /* Narrow screens: the same nav becomes an icon bar at the bottom. */
@@ -218,16 +219,26 @@ html {
     line-height: 1.15;
     letter-spacing: -0.01em;
     text-decoration: none;
-    /* Page loads morph each item; the shared name moves the fill to the new page. */
+    position: relative;
+    isolation: isolate;
+    /* Items keep their place between pages; only the pill below travels. */
     view-transition-name: var(--nav-name);
     view-transition-class: nav-item;
   }
   .site-header nav a[aria-current] {
     flex-grow: 1.5;
-    background: var(--primary);
     color: var(--primary-foreground);
     text-decoration: none;
-    view-transition-name: nav-current;
+  }
+  .site-header .nav-pill {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: squircle;
+    background: var(--primary);
+    view-transition-name: nav-pill;
   }
   .site-header nav a:focus-visible {
     outline-offset: -3px;

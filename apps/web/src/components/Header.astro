@@ -41,6 +41,7 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
         <Icon class:list={["nav-icon", { "flip-rtl": flip }]} size={24} aria-hidden="true" />
         <span class="nav-label">{label}</span>
         {short && <span class="nav-label-short">{short}</span>}
+        {current(route) && <span class="nav-pill"></span>}
       </a>
     ))}
   </nav>
