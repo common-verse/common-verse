@@ -218,41 +218,16 @@ html {
     line-height: 1.15;
     letter-spacing: -0.01em;
     text-decoration: none;
-    position: relative;
-    isolation: isolate;
-    transition:
-      flex-grow var(--motion-page) var(--motion-ease),
-      color var(--motion-page) var(--motion-ease);
-  }
-  /* The primary fill fades by opacity, so it is not repainted every frame. */
-  .site-header nav a::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    corner-shape: squircle;
-    background: var(--primary);
-    opacity: 0;
-    transition: opacity var(--motion-page) var(--motion-ease);
+    /* Page loads morph each item; the shared name moves the fill to the new page. */
+    view-transition-name: var(--nav-name);
+    view-transition-class: nav-item;
   }
   .site-header nav a[aria-current] {
     flex-grow: 1.5;
+    background: var(--primary);
     color: var(--primary-foreground);
     text-decoration: none;
-  }
-  .site-header nav a[aria-current]::before {
-    opacity: 1;
-  }
-  /* Each page load grows the current item and fades its fill in. */
-  @starting-style {
-    .site-header nav a[aria-current] {
-      flex-grow: 1;
-      color: inherit;
-    }
-    .site-header nav a[aria-current]::before {
-      opacity: 0;
-    }
+    view-transition-name: nav-current;
   }
   .site-header nav a:focus-visible {
     outline-offset: -3px;

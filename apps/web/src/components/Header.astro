@@ -37,7 +37,7 @@ const current = (route: string) => (path === `/${route}` ? 'page' : path.startsW
   <a class="brand" href={localizedPath(locale)}><BrandLogo /><span class="sr-only">The Poetry Project{m.site_title({}, messageOptions) !== 'The Poetry Project' ? ` — ${m.site_title({}, messageOptions)}` : ''}</span></a>
   <nav aria-label={m.nav_primary({}, messageOptions)}>
     {links.map(({ route, label, short, Icon, flip }) => (
-      <a href={localizedPath(locale, route)} aria-current={current(route)}>
+      <a href={localizedPath(locale, route)} aria-current={current(route)} style={`--nav-name: nav-${route}`}>
         <Icon class:list={["nav-icon", { "flip-rtl": flip }]} size={24} aria-hidden="true" />
         <span class="nav-label">{label}</span>
         {short && <span class="nav-label-short">{short}</span>}
